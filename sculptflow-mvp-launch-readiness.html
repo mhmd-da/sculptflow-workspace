@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SculptFlow Launch Readiness</title>
+<style>
+:root{--bg:#f7f8fa;--card:#fff;--text:#1b2230;--muted:#5d6778;--line:#e2e6ec;--red:#b42318;--redbg:#fdecea;--amber:#9a6200;--amberbg:#fff4e0;--green:#16794c;--greenbg:#e7f6ee;--blue:#1d4ed8;--code:#eef1f5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f141b;--card:#171e28;--text:#e6eaf0;--muted:#9aa5b5;--line:#2a3442;--red:#ff8a80;--redbg:#3a1a1a;--amber:#ffc266;--amberbg:#352812;--green:#6fd3a1;--greenbg:#12301f;--blue:#8ab4ff;--code:#222b37}}
+:root[data-theme="dark"]{--bg:#0f141b;--card:#171e28;--text:#e6eaf0;--muted:#9aa5b5;--line:#2a3442;--red:#ff8a80;--redbg:#3a1a1a;--amber:#ffc266;--amberbg:#352812;--green:#6fd3a1;--greenbg:#12301f;--blue:#8ab4ff;--code:#222b37}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:920px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:26px;margin:0 0 4px}
+h2{font-size:19px;margin:36px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0 0 10px}
+.sub{color:var(--muted);margin-bottom:20px}
+.verdict{background:var(--amberbg);border:1px solid var(--amber);border-radius:10px;padding:16px 18px;margin:18px 0}
+.verdict strong{color:var(--amber);font-size:17px}
+.item{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:8px;padding:12px 14px;margin:10px 0}
+.must{border-left-color:var(--red)}
+.should{border-left-color:var(--amber)}
+.good{border-left-color:var(--green)}
+.tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;border-radius:4px;padding:1px 6px;margin-right:6px;vertical-align:1px}
+.t-sec{background:var(--redbg);color:var(--red)}
+.t-ops{background:var(--amberbg);color:var(--amber)}
+.t-prod{background:var(--greenbg);color:var(--green)}
+.meta{color:var(--muted);font-size:13px;margin-top:4px}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:13px;word-break:break-word}
+ul{margin:6px 0 10px;padding-left:20px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600}
+.wrap{overflow-x:auto}
+</style>
+</head>
+<body>
+<main>
+<h1>Is SculptFlow ready to launch as an MVP?</h1>
+<p class="sub">Read-only review of the <code>main</code> branch (HEAD <code>548a3de</code>) plus the local tree, 30 Sep 2026. Covers the .NET backend, the Razor Pages frontend, the n8n integration points and the Supabase Postgres schema. No code was changed.</p>
+
+<div class="verdict">
+<strong>Verdict: launch a small pilot after a short must-fix list. Not ready for open signup yet.</strong>
+<p style="margin-top:8px">The product itself is in good shape: the committed code builds cleanly (0 errors, 0 warnings), tenant isolation is enforced server-side, and the core loop (WhatsApp/Telegram in, AI reply, staff takeover, booking) is complete. What stands between it and real clinics is mostly security hardening and operational setup, not missing features. About half the must-fix items are a few lines each. With them done, a pilot with 1 to 3 hand-picked clinics is reasonable.</p>
+</div>
+
+<p>The time-handling rework (UTC in the DB, clinic/my-time switch) is still in progress and uncommitted locally (17 files). I treated it as in-flight work, not a finding. It just needs to be finished and pushed before launch.</p>
+
+<h2>Must fix before any real clinic uses it</h2>
+
+<div class="item must">
+<h3><span class="tag t-sec">Security</span>1. Verify Meta's webhook signature</h3>
+<p><code>POST /api/integrations/whatsapp/webhook</code> accepts any body from anyone (<code>Controllers/WhatsAppWebhookController.cs:84</code>, and the class comment says so). Someone who knows or guesses a clinic's <code>phone_number_id</code> can forge "customer" messages. That creates fake leads, opens the 24-hour window, and makes the AI send real WhatsApp messages from the clinic's number to any phone number they choose. Fix: read the raw body and check <code>X-Hub-Signature-256</code> (HMAC-SHA256 with <code>Meta:AppSecret</code>) before processing. Roughly 20 lines.</p>
+</div>
+
+<div class="item must">
+<h3><span class="tag t-sec">Security</span>2. Rotate the leaked secrets</h3>
+<p><code>N8n:IngestApiKey</code> and <code>Meta:WebhookVerifyToken</code> are in git history (commit <code>2aec468</code>), and the handoff notes that the Supabase DB password was shown in chat. The ingest key matters most. It is a master key: every <code>/api/ai/*</code> endpoint trusts whatever <code>clinicId</code> the caller passes, so holding the key gives read and write access to every clinic's leads, bookings and conversations. Rotate all three and update Render, n8n and Meta.</p>
+</div>
+
+<div class="item must">
+<h3><span class="tag t-ops">Database</span>3. Give production its own database</h3>
+<p>Local development, live feature testing (test clinics registered and deleted with scratch tools) and the Render app all use the same Supabase database. Before real patient data goes in, create a separate production project, apply <code>Database/schema.sql</code> to it, point Render at it, and keep the current one for dev. Also confirm the Supabase plan includes daily backups, and ideally point-in-time recovery for medical-adjacent data.</p>
+</div>
+
+<div class="item must">
+<h3><span class="tag t-sec">Database</span>4. Lock down Supabase's public Data API</h3>
+<p><code>schema.sql</code> creates 35 tables in <code>public</code> and has no <code>enable row level security</code> statements at all. On Supabase, the auto-generated REST API exposes <code>public</code> tables to the anon key, which is designed to be non-secret. SculptFlow doesn't use that API, so the simplest fix is to turn the Data API off in the Supabase project settings. The other option is to enable RLS with no policies on every table. Before choosing that, confirm the app's connection role bypasses RLS (the <code>postgres</code> role does).</p>
+</div>
+
+<div class="item must">
+<h3><span class="tag t-sec">Security</span>5. Close the open doors: signup, lead intake, test endpoints</h3>
+<ul>
+<li><strong>Registration is open to anyone</strong>, with no email verification, CAPTCHA or rate limit. For a pilot, switch it off in Production and create the pilot clinics yourself.</li>
+<li><strong><code>POST /api/leads</code> is <code>[AllowAnonymous]</code></strong> with no ingest key and takes <code>ClinicId</code> from the body (<code>Controllers/LeadsController.cs:30</code>). Anyone can insert leads into any clinic. Nothing inbound uses it any more, so add <code>[RequireIngestKey]</code> or remove it.</li>
+<li><strong><code>/api/ai/test/*</code></strong> (<code>AiTestController</code>) is live in Production. It's inert, but it's easy to gate on <code>IsDevelopment()</code>.</li>
+</ul>
+</div>
+
+<div class="item must">
+<h3><span class="tag t-ops">Hosting</span>6. Behave correctly behind Render's proxy</h3>
+<p>There is no <code>UseForwardedHeaders</code> and no persisted DataProtection key store (<code>Program.cs</code>). Behind Render's TLS proxy the app thinks every request is plain HTTP. As a result, the login cookie isn't marked <code>Secure</code>, HSTS is never sent, and the app logs "Failed to determine the https port". Because the keys live inside the container, every deploy signs every user out and invalidates any calendar OAuth consent in progress. Fix: add <code>ForwardedHeaders</code> (proto and for) before the other middleware, and persist the keys to the database (<code>PersistKeysToDbContext</code>). About 10 lines.</p>
+</div>
+
+<div class="item must">
+<h3><span class="tag t-prod">Campaigns</span>7. Campaigns need opt-out, and "Schedule" doesn't work</h3>
+<ul>
+<li><strong>Nobody can opt out.</strong> Every lead created from an inbound WhatsApp or Telegram message defaults to <code>MarketingOptIn = true</code> (<code>Services/LeadService.cs:260, 293</code>). Nothing in the codebase ever sets <code>OptedOutAt</code>. There is no "STOP" handling and no staff control for it. So a reactivation campaign reaches everyone who ever messaged the clinic, with no way out. That breaks WhatsApp Business policy and can get the clinic's number quality-rated down or restricted. Minimum fix: honour "STOP" and unsubscribe replies, and give staff an opt-out toggle on the lead page.</li>
+<li><strong>Scheduled campaigns never send.</strong> The Create page offers "Schedule" (<code>Pages/Campaigns/Create.cshtml:286</code>), which sets the status to Scheduled. But no background worker picks those campaigns up, so they wait forever. Either add a small hosted service or hide the option for launch.</li>
+</ul>
+<p class="meta">If campaigns aren't part of the pilot, hiding the Campaigns menu is an acceptable alternative to fixing both of these now.</p>
+</div>
+
+<div class="item must">
+<h3><span class="tag t-ops">n8n</span>8. Finish and verify the patient-AI workflow end to end</h3>
+<p>The app side of the new booking tools is done (<code>schedule_consultation</code>, <code>cancel_consultation</code>, <code>get_my_appointments</code>, <code>get_available_slots</code> with <code>leadId</code>). According to the handoff, the n8n workflow still hasn't been moved over to them. The workflows aren't in the repo, so I couldn't review them directly. Before launch, move the workflow to the new tools, then run a full scripted conversation on a test number: ask a question, book, reschedule, cancel, hand off to staff, and get a 409 after takeover. Also turn on Header Auth for the trigger webhook. It currently needs Authentication = None, so the URL is the only thing stopping anyone from triggering AI turns. The app would need to send that header in <code>AiTriggerNotifier</code>.</p>
+</div>
+
+<div class="item must">
+<h3><span class="tag t-ops">Meta</span>9. Confirm the Meta app can onboard other businesses</h3>
+<p>I can't check this from code. For clinics to connect their own numbers through Embedded Signup, the Meta app has to be Live, business-verified, and have advanced access to <code>whatsapp_business_management</code> and <code>whatsapp_business_messaging</code> (Tech Provider). It also needs a privacy policy URL and a data-deletion URL. The app has neither page today.</p>
+</div>
+
+<h2>Should fix soon (pilot can start without them)</h2>
+
+<div class="item should"><h3><span class="tag t-sec">Security</span>Encrypt stored tokens</h3><p>WhatsApp access tokens, Telegram bot tokens and Google/Outlook refresh tokens are stored in plain text (<code>channel_integrations.access_token</code>, <code>calendar_integrations.refresh_token</code>). Once DataProtection keys are persisted (item 6), wrap these columns with a protector.</p></div>
+
+<div class="item should"><h3><span class="tag t-sec">Security</span>Tighten the ingest-key trust model</h3><p>Compare the key in constant time (<code>RequireIngestKeyAttribute.cs</code> and <code>ConversationsController.SendMessage</code> both use <code>!=</code>). Longer term, derive <code>clinicId</code> from the conversation instead of trusting the query parameter.</p></div>
+
+<div class="item should"><h3><span class="tag t-prod">Accounts</span>Password reset and staff invites</h3><p>There's no "forgot password" page and no email sender, and lockout is on (<code>lockoutOnFailure: true</code>). Staff can't be invited, so each clinic has exactly one login. That's workable in a pilot, where you can reset passwords by hand and clinics share a login, but it's the first thing real clinics will ask for.</p></div>
+
+<div class="item should"><h3><span class="tag t-ops">Ops</span>Monitoring, health check and hosting plan</h3><p>There's no health endpoint, error tracking or uptime alert. n8n failures are logged and swallowed, so a broken AI flow goes unnoticed until a clinic complains. Add <code>MapHealthChecks</code>, an uptime ping and an error tracker. Also make sure the Render plan doesn't sleep when idle, because Meta webhooks and the scrape and benchmark workers need the app awake.</p></div>
+
+<div class="item should"><h3><span class="tag t-ops">Backend</span>Don't wait on n8n inside Meta's webhook</h3><p><code>AiTriggerNotifier</code> runs inline in the webhook request with the default 100-second HttpClient timeout. If n8n is slow, Meta times out and retries. Ingestion is idempotent, so retries are safe, but set a short timeout (5s) or hand the trigger to a background queue.</p></div>
+
+<div class="item should"><h3><span class="tag t-prod">Product</span>Hide or finish half-built surfaces</h3><ul>
+<li>The Calendar Integrations page connects accounts, but appointment sync does nothing until the n8n sync workflow is built and <code>N8n__CalendarSyncWebhookUrl</code> is set. Label it "coming soon" or hide it.</li>
+<li>"Generate Test Cases" in the Benchmark stays disabled until its n8n workflow exists. That's fine as an internal tool, but consider hiding it from clinics.</li>
+<li>The manual WhatsApp connection form doesn't register the phone number.</li>
+<li>Remove the deprecated <code>/api/ai/appointments/book|reschedule</code> once n8n has moved to the new tools.</li>
+<li>A campaign send flips the conversation to human mode, so the AI stops answering people who reply to a reactivation campaign. Decide whether that's intended.</li>
+</ul></div>
+
+<div class="item should"><h3><span class="tag t-ops">Quality</span>Tests and CI</h3><p>There's no test project, and <code>.github/workflows</code> is empty. Every feature was verified by hand against the shared database. Two cheap wins: a build-on-push workflow, and a handful of integration tests for tenant isolation and the AI booking codes.</p></div>
+
+<div class="item should"><h3><span class="tag t-ops">Repo hygiene</span>Keep local keys out of commits</h3><p><code>Properties/launchSettings.json</code> is tracked in git and currently modified locally with real keys. The committed copy is clean. Move those values to user-secrets, or mark the file <code>git update-index --skip-worktree</code>, so a routine <code>git add -A</code> can't leak them. Also export the n8n workflows into the repo so they're versioned and reviewable.</p></div>
+
+<div class="item should"><h3><span class="tag t-prod">Compliance</span>Patient data basics</h3><p>Plastic-surgery conversations are health data. Before going beyond a pilot you'll need a privacy policy, terms, a data processing agreement with clinics, a retention and deletion path for a patient's data, and a clear note that AI replies go through OpenAI (embeddings) and whichever LLM n8n uses.</p></div>
+
+<h2>What's already solid</h2>
+<div class="item good"><ul>
+<li>The committed code builds cleanly: 0 errors, 0 warnings, from a fresh export of HEAD.</li>
+<li>Tenant isolation: dashboard pages and APIs resolve the clinic from the logged-in user, never from the browser. The SignalR hub groups are resolved server-side.</li>
+<li>The website crawler has a real SSRF guard: it validates connect-time IPs, re-checks every redirect hop, and doesn't use a proxy.</li>
+<li>The frontend escapes server data before inserting HTML (<code>escapeHtml</code> in Inbox, <code>textContent</code> in the calendar and benchmark).</li>
+<li>Telegram webhooks check a per-connection secret in constant time. Calendar OAuth uses a signed, time-limited, clinic-bound <code>state</code>.</li>
+<li>Message ingestion is idempotent, the 24-hour WhatsApp window is enforced server-side, and the AI send re-checks the mode before sending.</li>
+<li>Schema: all timestamps are <code>timestamptz</code>, there are 98 indexes covering the clinic-scoped queries, and closed sets have CHECK constraints.</li>
+</ul></div>
+
+<h2>Suggested order</h2>
+<div class="wrap"><table>
+<tr><th>Step</th><th>Items</th><th>Size</th></tr>
+<tr><td>1. Quick code fixes (one PR)</td><td>Webhook signature (1), forwarded headers and DataProtection keys (6), close signup, lead intake and test endpoints (5), constant-time key compare</td><td>Small</td></tr>
+<tr><td>2. Infrastructure</td><td>Rotate secrets (2), separate production DB and backups (3), turn off the Supabase Data API (4), confirm the Render plan</td><td>Owner tasks, under a day</td></tr>
+<tr><td>3. Campaigns decision</td><td>Opt-out and STOP handling, plus a scheduler or hiding Schedule (7). Or hide Campaigns for the pilot.</td><td>Small to medium</td></tr>
+<tr><td>4. AI end to end</td><td>Move n8n to the new tools, add trigger auth, scripted conversation test (8); finish the UTC rework</td><td>Medium</td></tr>
+<tr><td>5. Meta and legal</td><td>App Live and Tech Provider access, privacy policy and data-deletion pages (9)</td><td>External lead time</td></tr>
+</table></div>
+<p class="meta" style="margin-top:16px">Limits of this review: the n8n workflows and Render and Supabase dashboards weren't available, so those points are drawn from the app code and <code>PROJECT_HANDOFF.md</code>. No load testing or live end-to-end run was done.</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,304 @@
+{
+  "name": "Sculptflow Retreival Benchmark",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body }}",
+        "options": {
+          "systemMessage": "=You are a benchmark question generator for SculptFlow's Knowledge Base retrieval system.\n\nYour ONLY job is to generate realistic patient questions from the supplied Knowledge Base chunks.\n\nYou are NOT answering patients.\nYou are NOT evaluating retrieval.\nYou are NOT searching the Knowledge Base.\nYou are NOT providing medical advice.\n\nThe generated questions will later be used by SculptFlow to test whether its semantic/vector search can retrieve the ORIGINAL source chunk.\nYou write questions real patients would type to a plastic surgery clinic.\n- Write the question in the SAME language as the passage (Arabic passage → Arabic question).\n- Use everyday patient wording, NOT the passage's wording.\n- Do not copy phrases or numbers from the passage.\n- question under 25 words.\n\n==================================================\nINPUT\n==================================================\n\nYou will receive JSON containing:\n\n- generationId\n- clinicId\n- chunks\n\nEach chunk contains:\n\n- documentId\n- chunkId\n- content\n\nExample:\n\n{\n  \"generationId\": \"uuid\",\n  \"clinicId\": \"clinic-uuid\",\n  \"chunks\": [\n    {\n      \"documentId\": \"doc-1\",\n      \"chunkId\": \"chunk-1\",\n      \"content\": \"Many rhinoplasty patients plan approximately 7-14 days away from public-facing work or school.\"\n    }\n  ]\n}\n\n==================================================\nMAIN TASK\n==================================================\n\nFor each usable chunk, generate ONE realistic question that a real clinic patient or prospective patient could naturally ask.\n\nThe question must be answerable from that specific chunk.\n\nPreserve the exact:\n\n- documentId\n- chunkId\n\nfrom the source chunk.\n\nNever invent, modify, shorten, regenerate, or swap IDs.\n\n==================================================\nVERY IMPORTANT: TEST SEMANTIC RETRIEVAL\n==================================================\n\nDo NOT simply turn the source sentence into a nearly identical question.\n\nWe want to test semantic/vector retrieval, not simple keyword matching.\n\nBAD:\n\nSource:\n\"Many rhinoplasty patients plan 7-14 days away from public-facing work.\"\n\nQuestion:\n\"How many days away from public-facing work after rhinoplasty?\"\n\nThis copies too much source language.\n\nBETTER:\n\n\"How much time should I take off work after a nose job?\"\n\nThis expresses the same intent naturally using different wording.\n\n==================================================\nQUESTION STYLE\n==================================================\n\nQuestions should sound like real patient messages.\n\nUse natural variation such as:\n\n- conversational wording\n- paraphrases\n- synonyms\n- shorter questions\n- casual wording\n- realistic patient terminology\n\nExamples:\n\nInstead of:\n\"What is the postoperative recovery period for rhinoplasty?\"\n\nPrefer:\n\"How long would I need off work after a nose job?\"\n\nInstead of:\n\"What financing arrangements does the clinic provide?\"\n\nPrefer:\n\"Can I pay in installments?\"\n\nInstead of:\n\"What are the clinic's Saturday operating hours?\"\n\nPrefer:\n\"Are you open on Saturdays?\"\n\n==================================================\nGROUNDING\n==================================================\n\nThe generated question MUST be answerable from the supplied chunk.\n\nDo not use outside knowledge.\n\nDo not use your own medical knowledge to add facts that are absent from the chunk.\n\nDo not generate a question where the answer requires:\n\n- another chunk\n- another document\n- assumptions\n- general medical knowledge\n- information not present in the supplied content\n\nThe source chunk is the only source of truth.\n\n==================================================\nSPECIFICITY\n==================================================\n\nPrefer questions that test retrieval of an actual fact or concept.\n\nGood source facts include:\n\n- price\n- recovery period\n- consultation duration\n- policy\n- opening hours\n- location\n- procedure information\n- preparation instructions\n- payment/financing\n- restrictions\n- appointment information\n- clinic-specific codes\n- FAQ information\n\nAvoid vague questions such as:\n\n\"Can you tell me more?\"\n\n\"What information do you have?\"\n\n\"What does this mean?\"\n\nThe question should contain enough semantic meaning for retrieval to be meaningfully tested.\n\n==================================================\nDO NOT MAKE QUESTIONS ARTIFICIALLY EASY\n==================================================\n\nAvoid copying distinctive phrases word-for-word when a natural synonym or paraphrase exists.\n\nFor example:\n\nSource:\n\"Breast augmentation uses implants or selected fat transfer techniques.\"\n\nAvoid:\n\"Does breast augmentation use implants or fat transfer?\"\n\nPrefer:\n\"What options do you use to add breast volume?\"\n\nHowever, important procedure names may remain when patients would naturally use them.\n\nDo not intentionally remove every important keyword just to make the benchmark difficult.\n\nQuestions should be realistic, not adversarial nonsense.\n\n==================================================\nONE QUESTION PER CHUNK\n==================================================\n\nFor this version, generate at most ONE benchmark question for each supplied chunk.\n\nIf 20 usable chunks are supplied, normally return approximately 20 questions.\n\nDo not generate multiple near-duplicate questions for the same chunk.\n\n==================================================\nUNUSABLE CHUNKS\n==================================================\n\nSome chunks may not contain enough meaningful information to create a fair benchmark question.\n\nExamples:\n\n- navigation text\n- copyright/footer content\n- isolated headings\n- meaningless fragments\n- corrupted extraction\n- boilerplate\n- text requiring another chunk to understand\n\nDo NOT invent a question for an unusable chunk.\n\nInstead add it to the skipped array with its IDs and a short reason.\n\n==================================================\nNO ANSWERS\n==================================================\n\nDo NOT generate patient answers.\n\nThis benchmark evaluates RETRIEVAL ONLY.\n\nWe only need:\n\nquestion\n+\nknown expected documentId\n+\nknown expected chunkId\n\nThe original chunk itself is the ground truth source.\n\n==================================================\nID SAFETY\n==================================================\n\nFor every generated question:\n\ndocumentId must exactly match the source documentId.\n\nchunkId must exactly match the source chunkId.\n\nNever:\n\n- create IDs\n- infer IDs\n- change IDs\n- associate a question with another chunk\n\n==================================================\nOUTPUT FORMAT\n==================================================\n\nReturn ONLY valid JSON.\n\nNo markdown.\n\nNo ```json blocks.\n\nNo explanation before or after the JSON.\n\nNo commentary.\n\nUse exactly this structure:\n\nYou receive:\n\n{\n  \"generationId\": \"...\",\n  \"clinicId\": \"...\",\n  \"chunks\": [\n    {\n      \"documentId\": \"...\",\n      \"chunkId\": \"...\",\n      \"documentTitle\": \"...\",\n      \"content\": \"...\"\n    }\n  ]\n}\n\nFor each usable chunk, generate exactly ONE realistic patient question that can be answered from that chunk.\n\nReturn ONLY valid JSON using exactly this structure:\n\n{\n  \"generationId\": \"COPY EXACTLY FROM INPUT\",\n  \"questions\": [\n    {\n      \"documentId\": \"COPY EXACTLY FROM THE SOURCE CHUNK\",\n      \"chunkId\": \"COPY EXACTLY FROM THE SOURCE CHUNK\",\n      \"question\": \"Generated realistic patient question\"\n    }\n  ]\n}\n\nRules:\n\n- Never create or modify generationId.\n- Never create or modify documentId.\n- Never create or modify chunkId.\n- Each question must remain associated with the chunk it was generated from.\n- Do not return answers.\n- Do not return markdown.\n- Do not wrap the JSON in ```json.\n- Return only the JSON object.\n\nIf no valid questions can be generated:\n\n\"questions\": []\n\n==================================================\nFINAL CHECK BEFORE RETURNING\n==================================================\n\nFor each question verify internally:\n\n1. Can this question be answered using this exact chunk?\n2. Did I preserve the correct documentId?\n3. Did I preserve the correct chunkId?\n4. Does it sound like something a real patient might ask?\n5. Is it meaningfully paraphrased rather than copied?\n6. Did I avoid adding outside knowledge?\n7. Am I testing retrieval rather than generating an answer?\n\nReturn only the final JSON."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        192,
+        160
+      ],
+      "id": "ad860180-596e-49d6-b2b6-de27d77fe635",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        144,
+        480
+      ],
+      "id": "5b960613-715d-48ed-ac29-13341072ed5b",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "httpMethod": [
+          "POST"
+        ],
+        "path": "01cfeaf2-2261-48d8-afe8-a8a26b4ed592",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -576,
+        160
+      ],
+      "id": "129c3794-c935-42f2-ab22-6651619e88bb",
+      "name": "Receive Chunks",
+      "webhookId": "01cfeaf2-2261-48d8-afe8-a8a26b4ed592"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sculptflowapp.onrender.com/api/knowledge/benchmark/generations/{{ $('Receive Chunks').item.json.body.generationId }}/questions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.parse($json.output) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        912,
+        160
+      ],
+      "id": "0ddd8f20-d548-4897-98db-4abb6e59e12f",
+      "name": "Generated Questions",
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "i9XoPdqhvMa84cBf",
+          "name": "Multiple Headers Auth account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Receive Chunks": [
+      {
+        "json": {
+          "headers": {
+            "host": "fadelle.app.n8n.cloud",
+            "content-length": "45603",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "74.220.48.171",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "US",
+            "cf-ray": "a3ece5f61fe95d68-PDX",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json; charset=utf-8",
+            "traceparent": "00-e72c3db58fbd485deba00b20eaf91d7f-5f62fd11dabb3798-00",
+            "x-forwarded-for": "74.220.48.171, 104.23.160.30",
+            "x-forwarded-host": "fadelle.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-87-5f7c799d56-xwlpl",
+            "x-is-trusted": "yes",
+            "x-real-ip": "74.220.48.171"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "generationId": "74b3710a-50e5-43a7-a5a8-5daeda5c9d3a",
+            "clinicId": "58ffd8fd-94f9-4087-b462-f9bff70a3919",
+            "chunks": [
+              {
+                "documentId": "3bc8ad5d-32c5-4093-8636-0f5e9d998a1c",
+                "chunkId": "f8d82dec-04d5-495d-b1a3-407912423230",
+                "documentTitle": "6 Reasons a Light and Bright Complexion Is Absolutely Essential. - Hair Transplant Lebanon",
+                "content": "through the Light and Bright platform provides a powerful foundation for all subsequent scar interventions.\n\nThe Regenerative Power of Dermal Fillers\nFor deeper atrophic scars, particularly rolling and boxcar scars where structural volume loss is pronounced, treating the depression solely with surface techniques is often insufficient. This highlights the clinical necessity of a sequential, multi-modality approach. Dermal fillers are strategically injected beneath the skin to physically elevate these depressed acne scars ."
+              },
+              {
+                "documentId": "e85d75df-931f-43e1-8244-b2f3a06e80fe",
+                "chunkId": "f12b836f-9c80-4997-9c35-f6d7dceab35f",
+                "documentTitle": "Hyaluronic Acid Fillers: Incredible Ways to Stunning Skin. - Hair Transplant Lebanon",
+                "content": "provides an anchor that gently pulls up the skin and soft tissue lower down, effectively softening Nasolabial Folds and improving the entire profile.\nThis primary step in Cheek Volume Restoration is crucial for creating genuine Youthful Contours . Without adequate Cheek Volume Restoration , attempting to merely Plump Wrinkles around the mouth with Dermal Fillers will often lead to an unnatural, puffy look. Dr. Ibrahim Jebai utilizes the deepest placement of the Injectable Gel to mimic the bone structure, ensuring stability and long-lasting support a key technique learned in any reputable Aesthetic Clinic Beirut .\n\nSecret 2: Erasing Shadows Precision Tear Trough Correction\n\nThe under-eye area is arguably the most challenging region in Non-Surgical Rejuvenation , requiring extreme precision and a thorough understanding of vascular anatomy. The hollow crescent beneath the eye known as the tear trough casts deep shadows that create a perpetually tired look, demanding expert Tear Trough Correction .\n\nMastering Tear Trough Correction with HA Fillers"
+              },
+              {
+                "documentId": "0e63aa36-7b9c-431c-b937-0cec246c984d",
+                "chunkId": "46099503-8803-4961-b23c-409acf25d4ef",
+                "documentTitle": "5 Transformative Fraxel Laser for Stretch Marks Results - Hair Transplant Lebanon",
+                "content": "a path that has been proven to work for thousands.\n\nChapter 12: Frequently Asked Questions\n\nIs the Fraxel Laser for Stretch Marks safe for dark skin?\nYes, but it requires an expert. Because it is a Fractional Laser Treatment , it is much safer for darker skin tones than older lasers, but the settings must be precisely calibrated by a specialist like Dr. Ibrahim Jebai to prevent any unwanted pigment changes.\n\nHow painful is the Minimally Invasive Procedure?\n\nWith the topical numbing cream and integrated cooling systems of the FDA-Approved Laser , the discomfort is very manageable. Most patients rate it as a 3 out of 10 on the pain scale.\n\nHow soon will I see Striae Reduction?\n\nYou may see an initial Skin Texture Improvement within a few weeks, but the significant Reduce Visible Stretch Marks result becomes clear as the new collagen matures over several months.\n\nFinal Conclusion: The Gold Standard in Beirut"
+              },
+              {
+                "documentId": "14e95ed5-3c68-4c67-8874-7fd3d49d9a8c",
+                "chunkId": "a637b25d-7cab-4dea-b226-d9dc906fe1fa",
+                "documentTitle": "5 Ultimate Benefits of Dermal Fillers for a Youthful, Sculpted Look - Hair Transplant Lebanon",
+                "content": "and FDA-approved materials\n\nNatural-looking enhancements\n\nCommon Treatment Areas for Dermal Fillers\n\n1. Nasolabial Folds and Marionette Lines\nThese deep lines around the mouth and chin can make you appear older or fatigued. Dermal fillers plump wrinkles in these areas, creating a smoother transition between facial zones.\n\n2. Lips\n\nLip filler treatments are among the most popular uses of dermal fillers. Whether you want subtle definition or dramatic volume, our approach to enhancing lips is always personalized and elegant.\n\n3. Cheeks and Midface\n\nLoss of volume in the cheeks can create a hollow look. By using dermal fillers in this region, we can restore youthful contours and lift the midface naturally.\n\n4. Jawline and Chin\n\nAn undefined jawline or receding chin can impact facial harmony. Dermal fillers reshape contours , creating a more sculpted and balanced profile.\n\n5. Under-Eye Hollows\n\nDark circles or sunken under-eyes are often caused by volume loss. Tear trough fillers can rejuvenate this delicate area for a fresher, brighter look.\n\n6. Forehead and Glabella"
+              },
+              {
+                "documentId": "5e9d96f4-dbfe-48a1-b649-8dae7f63522e",
+                "chunkId": "5cd67150-1daa-4cf8-ae4e-ce2f688aac6d",
+                "documentTitle": "Laser Scar Removal: Incredible Secrets for a Clear Skin. - Hair Transplant Lebanon",
+                "content": "Need for Specialized Correction\n\nDifferent injuries lead to different types of scarring, each requiring a unique approach to Minimize Scar Appearance :\n- Surgical Scars: These are often linear and precise but can become widened or thickened if there is tension on the wound during healing.\n- Traumatic Scars: Resulting from accidents, cuts, or burns, these are often irregular in shape and may involve significant skin contraction.\n- Acne Scars: These usually manifest as “pitted” or depressed marks (atrophic scars) where the underlying skin support has been lost.\n- Hypertrophic Scars: These are raised, red scars that remain within the boundary of the original wound.\n- Keloid Treatment Needs: Keloids are aggressive scars that grow beyond the original wound site. They require specialized Keloid Treatment protocols, often involving Steroid Injections combined with laser therapy."
+              },
+              {
+                "documentId": "5de9486c-4570-4552-947a-a11d3b57b786",
+                "chunkId": "8e7fc6c5-0803-493b-abff-10bccc330d27",
+                "documentTitle": "Onychomycosis Archives - Hair Transplant Lebanon",
+                "content": "Onychomycosis, Nail restoration فطريات الأظافر\n\n351 Views 0 Comments November 28, 2025\n\nNail Restoration: The Definitive Way to Conquer Fungal Infections.\n\nNail restoration: Discover 5 Amazing Laser Benefits For millions globally, Onychomycosis, the stubborn and persistent fungal infection of the fingernails and toenails, represents a challenge that extends far beyond a simple\n\nRead More\n\nعلاج فطريات الأظافر\n\n403 Views 0 Comments July 18, 2025\n\nStop Onychomycosis: Your 4-Step Action Plan for Healthy Nails\n\nUnveiling Healthy Nails: A Comprehensive Guide to Onychomycosis Treatment and Nail Restoration with Dr. Ibrahim Jebai Healthy, clear nails are often seen as a sign of good health and personal care.\n\nRead More"
+              },
+              {
+                "documentId": "971c9ed1-2ee5-4b4a-9526-98abf681c9c4",
+                "chunkId": "3ca19c58-2551-41af-83bb-3bac2a6a7ba7",
+                "documentTitle": "أروع نتائج لحقن البوتوكس في لبنان مع الدكتور ابراهيم جباعي",
+                "content": "أو الوقاية من التجاعيد أو تعزيز الثقة بالنفس والحصول على مظهر أكثر شباباً وإشراقاً.\n\nلماذا تختار الدكتور إبراهيم جباعي لإجراء حقن البوتوكس في لبنان؟\nيعتمد نجاح نتائج حقن البوتوكس في لبنان بشكل كبير على خبرة الطبيب الذي يقوم بالإجراء ودقته في فهم تشريح الوجه وتناسق ملامحه. وفي سوق يضم العديد من مقدمي خدمات التجميل، يتميز الدكتور إبراهيم جباعي بقدرته على الجمع بين الخبرة الطبية العميقة والرؤية الفنية التي تضمن نتائج طبيعية ومتوازنة.\n\nخبرة متقدمة في طب التجميل في لبنان\n\nبفضل سنوات طويلة من الخبرة في جراحات الوجه المعقدة وعمليات زراعة الشعر، يمتلك الدكتور إبراهيم جباعي فهماً ثلاثي الأبعاد لطبقات الوجه وتشريحه، وهو مستوى من المعرفة لا يتوفر لدى العديد من ممارسي الحقن التجميلي.\n\nوتُعد هذه الخبرة المتخصصة عاملاً أساسياً في قدرته على تنفيذ إجراءات دقيقة مثل رفع الحواجب بالبوتوكس أو نحت الفك غير الجراحي بأعلى درجات الدقة والأمان. كما تساعده على تحقيق نتائج طبيعية تحافظ على ملامح الوجه وتبرز جمالها دون مبالغة.\n\nالتزام كامل بأعلى معايير الأمان\n\nالأمان بالنسبة للدكتور إبراهيم جباعي ليس مجرد خطوة ضمن العلاج، بل هو نهج متكامل يُطبق في جميع مراحل العلاج."
+              },
+              {
+                "documentId": "16719983-8ed4-429f-993e-19c0e8769b30",
+                "chunkId": "bf5fd24b-4a6e-49bb-bc53-500319cd8172",
+                "documentTitle": "3 Powerful Scar Revision Techniques to Improve their Looks - Hair Transplant Lebanon",
+                "content": "injuries, burns, or skin conditions like acne. Over time, scars may fade but often remain visible, sometimes causing discomfort or emotional distress.\nAt our clinic, Scar Revision isn’t about removing scars entirely — which is rarely possible — but about significantly improving their texture, color, and size to blend more naturally with your surrounding skin. This can dramatically boost self-esteem and make the skin look healthier and more uniform.\n\nWhy Choose Scar Revision with Dr. Ibrahim Jebai?\n\nDr. Ibrahim Jebai brings years of experience and skill in performing scar correction procedures. His meticulous attention to detail ensures every patient receives a tailored treatment plan, focusing on the specific type, location, and severity of the scar.\n\nWhat sets our Scar Revision treatments apart is the combination of innovative methods like laser treatment , chemical peels , and targeted injections — carefully customized to maximize results while minimizing discomfort and downtime.\n\nCommon Types of Scars Treated\n\nWe provide effective Scar Revision options for a variety of scar types, including:"
+              },
+              {
+                "documentId": "076f7c18-5eb2-4a63-b9f8-d6e3ddc2aa33",
+                "chunkId": "89b25980-ba40-4cb9-9997-491ba1645e02",
+                "documentTitle": "laser treatment Archives - Hair Transplant Lebanon",
+                "content": "Fraxel Laser for Stretch Marks ليزر فراكسل لعلاج علامات التمدد\n\n1009 Views 0 Comments March 25, 2026\n\n5 Transformative Fraxel Laser for Stretch Marks Results\n\nFraxel Laser for Stretch Marks: 5 Incredible Results. Stretch marks, medically known as striae, represent one of the most pervasive and psychologically taxing skin concerns for patients today. Whether they appear\n\nRead More\n\nBirthmark Removal إزالة الوحمات بالليزر\n\n540 Views 0 Comments March 6, 2026\n\nBirthmark Removal: Secrets of the Specialist Dr. Ibrahim Jebai\n\nBirthmark Removal: 3 Incredible Secrets to Clearer Skin. For many individuals, a birthmark is more than just a unique physical trait; it is a source of lifelong self-consciousness or even physical\n\nRead More\n\nLaser Scar Removal إزالة الندبات بالليزر\n\n551 Views 0 Comments February 11, 2026\n\nLaser Scar Removal: Incredible Secrets for a Clear Skin."
+              },
+              {
+                "documentId": "1e461642-9629-4000-9b17-d21c2b21b417",
+                "chunkId": "e503bdef-4d60-4df4-aef5-5fe66a57c77e",
+                "documentTitle": "Ultra Fine Hair Restoration | Dr. Ibrahim Jebai | Lebanon - Hair Transplant Lebanon",
+                "content": "e1719308089252\n\nStretch Marks\n\nFraxel laser is a treatment option for reducing the appearance of visible stretch marks.\n\nRead More\n\nHair Restoration\nScientific approach to the art of hair transplant\n\nMission : Blend medical expertise with cutting-edge techniques for optimal hair transplant results.\n\nGuidelines : Aim for a soft, natural hairline, good density, even hair distribution across the scalp, and minimal scarring.\n\nConsultation : Conduct a trichological assessment, evaluate the scalp for hair loss, conditions, and the anagen-telogen ratio. Calculate hair parameters including number, density, types, and diameter. Plan donor and recipient areas for optimal grafting.\n\nProcedure : Schedule early morning surgeries with meticulous patient preparation. Redraw the hairline and administer painless anesthesia. Harvest and prepare grafts while ensuring their integrity. Prepare the site and place grafts carefully.\n\nSurgical Variables : Use advanced anesthesia techniques, harvest intact grafts, handle grafts carefully considering pH, osmolarity, and temperature, and ensure precise site preparation and placement."
+              },
+              {
+                "documentId": "33509d82-f374-43f6-8459-968f80b98bfe",
+                "chunkId": "dfc6bfbb-17b6-4187-ab33-80150e79bd0a",
+                "documentTitle": "7 Incredible Ways Fraxel Treatment Revives Your Youthful Glow - Hair Transplant Lebanon",
+                "content": "assess your skin condition, review your medical history, and design a personalized Fraxel treatment plan tailored to your goals.\n\nDuring the Treatment\nThe Fraxel session typically lasts between 20 to 45 minutes, depending on the area being treated. A topical anesthetic is applied beforehand to minimize discomfort. You may feel a warm or prickling sensation, but the procedure is generally well tolerated.\n\nAftercare and Recovery\n\nPost-treatment, your skin may appear red, swollen, or slightly sensitive—similar to a mild sunburn. These effects usually subside within a few days. You’ll be given aftercare instructions including gentle skincare, sun protection, and hydration to aid recovery and optimize results.\n\nHow Many Fraxel Sessions Do You Need?\n\nWhile some patients see visible improvement after just one Fraxel session, a series of 3–5 treatments spaced 4–6 weeks apart is often recommended for optimal and long-lasting results. Dr. Jebai will advise you on the best schedule based on your skin condition and treatment goals.\n\nIs Fraxel Safe?"
+              },
+              {
+                "documentId": "a6f35a14-3cbd-48e5-b109-85495512d23d",
+                "chunkId": "53249541-e0cb-4fff-9eb4-e788fb438065",
+                "documentTitle": "Lebanon Archives - Hair Transplant Lebanon",
+                "content": "2274 Views 0 Comments October 10, 2024\n\nLaser Hair Restoration by Dr. Ibrahim Jebai in Lebanon 2025\n\nHair loss can be a deeply personal and distressing experience, affecting both men and women of all ages. Whether caused by genetics, hormones, or lifestyle factors, the desire for a solution\n\nRead More"
+              },
+              {
+                "documentId": "310a8371-80b5-4840-aa83-45ea877bed59",
+                "chunkId": "f5cd884b-0c93-46cd-84ee-7e6ca0bdeb3e",
+                "documentTitle": "فيلر الشفايف بيروت: 10 أسرار مضمونة لنتائج مذهلة في 2026 - Hair Transplant Lebanon",
+                "content": "فيلر الشفايف عادةً من 30 إلى 60 دقيقة، ويتضمن:\n\nالاستشارة النهائية: تقييم تشريح الوجه وتحديد نقاط الحقن.\n\nالتطهير: تنظيف المنطقة بمادة مضادة للبكتيريا.\nالتخدير: وضع كريم مخدر موضعي (يستغرق 15-30 دقيقة ليعمل).\n\nالحقن: يتم باستخدام إبر دقيقة جداً، مع تدليك خفيف لضمان التماثل.\n\n3.4 هل حقن الفيلر مؤلم؟\n\nرغم أن فكرة الإبر قد تكون مخيفة، إلا أن الإجراء ليس مؤلماً بشكل عام. استخدام كريم التخدير، بالإضافة إلى وجود مادة “الليدوكائين” (مخدر) داخل تركيبات الفيلر الحديثة مثل (Juvederm)، يجعل التجربة محتملة جداً. قد تشعرين بوخز بسيط أو ضغط لحظي فقط.\n\nالفصل الرابع: النتائج، الاستمرارية، والعناية\n\n4.1 الجدول الزمني للنتائج: يوماً بيوم\n\nاليوم الأول: توقع تورم واحمرار ملحوظ، وقد تبدو الشفايف “ممتلئة أكثر من اللازم”.\n\nاليوم 2-3: ذروة التورم؛ ننصح بشرب الماء والنوم مع رفع الرأس.\n\nاليوم 4-5: يبدأ التورم في التراجع وتصبح الشفايف أنعم.\n\nنهاية الأسبوع الأول: يختفي معظم التورم وتظهر النتيجة القريبة من النهائية.\n\nالأسبوع الثاني: يندمج الفيلر تماماً مع أنسجة الجسم وتظهر النتائج النهائية الرائعة.\n\n4.2 كم يدوم فيلر الشفايف؟\n\nفي المتوسط، يدوم فيلر الشفايف ما بين 6 إلى 18 شهراً . وتعتمد المدة على:"
+              },
+              {
+                "documentId": "ab7f5cfc-c33e-4fc0-8c64-f6b18615a765",
+                "chunkId": "78441128-3476-4d41-871a-217ba6161f5f",
+                "documentTitle": "Lip Fillers in Lebanon: Everything You Need to Know 2025 - Hair Transplant Lebanon",
+                "content": "On average:\n\n- Per session cost : $200 to $400\n- Premium clinics or renowned specialists may charge more, offering personalized consultations.\nLebanon offers affordable pricing without compromising quality, making it a popular destination for those seeking high-end cosmetic procedures.\n\n2. How Long Do Lip Fillers Last?\n\nLip fillers typically last between 6 to 12 months , depending on factors such as:\n\n- Metabolism rate : Faster metabolism means quicker filler absorption.\n- Lifestyle : Habits like smoking can shorten the lifespan of fillers.\n- Filler brand : High-quality brands tend to offer more durable results.\n\nYou can schedule maintenance sessions every 6–9 months to keep your lips plump and defined.\n\n3. Is the Procedure Painful?\n\nThe procedure involves minimal discomfort. In most clinics, including Dr. Ibrahim Jebai’s , numbing creams or local anesthesia are used to ensure the experience is painless. Most patients report only a slight pinching sensation during the injection.\n\nPost-procedure tip : Apply ice packs to reduce any swelling or redness.\n\n4. What Should I Expect After Getting Lip Fillers?"
+              },
+              {
+                "documentId": "3021ff22-d375-4df1-908f-e69f2cd9e32c",
+                "chunkId": "5c56c3b3-fc52-4a82-b37c-6ae2a19b5d9d",
+                "documentTitle": "Hair Restoration Archives - Hair Transplant Lebanon",
+                "content": "many\n\nRead More\n\nultra fine hair restoration\n\n667 Views 0 Comments December 4, 2024\n\nGuide to Ultra Fine Hair Restoration with Dr. Ibrahim Jebai 2025\nHair loss is a concern that affects millions worldwide, impacting confidence and self-esteem. If you’re searching for “hair restoration,” you’re in the right place. This guide explores the revolutionary ultra fine hair\n\nRead More"
+              },
+              {
+                "documentId": "47cbe808-d585-4687-bfa5-0af30b9df2c1",
+                "chunkId": "2fb409d0-bd7c-4bb0-813a-006a49173f04",
+                "documentTitle": "laser hair restoration Archives - Hair Transplant Lebanon",
+                "content": "525 Views 0 Comments October 28, 2024\n\nThe Ultimate Guide to Ultra Fine Hair Restoration 2025\n\nAre you struggling with hair loss and searching for effective solutions? Ultra Fine Hair Restoration might just be the answer you’ve been looking for. This innovative treatment offers a minimally invasive,\n\nRead More\n\n2274 Views 0 Comments October 10, 2024\n\nLaser Hair Restoration by Dr. Ibrahim Jebai in Lebanon 2025\n\nHair loss can be a deeply personal and distressing experience, affecting both men and women of all ages. Whether caused by genetics, hormones, or lifestyle factors, the desire for a solution\n\nRead More"
+              },
+              {
+                "documentId": "87fe4f73-445f-4a3a-b4bc-b33720c03ac7",
+                "chunkId": "db324221-d9b2-4ef2-b057-cee331e456f3",
+                "documentTitle": "حقن الفيلر في لبنان | تجديد الشباب مع د. إبراهيم جباعي - Hair Transplant Lebanon",
+                "content": "قد تجعلك تبدو أكبر سنًا أو أكثر إرهاقًا. تساعد حقن الفيلر على ملء التجاعيد في هذه المناطق، مما يمنح الوجه مظهرًا أكثر نعومة وانسجامًا.\n\n2. الشفاه\nتُعد حقن فيلر الشفاه من أكثر استخدامات حقن الفيلر شيوعًا. سواء كنت ترغب في تحديد بسيط أو حجم أكثر وضوحًا، فإن طريقتنا في تكبير الشفاه تعتمد دائمًا على نتائج طبيعية وأنيقة.\n\n3. الخدود ومنطقة منتصف الوجه\n\nفقدان الحجم في الخدين قد يؤدي إلى مظهر مجوف ومتعب. باستخدام حقن الفيلر في هذه المنطقة، يمكننا استعادة الامتلاء الطبيعي ورفع منتصف الوجه بشكل طبيعي.\n\n4. الفك والذقن\n\nقد يؤثر ضعف تحديد الفك أو تراجع الذقن على تناسق الوجه. تساعد حقن الفيلر على إعادة تشكيل الملامح ومنحك بروفايل أكثر تحديدًا وتوازنًا.\n\n5. تحت العين\n\nالهالات السوداء أو التجويف تحت العين غالبًا ما يكون ناتجًا عن فقدان الحجم. تساعد حقن Tear Trough Filler على تجديد هذه المنطقة الحساسة ومنحها مظهرًا أكثر إشراقًا وانتعاشًا.\n\n6. الجبهة وبين الحاجبين\n\nرغم أن البوتوكس يُستخدم غالبًا في هذه المنطقة، إلا أن حقن الفيلر تُستخدم أحيانًا من أجل تنعيم الخطوط عندما تكون التجاعيد العميقة أكثر وضوحًا.\n\nاستشارة حقن الفيلر المخصصة لك"
+              },
+              {
+                "documentId": "64b0777d-b3f8-4901-88ba-7d7f72ed7dd6",
+                "chunkId": "99cbf381-bfed-4ece-92a3-96274a551e8b",
+                "documentTitle": "Fraxel Laser Archives - Hair Transplant Lebanon",
+                "content": "Fraxel Laser for Stretch Marks ليزر فراكسل لعلاج علامات التمدد\n\n1009 Views 0 Comments March 25, 2026\n\n5 Transformative Fraxel Laser for Stretch Marks Results\n\nFraxel Laser for Stretch Marks: 5 Incredible Results. Stretch marks, medically known as striae, represent one of the most pervasive and psychologically taxing skin concerns for patients today. Whether they appear\n\nRead More\n\nFraxel Laser Treatment\n\n552 Views 0 Comments December 23, 2025\n\nFraxel Laser Treatment: 7 Amazing Benefits for Younger Skin.\n\nFraxel Laser Treatment: 7 Amazing Benefits for Younger Skin. In the rapidly advancing world of aesthetic medicine, the quest for a safe, non-invasive solution to erase years of sun damage pigmentation,\n\nRead More\n\nStretch Marks علاج علامات التمدد\n\n384 Views 0 Comments December 11, 2025\n\nFraxel Treatment for Stretch Marks: Amazing Results Guaranteed."
+              },
+              {
+                "documentId": "23cf5b99-1e1a-4fc8-81b2-64ca0c1234c2",
+                "chunkId": "c0730018-a1e8-458b-b8a9-0b9e505f96c7",
+                "documentTitle": "فطريات الأظافر: الحل النهائي | علاج فطريات الأظافر بالليزر Nd:YAG - Hair Transplant Lebanon",
+                "content": "الجلدية أو الخمائر. تبدأ عادةً كبقعة بيضاء أو صفراء تحت الظفر، ثم تتطور لتسبب:\n\n- تغيّر لون الظفر\n- زيادة سماكته\n- تكسّر وهشاشة\n- انفصال الظفر عن الجلد\nتُعد هذه الحالة صعبة العلاج، خاصة باستخدام الطرق التقليدية مثل الكريمات أو حتى دواء فطريات أظافر القدم الفموي، الذي قد يسبب آثارًا جانبية.\n\nلماذا يُعتبر الليزر أفضل علاج فطريات الأظافر؟\n\nتقنية Nd:YAG تمثل ثورة في مجال علاج فطريات الأظافر ، حيث تعمل على استهداف الفطريات من الجذور داخل الظفر دون التأثير على الأنسجة السليمة.\n\nمميزات العلاج بالليزر:\n\n- علاج غير جراحي وآمن\n- بدون آثار جانبية خطيرة\n- لا يؤثر على الكبد مثل الأدوية\n- جلسات سريعة بدون فترة نقاهة\n- مناسب لمعظم المرضى\n\nلهذا السبب، يُعتبر الليزر الخيار الأمثل لمن يبحث عن فطريات الأظافر الحل النهائي .\n\nكيف يعمل ليزر Nd:YAG لعلاج فطريات الأظافر؟\n\nيعتمد الليزر على تقنية متقدمة تقوم بإرسال طاقة حرارية تخترق الظفر وتصل إلى مصدر العدوى. هذه الطاقة تقوم بـ:\n\n- قتل الفطريات داخل الظفر\n- منع انتشار العدوى\n- تحفيز نمو أظافر صحية\n\nعلى عكس الكريمات أو دواء فطريات أظافر القدم ، فإن الليزر يعالج المشكلة من الجذور، مما يزيد من نسبة النجاح بشكل كبير.\n\nخطوات علاج فطريات الأظافر في العيادة\n\n1. الاستشارة الأولية"
+              },
+              {
+                "documentId": "94c44242-5da9-4c1c-a9f4-3405df0d70ef",
+                "chunkId": "3647e875-5dd7-4702-a2df-e68d6f07ff04",
+                "documentTitle": "أفضل طرق علاج تساقط الشعر المبكر للرجال والنساء في لبنان - Hair Transplant Lebanon",
+                "content": "ترقق واضح في منطقة التاج\n- زيادة الشعر المتساقط على الوسادة أو أثناء الاستحمام\n- ظهور فروة الرأس بشكل أوضح تحت الإضاءة\n\nعند النساء في الثلاثينات\n- اتساع فرق الشعر تدريجيًا\n- انخفاض كثافة ذيل الحصان\n- ترقق عام في كثافة الشعر\n- زيادة ملحوظة في التساقط بعد غسل الشعر\n\nإن التشخيص المبكر لـ ترقق الشعر في الثلاثينات يزيد بشكل كبير من فرص نجاح العلاج، إلا أن العديد من المرضى في لبنان يؤخرون طلب المساعدة حتى تتطور الحالة بشكل واضح، مما يجعل العلاج أكثر صعوبة وتكلفة.\n\nعلاج تساقط الشعر\n\nطرق غير جراحية لـ علاج تساقط الشعر\n\nبالنسبة للكثير من الأشخاص في لبنان، يمكن للطرق غير الجراحية أن تساعد على إبطاء أو حتى عكس ترقق الشعر عند البدء بها مبكرًا.\n\n1. العلاجات الموضعية المثبتة طبيًا\n\nمينوكسيديل (Rogaine)\n\n- متوفر في لبنان بدون وصفة طبية\n- فعال للرجال والنساء\n- يساعد على إطالة مرحلة نمو الشعر\n- تبدأ النتائج عادة بعد 3 إلى 6 أشهر\n- نسبة النجاح تصل إلى 60٪ في حالات التساقط المبكر المتوسطة\n\nالعلاجات الطبية المركزة\n\n- تركيبات مخصصة تحتوي على عوامل نمو\n- متوفرة من خلال أطباء مختصين في لبنان\n- غالبًا ما تُدمج مع علاجات أخرى لنتائج أقوى\n\n2. الأدوية الفموية لـعلاج تساقط الشعر\n\nفيناسترايد للرجال"
+              }
+            ]
+          },
+          "webhookUrl": "https://fadelle.app.n8n.cloud/webhook/01cfeaf2-2261-48d8-afe8-a8a26b4ed592",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Generated Questions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive Chunks": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a8f1c61c-dd70-4361-84b6-a849cdda24fb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0f7dfc3d2516110c54c68a2b4605a6b59e3b32b338249ba8b8946885e9abf683"
+  },
+  "nodeGroups": [],
+  "id": "yHBVrMMzKtwjkPMk",
+  "tags": []
+}

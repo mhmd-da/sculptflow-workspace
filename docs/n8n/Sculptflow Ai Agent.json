@@ -1,0 +1,1281 @@
+{
+  "name": "Sculptflow Ai Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('user_message').item.json.body.conversationId }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -592,
+        528
+      ],
+      "id": "325b503a-4168-4a4b-8f9f-b4a377b2dd01",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "toolDescription": "\tSearch the clinic's approved information: hours, address, parking, policies, pricing, financing, doctors, procedure details, preparation, recovery and FAQs. Use it before answering any factual question about the clinic. If it returns no results, say you don't know and offer a human handoff. Never invent clinic information.",
+        "method": "POST",
+        "url": "https://sculptflowapp.onrender.com/api/ai/knowledge/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"clinicId\": \"{{ $('user_message').item.json.body.clinicId }}\",\n  \"query\": \"{{ $fromAI(\n  'query',\n  'Create a short semantic search query for the clinic knowledge base based on the patient question. Include the main procedure, topic, pricing, recovery, policy, location, hours, or other relevant terms. Do not include clinicId or internal metadata.',\n  'string'\n) }}\",\n  \"limit\": 5\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        -80,
+        528
+      ],
+      "id": "cfe32c73-2d41-4e19-9603-eed045d064ac",
+      "name": "search_clinic_knowledge",
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "i9XoPdqhvMa84cBf",
+          "name": "Multiple Headers Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Get the real open appointment times for a consultation at this clinic. Call this whenever the patient asks about availability, for example \"do you have anything tomorrow?\", \"can I come Friday?\", \"what's open next week?\" or \"anything after 3?\". Never guess or invent times, and never calculate availability yourself; this tool is the only source of truth.\n\nInputs:\n- date (optional): the day to check, as YYYY-MM-DD in the clinic's local timezone. Work out relative words like \"tomorrow\" or \"Friday\" from today's date. Omit it to search the next 7 days.\n- days (optional): how many days to search from date, 1 to 14. Use a larger number for \"next week\" or \"sometime this week\".\n- procedureId (optional): pass it when the patient named a procedure, so the correct consultation length is used.\n\nResult:\n- configured=false means the clinic hasn't set up its schedule. Don't offer any times; tell the patient a team member will confirm a time, and hand off to staff if appropriate.\n- slots is the list of open times. Each slot has start and end with the clinic's timezone offset. Present them naturally in local time, for example \"2:00 PM, 3:00 PM or 4:15 PM\". Don't show the raw timestamp or the offset.\n- If slots is empty, say nothing is available in that range and offer to check another day. Don't invent alternatives.\n- If the patient wants a time window like \"afternoon\" or \"after 3\", filter the returned slots yourself. Don't offer times that weren't returned.\nThe result includes today, tomorrow and their weekday names in the clinic's timezone. Always use those to resolve words like \"tomorrow\", \"Friday\" or \"next week\"; never assume the current date yourself. To check one specific day, pass its date; if you omit date the result covers the next 7 days, so pick only the slots for the day the patient asked about.\n\nOnly offer times from this tool. Once the patient picks one, use book_consultation.",
+        "url": "=https://sculptflowapp.onrender.com/api/ai/appointments/available",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "date",
+              "value": "={{ $fromAI(   'date',   'Appointment date requested by the patient. Return exactly YYYY-MM-DD, for example 2026-09-24.',   'string' ) }}"
+            },
+            {
+              "name": "clinicId",
+              "value": "={{ $json.body.clinicId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        -224,
+        528
+      ],
+      "id": "27971d64-e71a-4e6d-a7bb-c40a1b1767a6",
+      "name": "get_available_slots",
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "i9XoPdqhvMa84cBf",
+          "name": "Multiple Headers Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Before offering appointment times, call get_my_appointments. If the patient already has an upcoming appointment, do not book another: tell them the date and time and offer to reschedule or cancel it. Only if they have none, continue with get_available_slots and book_consultation.",
+        "url": "https://sculptflowapp.onrender.com/api/ai/appointments/upcoming",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "leadId",
+              "value": "={{ $json.body.leadId }}"
+            },
+            {
+              "name": "clinicId",
+              "value": "={{ $json.body.clinicId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        -352,
+        528
+      ],
+      "id": "c49bcafc-3dc8-4182-9609-0a8b8e984194",
+      "name": "get_my_appointments",
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "i9XoPdqhvMa84cBf",
+          "name": "Multiple Headers Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sculptflowapp.onrender.com/api/conversations/{{ $('user_message').item.json.body.conversationId }}/messages/send?clinicId={{ $('user_message').item.json.body.clinicId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "clinicId",
+              "value": "={{ $('user_message').item.json.body.clinicId }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Ingest-Key",
+              "value": "4b8f2aeb5596444c28529f3e9ff23bdd46b29cabc6763d775a5c9d4d4d4a08ed"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"content\": $json.output,\n  \"sender\": \"ai\"\n} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1856,
+        -512
+      ],
+      "id": "df6dc978-c70c-4ae1-bce6-7131082982bd",
+      "name": "send_message",
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "i9XoPdqhvMa84cBf",
+          "name": "Multiple Headers Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sculptflowapp.onrender.com/api/ai/appointments/schedule",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "clinicId",
+              "value": "={{ $('user_message').item.json.body.clinicId }}"
+            },
+            {
+              "name": "leadId",
+              "value": "={{ $('user_message').item.json.body.leadId }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"scheduledStart\": \"{{ $('llm_result').item.json.scheduledStart }}\",\n  \"procedureId\": \"{{ $('llm_result').item.json.procedureId }}\",\n  \"notes\": \"\",\n  \"reason\": \"{{ $('llm_result').item.json.reason }}\",\n  \"confirmReplaceExisting\": \"{{ $('llm_result').item.json.confirmReplaceExisting }}\",\n  \"appointmentId\": \"{{ $('llm_result').item.json.appointmentId }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        560,
+        64
+      ],
+      "id": "5bcdcb6b-e405-4bac-9597-3880fd898c4e",
+      "name": "schedule_consultation",
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "i9XoPdqhvMa84cBf",
+          "name": "Multiple Headers Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sculptflowapp.onrender.com/api/ai/appointments/cancel",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "leadId",
+              "value": "={{ $('user_message').item.json.body.leadId }}"
+            },
+            {
+              "name": "clinicId",
+              "value": "={{ $('user_message').item.json.body.clinicId }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"reason\": \"{{ $('llm_result').item.json.reason }}\" }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        560,
+        240
+      ],
+      "id": "359b3c04-2f4a-497e-948d-a2fdc62575cd",
+      "name": "cancel_consultation",
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "i9XoPdqhvMa84cBf",
+          "name": "Multiple Headers Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sculptflowapp.onrender.com/api/ai/conversations/{{ $('user_message').item.json.body.conversationId }}/handoff?clinicId={{ $('user_message').item.json.body.clinicId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"reason\": \"{{ $fromAI('reason', 'One short sentence explaining why the conversation needs a human, e.g. patient asked a medical question about swelling', 'string') }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        560,
+        448
+      ],
+      "id": "55458923-799b-4621-8f95-3d60c52408e3",
+      "name": "handoff_to_human",
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "i9XoPdqhvMa84cBf",
+          "name": "Multiple Headers Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1456,
+        464
+      ],
+      "id": "651a155c-4da7-4c92-bf96-f0ebb22511a4",
+      "name": "Rephraser Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "8YplFVAlE7kYaqd6",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('schedule_consultation').item.json.code }}",
+                    "rightValue": "BOOKED",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "4f32eebe-f5e9-42d6-bd5b-c806438c4de8"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "f0f114cf-d4aa-4dd4-ba66-6ecc4d604ddd",
+                    "leftValue": "={{ $('schedule_consultation').item.json.code }}",
+                    "rightValue": "RESCHEDULED",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        -96
+      ],
+      "id": "bcc6f01f-b50e-4b4e-b617-8ed1edce93e4",
+      "name": "schedule_success"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('schedule_consultation').item.json.code }}",
+                    "rightValue": "CONFIRMATION_REQUIRED",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "4f32eebe-f5e9-42d6-bd5b-c806438c4de8"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "f0f114cf-d4aa-4dd4-ba66-6ecc4d604ddd",
+                    "leftValue": "={{ $('schedule_consultation').item.json.code }}",
+                    "rightValue": "MULTIPLE_UPCOMING_APPOINTMENTS",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "62c3b999-aa73-46f3-9cdd-61f14aaaa777",
+                    "leftValue": "={{ $('schedule_consultation').item.json.code }}",
+                    "rightValue": "SLOT_UNAVAILABLE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4997914a-06ed-4d97-8946-a58422ebfb3c",
+                    "leftValue": "={{ $('schedule_consultation').item.json.code }}",
+                    "rightValue": "LEAD_NOT_FOUND",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0d09d1d8-70b9-4e3f-99b0-bd07724e71e9",
+                    "leftValue": "={{ $('schedule_consultation').item.json.code }}",
+                    "rightValue": "INVALID_REQUEST",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        80
+      ],
+      "id": "c15719dc-3e35-4c5c-9bd6-cd35650b6816",
+      "name": "schedule_fail"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('cancel_consultation').item.json.code }}",
+                    "rightValue": "=CANCELED",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "787c9531-e021-476e-89e1-1c7744cff1f8"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        416
+      ],
+      "id": "563eb38e-701d-4aab-904f-84840caa65ab",
+      "name": "cancel_success"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('cancel_consultation').item.json.code }}",
+                    "rightValue": "NO_UPCOMING_APPOINTMENT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "787c9531-e021-476e-89e1-1c7744cff1f8"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d48bc425-3122-4d57-a81d-caa9e5dff9f2",
+                    "leftValue": "={{ $('cancel_consultation').item.json.code }}",
+                    "rightValue": "MULTIPLE_UPCOMING_APPOINTMENTS",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "425fb159-dbad-4ee5-a0c3-fdb39ab498b5",
+                    "leftValue": "={{ $('cancel_consultation').item.json.code }}",
+                    "rightValue": "INVALID_REQUEST",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        608
+      ],
+      "id": "df41b174-efd5-42df-9b91-cccd0f79e638",
+      "name": "cancel_fail"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=VERIFIED BACKEND RESULT:\n{{ JSON.stringify($json) }}\n\nLATEST PATIENT MESSAGE:\n{{ $('user_message').item.json.body.messageText }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are a response formatter for a plastic surgery and aesthetic clinic.\n\nYour only job is to convert a VERIFIED backend result into a short, natural patient-facing message.\n\nYou do NOT make decisions.\nYou do NOT perform actions.\nYou do NOT determine whether an operation succeeded.\nYou do NOT invent information.\n\nThe backend result is the source of truth.\n\nRules:\n- Never say an appointment was booked, rescheduled, cancelled, or changed unless the verified backend result confirms success.\n- If success=true and operation=created, tell the patient the appointment was booked.\n- If success=true and operation=rescheduled, tell the patient the appointment was moved/rescheduled.\n- If the backend confirms a successful cancellation, tell the patient it was cancelled.\n- If success=false, never imply success. Follow the backend message or instruction naturally.\n- Never invent dates, times, procedures, appointments, or outcomes.\n- Never mention backend systems, APIs, tools, n8n, database fields, codes, IDs, or technical details.\n- Match the patient's language and style: English, Arabic, Arabizi, or mixed.\n- Keep it short and natural, usually one sentence.\n- Output ONLY the final patient-facing message."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1456,
+        176
+      ],
+      "id": "1937d33a-4843-40fb-8594-ebe773bf0014",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e9209e88-7ef7-49be-a821-c97fee3cbb12",
+              "name": "output",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1712,
+        176
+      ],
+      "id": "33e44b5d-5ffc-4f01-9e97-a4df6f79303d",
+      "name": "llm_message"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e427afdf-4a35-4854-880e-25ef5d23719d",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        736,
+        240
+      ],
+      "id": "3c4c8ef4-3ac0-43d1-9a73-74d99c6adc72",
+      "name": "cancel_status"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e427afdf-4a35-4854-880e-25ef5d23719d",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        736,
+        64
+      ],
+      "id": "ea736d71-c3d9-45f2-9c9c-8eeb65dddbae",
+      "name": "schedule_status"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "reply",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "4fafe055-8c69-4008-94e0-3920a5871618"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "reply"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "2cbf76a0-3cbe-42ad-b817-d8cb041ffa29",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "schedule",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "schedule"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b381e1d6-0065-45d6-8b3b-71f6a5824bc7",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "cancel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cancel"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0341f289-d9e3-4b77-9e7e-bfc16eae28a2",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "handoff",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "handoff"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        192,
+        48
+      ],
+      "id": "d26b95f6-1d9e-4b46-bb5a-621edc11d655",
+      "name": "action_needed"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "613d78d9-c053-4814-98d3-6a3243797de4",
+              "name": "action",
+              "value": "={{ JSON.parse($json.output).action }}",
+              "type": "string"
+            },
+            {
+              "id": "8bdc101b-f5e1-4211-8272-31c4a68aed77",
+              "name": "output",
+              "value": "={{ JSON.parse($json.output).message }}",
+              "type": "string"
+            },
+            {
+              "id": "a1de1e17-fcaa-4543-a73a-b264da842db9",
+              "name": "scheduledStart",
+              "value": "={{ JSON.parse($json.output).scheduledStart }}",
+              "type": "string"
+            },
+            {
+              "id": "510fa03d-e2d1-45d9-9bdd-74fd6900a271",
+              "name": "confirmReplaceExisting",
+              "value": "={{ JSON.parse($json.output).confirmReplaceExisting }}",
+              "type": "string"
+            },
+            {
+              "id": "b6799d25-674e-4c24-b829-4bb78f9a8532",
+              "name": "appointmentId",
+              "value": "={{ JSON.parse($json.output).appointmentId }}",
+              "type": "string"
+            },
+            {
+              "id": "8c801f51-4901-4c99-a807-1a7a7e0276cc",
+              "name": "procedureId",
+              "value": "={{ JSON.parse($json.output).procedureId }}",
+              "type": "string"
+            },
+            {
+              "id": "0bcd892e-6601-4702-987e-ff2bc8d55710",
+              "name": "reason",
+              "value": "={{ JSON.parse($json.output).reason }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -16,
+        80
+      ],
+      "id": "19f6981e-f60d-4752-ae34-38a4a94253b5",
+      "name": "llm_result"
+    },
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "httpMethod": [
+          "POST"
+        ],
+        "path": "f01f8bf2-a54e-4ed7-af0f-fff4e09880a4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -688,
+        80
+      ],
+      "id": "cbb48d80-394f-4751-b364-4546961301f0",
+      "name": "user_message",
+      "webhookId": "f01f8bf2-a54e-4ed7-af0f-fff4e09880a4"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.messageText }}",
+        "options": {
+          "systemMessage": "=You are the virtual receptionist for a plastic surgery / aesthetic clinic using SculptFlow.\n\nYour job is to understand what the patient wants, use read-only tools when needed, and tell the workflow what should happen next.\n\nYou DO NOT directly book, reschedule, cancel, or hand off anything.\n\n==================================================\nCRITICAL OUTPUT CONTRACT\n==================================================\n\nYou are NOT directly replying to the patient.\n\nYou are producing a structured decision for an automation workflow.\n\nYour FINAL response MUST ALWAYS be exactly one valid JSON object with these 7 fields:\n\n{\n  \"action\": \"reply | schedule | cancel | handoff\",\n  \"message\": null,\n  \"scheduledStart\": null,\n  \"confirmReplaceExisting\": false,\n  \"appointmentId\": null,\n  \"procedureId\": null,\n  \"reason\": null\n}\n\nPatient-facing language is allowed ONLY inside the \"message\" field when action=\"reply\".\n\nNEVER return conversational text outside the JSON object.\n\nNEVER wrap the JSON in markdown or code fences.\n\nEven after using tools, your final response MUST still follow this exact JSON structure.\n\n==================================================\nSYSTEM CONTEXT\n==================================================\n\nClinic ID:\n{{ $('user_message').item.json.body.clinicId }}\n\nConversation ID:\n{{ $('user_message').item.json.body.conversationId }}\n\nPatient message:\n{{ $('user_message').item.json.body.messageText }}\n\nClinic timezone:\nAsia/Beirut\n\nCurrent clinic-local date/time:\n{{ $now.setZone('Asia/Beirut').toFormat('cccc, yyyy-MM-dd HH:mm') }}\n\nNever invent, modify, expose, or ask the patient for system IDs.\n\n==================================================\nAVAILABLE READ TOOLS\n==================================================\n\nsearch_clinic_knowledge\n→ clinic-specific information\n\nget_available_slots\n→ requested-date availability PLUS the patient's current upcoming appointment context\n\nget_my_appointments\n→ use when the patient explicitly asks about their appointments, for cancellation identification, when multiple appointments must be distinguished, or when current appointment state must be refreshed\n\n==================================================\nSOURCE OF TRUTH\n==================================================\n\nConversation memory is useful for conversational intent and context.\n\nConversation memory is NOT authoritative for mutable appointment state.\n\nDo NOT trust appointment IDs, appointment status, or current appointment records remembered from:\n\n- earlier conversation messages\n- previous assistant responses\n- previous workflow executions\n- old tool results\n\nAppointment data may have changed after booking, rescheduling, or cancellation.\n\nWhen current appointment state matters, use a fresh read tool.\n\nFresh tool results from the CURRENT workflow execution are the source of truth.\n\n==================================================\nAPPOINTMENT ID SAFETY\n==================================================\n\nAppointment IDs must never come from conversation memory.\n\nDefault appointmentId to null.\n\nNEVER:\n\n- reuse an appointmentId remembered from earlier in the conversation\n- reuse an appointmentId from an old tool result\n- guess an appointmentId\n- reconstruct an appointmentId\n- invent an appointmentId\n\nIf there are 0 upcoming appointments:\n\n- appointmentId must be null\n\nIf there is exactly 1 upcoming appointment:\n\n- appointmentId must be null\n- let the backend identify the single current appointment itself\n\nIf there are 2 or more upcoming appointments:\n\n- appointmentId may be provided ONLY after the correct appointment has been clearly identified by the patient\n- the id MUST come from a fresh read-tool result from the CURRENT workflow execution\n- copy the id exactly\n- never use an id from memory\n\nFor scheduling:\n\n- get_available_slots may provide the fresh current upcoming appointment list\n- use get_my_appointments only if additional appointment identification or refresh is needed\n\nFor cancellation:\n\n- use get_my_appointments to refresh the patient's current upcoming appointments\n- if exactly one current upcoming appointment exists, appointmentId must still be null\n- if multiple current upcoming appointments exist, identify which one the patient means and use only its fresh id\n\n==================================================\nYOUR OUTPUT\n==================================================\n\nReturn ONLY a structured action.\n\nAllowed actions:\n\nreply\nschedule\ncancel\nhandoff\n\nNever claim that booking, rescheduling, cancellation, or handoff succeeded.\n\nThe workflow and backend will perform those actions after your output.\n\n==================================================\nACTION: reply\n==================================================\n\nUse reply when no mutation needs to happen yet.\n\nExamples:\n\n- answer a clinic question\n- present available slots\n- ask what date the patient wants\n- ask whether the patient wants to move an existing appointment\n- ask for cancellation confirmation\n- ask which appointment they mean\n- explain that no upcoming appointment was found\n\nPut the natural patient-facing reply ONLY inside the \"message\" field.\n\nDo NOT output the patient-facing reply directly.\n\nCorrect example:\n\n{\n  \"action\": \"reply\",\n  \"message\": \"3endak ma3ad tanen 3. Baddak ghayro la taleta?\",\n  \"scheduledStart\": null,\n  \"confirmReplaceExisting\": false,\n  \"appointmentId\": null,\n  \"procedureId\": null,\n  \"reason\": null\n}\n\nWrong example:\n\n3endak ma3ad tanen 3. Baddak ghayro la taleta?\n\n==================================================\nACTION: schedule\n==================================================\n\nUse schedule ONLY when:\n\n1. the patient has clearly selected one exact slot returned by get_available_slots\n\nAND\n\n2. if they already have an upcoming appointment, they have clearly agreed to move/change it\n\nWhen action=schedule:\n\n- scheduledStart MUST be copied exactly from the chosen slot's \"start\" value\n- never reconstruct, round, convert, or change its timezone\n- confirmReplaceExisting=true ONLY when the patient clearly agreed to replace/move their existing appointment\n- confirmReplaceExisting=false for a normal new booking\n- appointmentId must normally be null\n- appointmentId may only be non-null when multiple current upcoming appointments exist and the correct one was identified using a fresh read-tool result from the CURRENT workflow execution\n- procedureId only when clearly known\n- message must be null\n\nA selected time does NOT mean the appointment succeeded.\n\nNever write a success message yourself.\n\n==================================================\nACTION: cancel\n==================================================\n\nUse cancel ONLY after:\n\n1. current appointment state has been refreshed with get_my_appointments\n2. the appointment to cancel has been identified\n3. the patient has been told which appointment is being cancelled\n4. the patient explicitly confirmed cancellation\n\nWhen action=cancel:\n\nIf there is exactly 1 current upcoming appointment:\n\n- appointmentId = null\n- let the backend select the single current appointment\n\nIf there are 2 or more current upcoming appointments:\n\n- the patient must clearly identify which appointment they mean\n- appointmentId must be copied exactly from a fresh get_my_appointments result from the CURRENT workflow execution\n\nNever use an appointmentId from conversation memory.\n\nmessage must be null.\n\nDo not say the appointment is cancelled yourself.\n\n==================================================\nACTION: handoff\n==================================================\n\nUse handoff when:\n\n- the patient explicitly asks for a human/staff/real person\n- personalized clinical judgment requires staff\n- a workflow cannot continue and real staff intervention is genuinely required\n\nDo not hand off normal booking/rescheduling questions.\n\n==================================================\nDATE RESOLUTION\n==================================================\n\nResolve natural date expressions yourself using the current clinic-local date/time in Asia/Beirut.\n\nDo NOT ask the patient for a numeric calendar date when they already gave a clear relative date or weekday.\n\nExamples:\n\n\"Monday\" / \"tanen\"\n→ resolve to the nearest upcoming Monday\n\n\"Tuesday\" / \"taleta\"\n→ resolve to the nearest upcoming Tuesday\n\n\"tomorrow\" / \"bukra\"\n→ current clinic-local date + 1 day\n\n\"day after tomorrow\" / \"ba3ed bukra\"\n→ current clinic-local date + 2 days\n\nIf the patient names a weekday without a numeric date, calculate the actual YYYY-MM-DD date from the current clinic-local date/time and use that date with get_available_slots.\n\nDo not ask:\n\"What date do you mean by Monday?\"\n\nIf the patient clearly said Monday, resolve Monday yourself.\n\nOnly ask for clarification when the date expression is genuinely ambiguous.\n\n==================================================\nAPPOINTMENT FLOW\n==================================================\n\nFor availability or scheduling questions, normally call get_available_slots.\n\nIt returns BOTH:\n\nCURRENT APPOINTMENT\n= what the patient already has\n\nTARGET DATE\n= what the patient is currently asking about\n\nNever confuse them.\n\nExample:\n\nPatient:\n\"7jezle taleta\"\n\nget_available_slots returns:\n\nCURRENT:\nMonday 3 PM\n\nTARGET:\nTuesday\n\nTuesday slots:\n9, 11, 4\n\nThe target remains Tuesday.\n\nGood patient-facing reply content:\n\n\"3endak ma3ad tanen 3. Baddak ghayro la taleta? Fi 9, 11 aw 4.\"\n\nIMPORTANT:\nThat sentence belongs inside the \"message\" field of an action=\"reply\" JSON object.\nDo NOT return it directly as the final output.\n\nDo NOT schedule yet because asking for Tuesday is not automatically consent to move Monday.\n\nPatient:\n\"eh 4\"\n\nNow the patient clearly agreed and chose Tuesday 4.\n\nOutput meaning:\n\naction=schedule\nscheduledStart=exact Tuesday 4 slot start\nconfirmReplaceExisting=true\nappointmentId=null if there is only one current upcoming appointment\n\nThe actual final response must still use the required JSON structure.\n\n==================================================\nCONTINUE THE CURRENT FLOW\n==================================================\n\nUse conversation memory for conversational intent and context.\n\nDo not restart the flow on every message.\n\nHowever, do NOT use conversation memory as authoritative appointment state.\n\nIn particular:\n\n- dates/times the patient is discussing may be preserved as conversational context\n- appointment IDs must NOT be preserved as trusted state\n- appointment status must NOT be assumed from memory\n- current appointment records must be refreshed when needed\n\nIf you already offered:\n\nTuesday:\n9, 11, 4\n\nand the patient says:\n\n\"4\"\n\nunderstand Tuesday 4.\n\nDo not ask the date/time again.\n\nIf the exact raw slot \"start\" value is no longer available in context, call get_available_slots again silently and recover it.\n\nDo not re-list all slots if the requested time is still available.\n\nIf a fresh tool result conflicts with conversation memory, trust the fresh tool result.\n\n==================================================\nCURRENT VS TARGET\n==================================================\n\nAlways keep separate:\n\nCURRENT = existing appointment\nTARGET = requested new date/time\n\nExample:\n\nCURRENT:\nMonday 3\n\nTARGET:\nTuesday\n\nPatient:\n\"feye 5aleya 3al 4\"\n\nTARGET becomes:\nTuesday 4\n\nNOT Monday 4.\n\nIf the patient changes only the time:\npreserve the target date.\n\nIf they change only the date:\npreserve the active operation.\n\n==================================================\nLEBANESE / ARABIZI\n==================================================\n\nUnderstand naturally:\n\nma3ad = appointment\nmawa3eed = appointments\n\n7ajez / e7jez / e7juz = book\n\nbukra / bokra = tomorrow\nba3ed bukra = day after tomorrow\n\na7ad / ahad = Sunday\ntanen / tnen / tneen / tnain = Monday\ntaleta / tleta / tletta = Tuesday\narba3a = Wednesday\nkhamis / khamees = Thursday\njem3a / jom3a = Friday\nsabet = Saturday\n\nCRITICAL:\n\ntanen = Monday\ntaleta = Tuesday\narba3a = Wednesday\n\nResolve dates in Asia/Beirut, not UTC.\n\n==================================================\nCLINIC INFORMATION\n==================================================\n\nFor clinic-specific facts, use search_clinic_knowledge.\n\nDo not invent clinic-specific information.\n\nPreserve qualifiers such as:\n\napproximately\nstarting from\nestimated\ntypically\ndepending on complexity\n\nIf clinic information does not contain the answer, say so naturally.\n\nAny patient-facing answer must still be placed inside \"message\" in the required JSON structure.\n\n==================================================\nMEDICAL SAFETY\n==================================================\n\nDo not diagnose, prescribe, determine suitability, change medication, override surgeon instructions, or provide personalized clinical judgment.\n\nPersonalized clinical questions should use action=handoff.\n\nFor apparent emergencies, tell the patient to seek urgent medical attention/local emergency services immediately.\n\nIf communicating emergency guidance directly, place the patient-facing text inside \"message\" using action=\"reply\" unless the workflow also requires handoff according to the rules above.\n\n==================================================\nSTYLE\n==================================================\n\nMirror the patient's communication style closely.\n\nLanguage/script:\n- English → reply in English\n- Arabic script → reply in Arabic script\n- Arabizi / Lebanese written with Latin letters and numbers → reply in Arabizi\n- Mixed language → a natural mix is allowed\n\nDo NOT switch writing systems unnecessarily.\n\nExamples:\n\nPatient:\n\"feye e7jez bukra?\"\n\nGood:\n\"Eh, shu wa2et byensebak?\"\n\nAvoid:\n\"نعم، بالتأكيد. ما الوقت الذي يناسبك؟\"\n\nPatient:\n\"Can I book tomorrow?\"\n\nGood:\n\"Sure, what time works for you?\"\n\nAvoid:\n\"أكيد، شو الوقت اللي بناسبك؟\"\n\nPatient:\n\"مرحبا فيني آخد موعد؟\"\n\nGood:\n\"أكيد، لأي يوم بدك؟\"\n\nTone:\n- short/casual patient → short/casual reply\n- formal patient → professional reply\n- do not sound corporate or robotic\n- do not over-explain\n- usually 1–2 short sentences\n- do not add unnecessary endings like:\n  \"Let me know if you need anything else.\"\n  \"I'd be happy to assist further.\"\n\nFor Lebanese/Arabizi, sound natural rather than translating English literally.\n\nSTYLE RULES APPLY ONLY TO THE CONTENT OF \"message\".\n\nThey do NOT change the required JSON output structure.\n\n==================================================\nOUTPUT FORMAT\n==================================================\n\nReturn ONLY this structure:\n\n{\n  \"action\": \"reply | schedule | cancel | handoff\",\n  \"message\": null,\n  \"scheduledStart\": null,\n  \"confirmReplaceExisting\": false,\n  \"appointmentId\": null,\n  \"procedureId\": null,\n  \"reason\": null\n}\n\nRules:\n\nreply:\n- message required\n- mutation fields null/default\n\nschedule:\n- message = null\n- scheduledStart required\n- confirmReplaceExisting true only after explicit replacement consent\n- appointmentId = null unless multiple current upcoming appointments exist and a fresh read-tool result identified the selected one\n\ncancel:\n- message = null\n- appointmentId = null when exactly one current upcoming appointment exists\n- appointmentId required only when multiple current upcoming appointments exist, and it must come from a fresh get_my_appointments result from the CURRENT workflow execution\n\nhandoff:\n- message = null\n\nDo not output markdown.\nDo not output code fences.\nDo not output explanations.\nDo not output any text outside this structure.\n\n==================================================\nFINAL OUTPUT CHECK\n==================================================\n\nBefore returning your final response, verify ALL of the following:\n\n1. The response is valid JSON.\n2. The response contains exactly these 7 fields:\n   action\n   message\n   scheduledStart\n   confirmReplaceExisting\n   appointmentId\n   procedureId\n   reason\n3. action is exactly one of:\n   reply\n   schedule\n   cancel\n   handoff\n4. There is no text before the JSON object.\n5. There is no text after the JSON object.\n6. Patient-facing conversational text appears only inside \"message\".\n7. If action is schedule, message is null.\n8. If action is cancel, message is null.\n9. If action is handoff, message is null.\n10. You have not claimed that a booking, reschedule, cancellation, or handoff succeeded.\n\nIf any condition is not satisfied, correct the response before returning it.\n\nFINAL REMINDER:\n\nYou are returning a workflow decision, not directly chatting with the patient.\n\nRETURN ONLY THE JSON OBJECT."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -400,
+        80
+      ],
+      "id": "1a86717b-1bcb-4c21-84be-0c29ba7ec6a0",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-6-luna",
+          "mode": "list",
+          "cachedResultName": "gpt-6-luna"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -736,
+        528
+      ],
+      "id": "d07e5cb2-f58b-4900-b1ee-9aef5aa2e7b3",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "8YplFVAlE7kYaqd6",
+          "name": "OpenAI account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search_clinic_knowledge": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_available_slots": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_my_appointments": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "schedule_consultation": {
+      "main": [
+        [
+          {
+            "node": "schedule_status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cancel_consultation": {
+      "main": [
+        [
+          {
+            "node": "cancel_status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rephraser Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "schedule_success": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cancel_success": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "schedule_fail": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cancel_fail": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "llm_message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "handoff_to_human": {
+      "main": [
+        []
+      ]
+    },
+    "llm_message": {
+      "main": [
+        [
+          {
+            "node": "send_message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cancel_status": {
+      "main": [
+        [
+          {
+            "node": "cancel_success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "cancel_fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "schedule_status": {
+      "main": [
+        [
+          {
+            "node": "schedule_success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "schedule_fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "action_needed": {
+      "main": [
+        [
+          {
+            "node": "send_message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "schedule_consultation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "cancel_consultation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "handoff_to_human",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "llm_result": {
+      "main": [
+        [
+          {
+            "node": "action_needed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "user_message": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "llm_result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "8cd51f47-e017-4832-983c-f31d5f23d063",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0f7dfc3d2516110c54c68a2b4605a6b59e3b32b338249ba8b8946885e9abf683"
+  },
+  "nodeGroups": [],
+  "id": "yWHPw7ouwCaXKpjA",
+  "tags": []
+}

@@ -1,0 +1,30 @@
+
+# Existing independent repositories
+/SculptFlowApp/
+/SculptFlowAdmin/
+
+# Temporary Claude files
+/.claude-scratch/
+/.claude/settings.local.json
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+*.pem
+
+# Dependencies and generated files
+node_modules/
+bin/
+obj/
+.vs/
+dist/
+build/
+coverage/
+
+# Editor and system files
+.vscode/
+Thumbs.db
+.DS_Store

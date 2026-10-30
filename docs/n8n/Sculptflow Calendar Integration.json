@@ -1,0 +1,623 @@
+{
+  "name": "Sculptflow Calendar Integration",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.body.accessToken }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"summary\": \"{{ $json.body.eventTitle }}\",\n  \"start\": {\n    \"dateTime\": \"{{ $json.body.scheduledStart }}\",\n    \"timeZone\": \"Asia/Beirut\"\n  },\n  \"end\": {\n    \"dateTime\": \"{{ $json.body.scheduledEnd }}\",\n    \"timeZone\": \"Asia/Beirut\"\n  }\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -144,
+        -800
+      ],
+      "id": "31a2c7e1-28dc-425f-a6a9-cf9678b735b6",
+      "name": "google_create"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://www.googleapis.com/calendar/v3/calendars/primary/events/{{ $json.body.externalEventId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.body.accessToken }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"summary\": \"{{ $json.body.eventTitle }}\",\n  \"start\": {\n    \"dateTime\": \"{{ $json.body.scheduledStart }}\",\n    \"timeZone\": \"Asia/Beirut\"\n  },\n  \"end\": {\n    \"dateTime\": \"{{ $json.body.scheduledEnd }}\",\n    \"timeZone\": \"Asia/Beirut\"\n  }\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -144,
+        -624
+      ],
+      "id": "211e62be-0234-4029-a670-b73da79cacb1",
+      "name": "google_update"
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://www.googleapis.com/calendar/v3/calendars/primary/events/{{ $json.body.externalEventId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.body.accessToken }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -128,
+        -448
+      ],
+      "id": "3f9720b2-5d97-4a59-b57d-865e7c20e5c9",
+      "name": "google_cancel"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.microsoft.com/v1.0/me/events",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.body.accessToken }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"summary\": \"{{ $json.body.eventTitle }}\",\n  \"start\": {\n    \"dateTime\": \"{{ $json.body.scheduledStart }}\",\n    \"timeZone\": \"Asia/Beirut\"\n  },\n  \"end\": {\n    \"dateTime\": \"{{ $json.body.scheduledEnd }}\",\n    \"timeZone\": \"Asia/Beirut\"\n  }\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -160,
+        -224
+      ],
+      "id": "f51ccce0-c101-4dfb-8ce9-1d22aad8441c",
+      "name": "outlook_create"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://graph.microsoft.com/v1.0/me/events/{{ $json.body.externalEventId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.body.accessToken }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"summary\": \"{{ $json.body.eventTitle }}\",\n  \"start\": {\n    \"dateTime\": \"{{ $json.body.scheduledStart }}\",\n    \"timeZone\": \"Asia/Beirut\"\n  },\n  \"end\": {\n    \"dateTime\": \"{{ $json.body.scheduledEnd }}\",\n    \"timeZone\": \"Asia/Beirut\"\n  }\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -160,
+        -64
+      ],
+      "id": "a1773136-f7f9-4640-a758-9d8207c33ffa",
+      "name": "outlook_update"
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=DELETE https://graph.microsoft.com/v1.0/me/events/{{ $json.body.externalEventId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.body.accessToken }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -160,
+        96
+      ],
+      "id": "0af4f30a-b917-4760-a865-c0c3c465e305",
+      "name": "outlook_cancel"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.operation }}",
+                    "rightValue": "create",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ad0f3f29-0d6d-43bf-be7c-152c8baa7395"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "43dd7d0c-5a3d-4cf2-9c1a-d3cddb2a1e9f",
+                    "leftValue": "={{ $json.body.operation }}",
+                    "rightValue": "update",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "9cb01f1d-9a60-4554-ab9a-31a595475bcb",
+                    "leftValue": "={{ $json.body.operation }}",
+                    "rightValue": "cancel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -592,
+        -144
+      ],
+      "id": "2b07a484-b4e2-488c-80b2-a34a3562da75",
+      "name": "outlook_operation"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.operation }}",
+                    "rightValue": "create",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ad0f3f29-0d6d-43bf-be7c-152c8baa7395"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "43dd7d0c-5a3d-4cf2-9c1a-d3cddb2a1e9f",
+                    "leftValue": "={{ $json.body.operation }}",
+                    "rightValue": "update",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "9cb01f1d-9a60-4554-ab9a-31a595475bcb",
+                    "leftValue": "={{ $json.body.operation }}",
+                    "rightValue": "cancel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -576,
+        -672
+      ],
+      "id": "e9ab9cab-2b57-478a-b5b3-a08d651e2e15",
+      "name": "google_operation"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "d1228ed6-6ec7-4ef0-87e9-adfd9540c6e2",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1280,
+        -352
+      ],
+      "id": "bb79b8f9-0261-4f11-b393-4b437ff7811c",
+      "name": "new_appointment",
+      "webhookId": "d1228ed6-6ec7-4ef0-87e9-adfd9540c6e2"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.provider }}",
+                    "rightValue": "google",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "c37496f6-6f0e-462c-8e58-2b37462196f3"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "google"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "bcbb595d-168b-43d8-b0b2-e9f9f53e799e",
+                    "leftValue": "={{ $json.body.provider }}",
+                    "rightValue": "outlook",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "outlook"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -976,
+        -352
+      ],
+      "id": "dff945cb-de28-45fb-8527-62609875f95d",
+      "name": "provider"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sculptflowapp.onrender.com/api/calendar-integrations/sync-callback",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpMultipleHeadersAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"clinicId\": \"{{ $('new_appointment').item.json.body.clinicId }}\",\n  \"appointmentId\": \"{{ $('new_appointment').item.json.body.appointmentId }}\",\n  \"calendarIntegrationId\": \"{{ $('new_appointment').item.json.body.calendarIntegrationId }}\",\n  \"requestId\": \"{{ $('new_appointment').item.json.body.requestId }}\",\n  \"success\": true,\n  \"externalEventId\": \"{{ $json.id }}\",\n  \"errorMessage\": null\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        288,
+        -384
+      ],
+      "id": "551be11f-1fec-4fa4-a819-a16c4f6fb4ca",
+      "name": "sculptflow_event_handler",
+      "credentials": {
+        "httpMultipleHeadersAuth": {
+          "id": "i9XoPdqhvMa84cBf",
+          "name": "Multiple Headers Auth account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "google_create": {
+      "main": [
+        [
+          {
+            "node": "sculptflow_event_handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "google_update": {
+      "main": [
+        [
+          {
+            "node": "sculptflow_event_handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "google_cancel": {
+      "main": [
+        [
+          {
+            "node": "sculptflow_event_handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "outlook_create": {
+      "main": [
+        [
+          {
+            "node": "sculptflow_event_handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "outlook_update": {
+      "main": [
+        [
+          {
+            "node": "sculptflow_event_handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "outlook_cancel": {
+      "main": [
+        [
+          {
+            "node": "sculptflow_event_handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "outlook_operation": {
+      "main": [
+        [
+          {
+            "node": "outlook_create",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "outlook_update",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "outlook_cancel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "google_operation": {
+      "main": [
+        [
+          {
+            "node": "google_create",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "google_update",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "google_cancel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "new_appointment": {
+      "main": [
+        [
+          {
+            "node": "provider",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "provider": {
+      "main": [
+        [
+          {
+            "node": "google_operation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "outlook_operation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6cb00c7c-36f5-48ee-bee3-f85f2bcd7f81",
+  "meta": {
+    "instanceId": "0f7dfc3d2516110c54c68a2b4605a6b59e3b32b338249ba8b8946885e9abf683"
+  },
+  "nodeGroups": [],
+  "id": "h9fDYWxwXSLVhpwX",
+  "tags": []
+}
