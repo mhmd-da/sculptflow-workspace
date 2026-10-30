@@ -1,0 +1,416 @@
+{
+  "id": "0bb263a3561a41da9eab5d620f0864fa",
+  "environment": "local",
+  "baseUrl": "http://localhost:5274",
+  "startedAt": "2026-10-12T22:02:59.7595172+00:00",
+  "finishedAt": "2026-10-12T22:03:02.3835406+00:00",
+  "phase": "finished",
+  "testClinic": "[Automation] main 0bb263a3 (d98da879-6a0d-48fb-bfb9-0cd690b15b5e)",
+  "allowExternal": true,
+  "allowMessaging": false,
+  "allowBilling": true,
+  "keepTestData": false,
+  "results": [
+    {
+      "id": "edge.reopen",
+      "suiteId": "edge",
+      "name": "A closed conversation can be reopened; an open one stays open",
+      "status": "passed",
+      "durationMs": 129,
+      "message": null,
+      "log": [
+        "GET /Account/Register -\u003E 200 in 32 ms",
+        "POST /Account/Register -\u003E 302 (/dashboard) in 47 ms",
+        "POST /api/procedures -\u003E 201 (http://localhost:5274/api/procedures/fe19026a-2181-4457-b216-d3f696d3557d) in 2 ms",
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/2674dce8-abc9-477e-9e64-89ae938bf590) in 4 ms",
+        "POST /api/conversations -\u003E 201 (http://localhost:5274/api/conversations/ade3cae9-5ffe-41a0-920f-c70106449128) in 1 ms",
+        "POST /api/conversations/ade3cae9-5ffe-41a0-920f-c70106449128/close -\u003E 200 in 1 ms",
+        "POST /api/conversations/ade3cae9-5ffe-41a0-920f-c70106449128/reopen -\u003E 200 in 1 ms",
+        "POST /api/conversations/ade3cae9-5ffe-41a0-920f-c70106449128/reopen -\u003E 200 in 0 ms",
+        "POST /api/conversations/3dbc194e-d651-4fb5-a0a8-3de5940fedb1/reopen -\u003E 404 in 1 ms"
+      ]
+    },
+    {
+      "id": "edge.auto-reopen",
+      "suiteId": "edge",
+      "name": "A patient message reopens a closed conversation",
+      "status": "passed",
+      "durationMs": 14,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/cc79705c-53e1-441e-b0bf-91e1ed34a361) in 1 ms",
+        "POST /api/conversations -\u003E 201 (http://localhost:5274/api/conversations/2605f766-f9cf-4f63-b71b-863d1d07f276) in 1 ms",
+        "POST /api/conversations/2605f766-f9cf-4f63-b71b-863d1d07f276/close -\u003E 200 in 1 ms",
+        "POST /api/messages/ingest -\u003E 200 in 4 ms",
+        "GET /api/conversations/2605f766-f9cf-4f63-b71b-863d1d07f276 -\u003E 200 in 1 ms"
+      ]
+    },
+    {
+      "id": "edge.ingest-duplicate",
+      "suiteId": "edge",
+      "name": "The same inbound message ingested twice is stored once",
+      "status": "passed",
+      "durationMs": 12,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/8a604f78-6995-488b-9f2f-74501521cef0) in 1 ms",
+        "POST /api/conversations -\u003E 201 (http://localhost:5274/api/conversations/22f2ac2f-ea16-4441-ae69-82551e3d7a04) in 1 ms",
+        "POST /api/messages/ingest -\u003E 200 in 5 ms",
+        "POST /api/messages/ingest -\u003E 200 in 0 ms",
+        "GET /api/conversations/22f2ac2f-ea16-4441-ae69-82551e3d7a04/messages -\u003E 200 in 1 ms",
+        "POST /api/messages/ingest -\u003E 400 in 0 ms"
+      ]
+    },
+    {
+      "id": "edge.conversation-unknown-lead",
+      "suiteId": "edge",
+      "name": "Opening a conversation for a lead that doesn\u0027t exist is rejected (not a server error)",
+      "status": "failed",
+      "durationMs": 7,
+      "message": "POST /api/conversations returned 500, expected 400 or 404. Body: \u003C!DOCTYPE html\u003E\r\n\u003Chtml lang=\u0022en\u0022 data-au-app=\u0022client\u0022 data-brand=\u0022teal\u0022\u003E\r\n\u003Chead\u003E\r\n    \u003Cmeta charset=\u0022utf-8\u0022 /\u003E\r\n    \u003Cmeta name=\u0022viewport\u0022 content=\u0022width=device-width, initial-scale=1.0\u0022 /\u003E\r\n    \u003Ctitle\u003ESomething went wrong \u0026#xB7; MySculptFlow\u003C/title\u003E\r\n    \u003Cscript\u003E\r\n    (function () {\r\n        try {\r\n            var ls = localStorage, r = document.documentElement;\r\n            var saved = ls.getItem(\u0027client.themeMode\u0027) || ls.getItem(\u0027sf-theme\u0027);\r\n            var mode = saved === \u0027light\u0027 || saved === \u0027dark\u0027 ? saved\r\n                : (window.matchMedia \u0026\u0026 matchMedia(\u0027(prefers-color-scheme: dark)\u0027\u2026",
+      "log": [
+        "POST /api/conversations -\u003E 500 in 5 ms"
+      ]
+    },
+    {
+      "id": "edge.message-sender",
+      "suiteId": "edge",
+      "name": "A message with an unknown sender type is rejected (400, not a server error)",
+      "status": "failed",
+      "durationMs": 10,
+      "message": "POST /api/conversations/48f35b99-93e2-43ff-b757-0b71b2e76021/messages returned 500, expected 400. Body: \u003C!DOCTYPE html\u003E\r\n\u003Chtml lang=\u0022en\u0022 data-au-app=\u0022client\u0022 data-brand=\u0022teal\u0022\u003E\r\n\u003Chead\u003E\r\n    \u003Cmeta charset=\u0022utf-8\u0022 /\u003E\r\n    \u003Cmeta name=\u0022viewport\u0022 content=\u0022width=device-width, initial-scale=1.0\u0022 /\u003E\r\n    \u003Ctitle\u003ESomething went wrong \u0026#xB7; MySculptFlow\u003C/title\u003E\r\n    \u003Cscript\u003E\r\n    (function () {\r\n        try {\r\n            var ls = localStorage, r = document.documentElement;\r\n            var saved = ls.getItem(\u0027client.themeMode\u0027) || ls.getItem(\u0027sf-theme\u0027);\r\n            var mode = saved === \u0027light\u0027 || saved === \u0027dark\u0027 ? saved\r\n                : (window.matchMedia \u0026\u0026 matchMedia(\u0027(prefers-color-scheme: dark)\u0027\u2026",
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/233d3678-bf10-4b47-8e79-51dc6a822565) in 2 ms",
+        "POST /api/conversations -\u003E 201 (http://localhost:5274/api/conversations/48f35b99-93e2-43ff-b757-0b71b2e76021) in 1 ms",
+        "POST /api/conversations/48f35b99-93e2-43ff-b757-0b71b2e76021/messages -\u003E 500 in 5 ms"
+      ]
+    },
+    {
+      "id": "edge.messages",
+      "suiteId": "edge",
+      "name": "Bad message bodies and unknown media are refused",
+      "status": "passed",
+      "durationMs": 13,
+      "message": null,
+      "log": [
+        "POST /api/conversations -\u003E 201 (http://localhost:5274/api/conversations/fe30f994-074b-4697-bbe0-54905e49f1cc) in 1 ms",
+        "POST /api/conversations/fe30f994-074b-4697-bbe0-54905e49f1cc/messages -\u003E 400 in 0 ms",
+        "POST /api/conversations/f9d4c65f-3db3-4639-8b0d-52954d3ba3fe/messages -\u003E 404 in 1 ms",
+        "GET /api/messages/01ea5675-9e98-43fc-932f-7c5cc57526e5/media -\u003E 404 in 1 ms",
+        "POST /api/conversations -\u003E 400 in 0 ms",
+        "POST /api/conversations/fe30f994-074b-4697-bbe0-54905e49f1cc/messages/send-template -\u003E 422 in 7 ms"
+      ]
+    },
+    {
+      "id": "edge.staff-send",
+      "suiteId": "edge",
+      "name": "Staff reply on a conversation with no connected channel is refused, not lost",
+      "status": "passed",
+      "durationMs": 6,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/ccc39e60-e8c5-4de0-8c40-d0f09d86460d) in 2 ms",
+        "POST /api/conversations -\u003E 201 (http://localhost:5274/api/conversations/7004b3cf-886f-4afc-abc7-8da88dd2555f) in 1 ms",
+        "POST /api/conversations/7004b3cf-886f-4afc-abc7-8da88dd2555f/messages/send -\u003E 422 in 1 ms",
+        "Staff send answered 422 Body: {\u0022error\u0022:\u0022Your subscription isn\u0027t active, so messages can\u0027t be sent. See Settings \u2192 Billing.\u0022}"
+      ]
+    },
+    {
+      "id": "edge.notifications",
+      "suiteId": "edge",
+      "name": "Mark one notification read",
+      "status": "passed",
+      "durationMs": 5,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/1dd47bc2-07ce-42df-9909-c22aa1a5bb9d) in 1 ms",
+        "GET /api/notifications?take=5 -\u003E 200 in 1 ms",
+        "POST /api/notifications/e45db540-ecd5-4740-bd6a-7ebd84992444/read -\u003E 204 in 0 ms",
+        "GET /api/notifications?take=100000 -\u003E 200 in 1 ms"
+      ]
+    },
+    {
+      "id": "edge.negative-skip",
+      "suiteId": "edge",
+      "name": "A negative skip is clamped on every list (no server error)",
+      "status": "failed",
+      "durationMs": 39,
+      "message": "Server error on skip=-5: /api/notifications (500), /api/leads (500), /api/appointments (500), /api/procedure-bookings (500), /api/conversations (500), /api/dashboard/leads (500), /api/whatsapp/health/events (500)",
+      "log": [
+        "GET /api/notifications?skip=-5 -\u003E 500 in 5 ms",
+        "GET /api/leads?skip=-5 -\u003E 500 in 5 ms",
+        "GET /api/appointments?skip=-5 -\u003E 500 in 5 ms",
+        "GET /api/procedure-bookings?skip=-5 -\u003E 500 in 4 ms",
+        "GET /api/conversations?skip=-5 -\u003E 500 in 4 ms",
+        "GET /api/dashboard/leads?skip=-5 -\u003E 500 in 4 ms",
+        "GET /api/whatsapp/health/events?skip=-5 -\u003E 500 in 8 ms"
+      ]
+    },
+    {
+      "id": "edge.paging",
+      "suiteId": "edge",
+      "name": "Huge or negative paging values are clamped, not errors",
+      "status": "passed",
+      "durationMs": 28,
+      "message": null,
+      "log": [
+        "GET /api/leads?take=100000\u0026skip=0 -\u003E 200 in 2 ms",
+        "GET /api/leads?take=0 -\u003E 200 in 2 ms",
+        "GET /api/appointments?take=100000\u0026skip=0 -\u003E 200 in 2 ms",
+        "GET /api/appointments?take=0 -\u003E 200 in 2 ms",
+        "GET /api/procedure-bookings?take=100000\u0026skip=0 -\u003E 200 in 2 ms",
+        "GET /api/procedure-bookings?take=0 -\u003E 200 in 2 ms",
+        "GET /api/conversations?take=100000\u0026skip=0 -\u003E 200 in 2 ms",
+        "GET /api/conversations?take=0 -\u003E 200 in 2 ms",
+        "GET /api/dashboard/leads?take=100000\u0026skip=0 -\u003E 200 in 1 ms",
+        "GET /api/dashboard/leads?take=0 -\u003E 200 in 1 ms",
+        "GET /api/dashboard/appointments?take=100000\u0026skip=0 -\u003E 200 in 1 ms",
+        "GET /api/dashboard/appointments?take=0 -\u003E 200 in 1 ms",
+        "GET /api/billing/usage?page=0\u0026pageSize=100000 -\u003E 200 in 1 ms"
+      ]
+    },
+    {
+      "id": "edge.campaigns",
+      "suiteId": "edge",
+      "name": "Campaign actions on unknown ids return 404; bad schedules are rejected",
+      "status": "passed",
+      "durationMs": 14,
+      "message": null,
+      "log": [
+        "GET /api/campaigns/b2b70778-7bbc-47b8-806f-e9acf9d7ed4c -\u003E 404 in 1 ms",
+        "POST /api/campaigns/b2b70778-7bbc-47b8-806f-e9acf9d7ed4c/schedule -\u003E 404 in 0 ms",
+        "POST /api/campaigns/b2b70778-7bbc-47b8-806f-e9acf9d7ed4c/send -\u003E 404 in 0 ms",
+        "POST /api/campaigns/b2b70778-7bbc-47b8-806f-e9acf9d7ed4c/process-batch -\u003E 404 in 0 ms",
+        "POST /api/campaigns/b2b70778-7bbc-47b8-806f-e9acf9d7ed4c/cancel -\u003E 404 in 0 ms",
+        "GET /api/campaigns/audience-preview?audienceType=nonsense -\u003E 400 in 0 ms",
+        "GET /api/campaigns/audience-preview?audienceType=reactivation_no_consultation -\u003E 200 in 1 ms",
+        "POST /api/campaigns -\u003E 400 in 1 ms"
+      ]
+    },
+    {
+      "id": "edge.templates",
+      "suiteId": "edge",
+      "name": "Template lookups and validation",
+      "status": "passed",
+      "durationMs": 7,
+      "message": null,
+      "log": [
+        "GET /api/whatsapp/templates/6cf46815-da2d-4286-bd93-a1a57da2d8f0 -\u003E 404 in 1 ms",
+        "POST /api/whatsapp/templates/21c5dcc1-4b7e-4de3-b899-2aa8147af7c1/sync -\u003E 404 in 0 ms",
+        "POST /api/whatsapp/templates -\u003E 400 in 0 ms",
+        "POST /api/whatsapp/templates -\u003E 400 in 0 ms",
+        "POST /api/whatsapp/templates -\u003E 201 (http://localhost:5274/api/whatsapp/templates/ff5683c3-190e-4177-8de8-1c507d3909c6) in 1 ms",
+        "GET /api/whatsapp/templates/ff5683c3-190e-4177-8de8-1c507d3909c6 -\u003E 200 in 1 ms"
+      ]
+    },
+    {
+      "id": "edge.template-name",
+      "suiteId": "edge",
+      "name": "A template name WhatsApp would refuse (capitals, spaces, symbols) is rejected up front",
+      "status": "failed",
+      "durationMs": 2,
+      "message": "POST /api/whatsapp/templates returned 201, expected 400 or 422. Body: {\u0022id\u0022:\u00221673c4c1-acf1-4fa5-a7f6-cb165bf1e751\u0022,\u0022clinicId\u0022:\u0022d98da879-6a0d-48fb-bfb9-0cd690b15b5e\u0022,\u0022metaTemplateId\u0022:null,\u0022name\u0022:\u0022Bad Name!\u0022,\u0022category\u0022:\u0022marketing\u0022,\u0022language\u0022:\u0022en\u0022,\u0022status\u0022:\u0022draft\u0022,\u0022headerType\u0022:null,\u0022headerContent\u0022:null,\u0022body\u0022:\u0022Hi\u0022,\u0022footer\u0022:null,\u0022buttonsJson\u0022:null,\u0022variablesJson\u0022:null,\u0022rejectionReason\u0022:null,\u0022createdAt\u0022:\u00222026-10-12T22:03:00.0580292\u002B00:00\u0022,\u0022updatedAt\u0022:\u00222026-10-12T22:03:00.0580292\u002B00:00\u0022,\u0022channelIntegrationId\u0022:null,\u0022qualityRating\u0022:null,\u0022previousCategory\u0022:null,\u0022currentCategory\u0022:null,\u0022componentsJson\u0022:null,\u0022lastMetaEventAt\u0022:null}",
+      "log": [
+        "POST /api/whatsapp/templates -\u003E 201 (http://localhost:5274/api/whatsapp/templates/1673c4c1-acf1-4fa5-a7f6-cb165bf1e751) in 1 ms"
+      ]
+    },
+    {
+      "id": "edge.channels",
+      "suiteId": "edge",
+      "name": "Channel actions without a connected channel are refused cleanly",
+      "status": "passed",
+      "durationMs": 47,
+      "message": null,
+      "log": [
+        "POST /api/channel-integrations/whatsapp/disconnect -\u003E 204 in 1 ms",
+        "POST /api/channel-integrations/telegram/refresh -\u003E 200 in 0 ms",
+        "POST /api/channel-integrations/telegram/connect -\u003E 400 in 0 ms",
+        "PUT /api/channel-integrations -\u003E 400 in 7 ms",
+        "PUT /api/channel-integrations -\u003E 200 in 32 ms",
+        "GET /api/channel-integrations -\u003E 200 in 1 ms"
+      ]
+    },
+    {
+      "id": "edge.channel-unknown",
+      "suiteId": "edge",
+      "name": "Disconnecting an unknown channel type is rejected",
+      "status": "failed",
+      "durationMs": 1,
+      "message": "POST /api/channel-integrations/pigeon/disconnect returned 204, expected 400 or 404.",
+      "log": [
+        "POST /api/channel-integrations/pigeon/disconnect -\u003E 204 in 1 ms"
+      ]
+    },
+    {
+      "id": "edge.channels-external",
+      "suiteId": "edge",
+      "name": "Fake Telegram, WhatsApp and Facebook credentials are rejected and nothing gets connected",
+      "status": "passed",
+      "durationMs": 155,
+      "message": null,
+      "log": [
+        "POST /api/channel-integrations/telegram/connect -\u003E 400 in 0 ms",
+        "POST /api/channel-integrations/whatsapp/debug-token -\u003E 502 in 147 ms",
+        "POST /api/channel-integrations/whatsapp/connect -\u003E 502 in 1 ms",
+        "POST /api/channel-integrations/facebook/connect -\u003E 502 in 1 ms",
+        "GET /api/channel-integrations -\u003E 200 in 1 ms"
+      ]
+    },
+    {
+      "id": "edge.calendar",
+      "suiteId": "edge",
+      "name": "Calendar actions on an unconnected or unknown provider are refused",
+      "status": "passed",
+      "durationMs": 11,
+      "message": null,
+      "log": [
+        "POST /api/calendar-integrations/google/refresh-calendars -\u003E 400 in 1 ms",
+        "POST /api/calendar-integrations/google/select-calendar -\u003E 400 in 1 ms",
+        "POST /api/calendar-integrations/google/sync-enabled -\u003E 400 in 1 ms",
+        "POST /api/calendar-integrations/google/disconnect -\u003E 204 in 0 ms",
+        "POST /api/calendar-integrations/outlook/refresh-calendars -\u003E 400 in 1 ms",
+        "POST /api/calendar-integrations/outlook/select-calendar -\u003E 400 in 1 ms",
+        "POST /api/calendar-integrations/outlook/sync-enabled -\u003E 400 in 0 ms",
+        "POST /api/calendar-integrations/outlook/disconnect -\u003E 204 in 0 ms",
+        "POST /api/calendar-integrations/yahoo/refresh-calendars -\u003E 400 in 0 ms"
+      ]
+    },
+    {
+      "id": "edge.websites",
+      "suiteId": "edge",
+      "name": "Website source actions: unknown ids, deactivate and rescrape",
+      "status": "passed",
+      "durationMs": 6,
+      "message": null,
+      "log": [
+        "GET /api/knowledge/websites/75e4eeeb-e5b6-401f-99f4-fa071627cbc6 -\u003E 404 in 0 ms",
+        "POST /api/knowledge/websites/75e4eeeb-e5b6-401f-99f4-fa071627cbc6/active -\u003E 404 in 0 ms",
+        "POST /api/knowledge/websites/75e4eeeb-e5b6-401f-99f4-fa071627cbc6/rescrape -\u003E 404 in 0 ms",
+        "DELETE /api/knowledge/websites/75e4eeeb-e5b6-401f-99f4-fa071627cbc6 -\u003E 404 in 0 ms",
+        "POST /api/knowledge/websites -\u003E 400 in 0 ms",
+        "POST /api/knowledge/websites -\u003E 400 in 1 ms"
+      ]
+    },
+    {
+      "id": "edge.websites-lifecycle",
+      "suiteId": "edge",
+      "name": "Deactivate and rescrape a real website source; the same address can\u0027t be added twice",
+      "status": "passed",
+      "durationMs": 2026,
+      "message": null,
+      "log": [
+        "POST /api/knowledge/websites -\u003E 202 (http://localhost:5274/api/knowledge/websites/bc854b76-a689-4f28-9c72-0a878a0477c8) in 3 ms",
+        "POST /api/knowledge/websites -\u003E 400 in 1 ms",
+        "GET /api/knowledge/websites/bc854b76-a689-4f28-9c72-0a878a0477c8 -\u003E 200 in 1 ms",
+        "GET /api/knowledge/websites/bc854b76-a689-4f28-9c72-0a878a0477c8 -\u003E 200 in 6 ms",
+        "POST /api/knowledge/websites/bc854b76-a689-4f28-9c72-0a878a0477c8/active -\u003E 200 in 8 ms",
+        "POST /api/knowledge/websites/bc854b76-a689-4f28-9c72-0a878a0477c8/rescrape -\u003E 409 in 1 ms",
+        "GET /api/knowledge/websites/bc854b76-a689-4f28-9c72-0a878a0477c8 -\u003E 200 in 1 ms",
+        "DELETE /api/knowledge/websites/bc854b76-a689-4f28-9c72-0a878a0477c8 -\u003E 204 in 1 ms"
+      ]
+    },
+    {
+      "id": "edge.knowledge",
+      "suiteId": "edge",
+      "name": "Knowledge validation and unknown ids",
+      "status": "passed",
+      "durationMs": 9,
+      "message": null,
+      "log": [
+        "POST /api/knowledge -\u003E 400 in 0 ms",
+        "POST /api/knowledge -\u003E 400 in 0 ms",
+        "GET /api/knowledge/f359191b-8e51-47b5-a1a3-0b8627d2d05f -\u003E 404 in 0 ms",
+        "PUT /api/knowledge/de01eed6-b251-4859-b39b-7f2c41418c73 -\u003E 404 in 0 ms",
+        "DELETE /api/knowledge/5902642c-57a2-403a-8ddf-f89d5b854465 -\u003E 404 in 0 ms",
+        "PUT /api/knowledge/settings -\u003E 400 in 0 ms",
+        "PUT /api/knowledge/settings -\u003E 400 in 0 ms",
+        "POST /api/knowledge/upload -\u003E 400 in 0 ms"
+      ]
+    },
+    {
+      "id": "edge.lead-unknown-clinic",
+      "suiteId": "edge",
+      "name": "Lead intake for a clinic that doesn\u0027t exist is rejected (not a server error)",
+      "status": "failed",
+      "durationMs": 5,
+      "message": "POST /api/leads returned 500, expected 400 or 404. Body: \u003C!DOCTYPE html\u003E\r\n\u003Chtml lang=\u0022en\u0022 data-au-app=\u0022client\u0022 data-brand=\u0022teal\u0022\u003E\r\n\u003Chead\u003E\r\n    \u003Cmeta charset=\u0022utf-8\u0022 /\u003E\r\n    \u003Cmeta name=\u0022viewport\u0022 content=\u0022width=device-width, initial-scale=1.0\u0022 /\u003E\r\n    \u003Ctitle\u003ESomething went wrong \u0026#xB7; MySculptFlow\u003C/title\u003E\r\n    \u003Cscript\u003E\r\n    (function () {\r\n        try {\r\n            var ls = localStorage, r = document.documentElement;\r\n            var saved = ls.getItem(\u0027client.themeMode\u0027) || ls.getItem(\u0027sf-theme\u0027);\r\n            var mode = saved === \u0027light\u0027 || saved === \u0027dark\u0027 ? saved\r\n                : (window.matchMedia \u0026\u0026 matchMedia(\u0027(prefers-color-scheme: dark)\u0027\u2026",
+      "log": [
+        "POST /api/leads -\u003E 500 in 4 ms"
+      ]
+    },
+    {
+      "id": "edge.lead-empty",
+      "suiteId": "edge",
+      "name": "Lead intake with no name, phone or email is rejected",
+      "status": "failed",
+      "durationMs": 2,
+      "message": "POST /api/leads returned 201, expected 400. Body: {\u0022id\u0022:\u0022cef8df6c-3939-4a7b-ae1c-496d31b8e1f6\u0022,\u0022clinicId\u0022:\u0022d98da879-6a0d-48fb-bfb9-0cd690b15b5e\u0022,\u0022procedureId\u0022:null,\u0022procedureName\u0022:null,\u0022fullName\u0022:null,\u0022firstName\u0022:null,\u0022lastName\u0022:null,\u0022phone\u0022:null,\u0022email\u0022:null,\u0022source\u0022:null,\u0022sourceDetail\u0022:null,\u0022campaignName\u0022:null,\u0022externalLeadId\u0022:null,\u0022status\u0022:\u0022new\u0022,\u0022qualificationStatus\u0022:\u0022unknown\u0022,\u0022preferredLanguage\u0022:null,\u0022city\u0022:null,\u0022desiredTimeline\u0022:null,\u0022notes\u0022:null,\u0022marketingOptIn\u0022:true,\u0022optedOutAt\u0022:null,\u0022lastContactAt\u0022:null,\u0022nextFollowupAt\u0022:null,\u0022createdAt\u0022:\u00222026-10-12T22:03:02.3248147\u002B00:00\u0022,\u0022updatedAt\u0022:\u00222026-10-12T22:03:02.3248148\u002B00:00\u0022}",
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/cef8df6c-3939-4a7b-ae1c-496d31b8e1f6) in 1 ms"
+      ]
+    },
+    {
+      "id": "edge.leads",
+      "suiteId": "edge",
+      "name": "Lead intake validation",
+      "status": "passed",
+      "durationMs": 5,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/d7e69ec4-a7e3-4fc9-9954-f6e96bfe3b58) in 1 ms",
+        "PATCH /api/leads/814823d9-7e71-4c3e-a482-9e8a0470079f -\u003E 404 in 1 ms",
+        "POST /api/leads/8dac0b9f-5a9f-45f7-81f3-01bd95c6acd6/status -\u003E 404 in 0 ms"
+      ]
+    },
+    {
+      "id": "edge.appointments",
+      "suiteId": "edge",
+      "name": "Appointment validation: unknown lead, outside hours, in the past",
+      "status": "passed",
+      "durationMs": 24,
+      "message": null,
+      "log": [
+        "GET /settings/clinic-info -\u003E 200 in 1 ms",
+        "POST /settings/clinic-info?handler=SaveAvailability -\u003E 302 (/settings/clinic-info?tab=availability) in 3 ms",
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/fb2e8967-008c-4fb7-9a31-51bcfe854139) in 2 ms",
+        "POST /api/appointments -\u003E 400 in 1 ms",
+        "POST /api/appointments -\u003E 201 (http://localhost:5274/api/appointments) in 3 ms",
+        "Staff booking at 03:00 (clinic closed) answered 201",
+        "POST /api/appointments -\u003E 201 (http://localhost:5274/api/appointments) in 2 ms",
+        "Staff booking in the past answered 201",
+        "PATCH /api/appointments/40acb3a0-f236-430c-bff0-07b821c6950d/status -\u003E 404 in 0 ms",
+        "GET /api/appointments/available?days=-3 -\u003E 200 in 1 ms",
+        "GET /api/appointments/available?procedureId=8a4b7785-a973-48de-b07a-cedf7380e0f1 -\u003E 400 in 1 ms"
+      ]
+    },
+    {
+      "id": "edge.ai-booking-rules",
+      "suiteId": "edge",
+      "name": "AI booking refuses a closed time, the past and an unknown lead",
+      "status": "passed",
+      "durationMs": 19,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/e3942f7f-4914-4dc0-a14f-743d3ed583f3) in 2 ms",
+        "POST /api/ai/appointments/book?clinicId=d98da879-6a0d-48fb-bfb9-0cd690b15b5e -\u003E 200 in 1 ms",
+        "POST /api/ai/appointments/book?clinicId=d98da879-6a0d-48fb-bfb9-0cd690b15b5e -\u003E 200 in 1 ms",
+        "GET /api/appointments/available?procedureId=fe19026a-2181-4457-b216-d3f696d3557d\u0026days=14 -\u003E 200 in 2 ms",
+        "POST /api/ai/appointments/book?clinicId=d98da879-6a0d-48fb-bfb9-0cd690b15b5e -\u003E 200 in 0 ms",
+        "POST /api/ai/appointments/cancel?clinicId=d98da879-6a0d-48fb-bfb9-0cd690b15b5e\u0026leadId=e3942f7f-4914-4dc0-a14f-743d3ed583f3 -\u003E 200 in 1 ms",
+        "GET /api/appointments/available?procedureId=fe19026a-2181-4457-b216-d3f696d3557d\u0026days=14 -\u003E 200 in 2 ms",
+        "POST /api/ai/appointments/reschedule?clinicId=d98da879-6a0d-48fb-bfb9-0cd690b15b5e\u0026leadId=e3942f7f-4914-4dc0-a14f-743d3ed583f3 -\u003E 404 in 1 ms"
+      ]
+    }
+  ],
+  "runLog": [
+    "22:02:59 Run started against local (http://localhost:5274) with 25 tests.",
+    "22:02:59 Registered test clinic \u0022[Automation] main 0bb263a3\u0022 (d98da879-6a0d-48fb-bfb9-0cd690b15b5e).",
+    "22:03:02 DELETE /api/platform-admin/automation/clinics/d98da879-6a0d-48fb-bfb9-0cd690b15b5e -\u003E 204 in 6 ms",
+    "22:03:02 Deleted test clinic \u0022[Automation] main 0bb263a3\u0022 and all its data.",
+    "22:03:02 Done: 18 passed, 7 failed, 0 skipped."
+  ],
+  "passed": 18,
+  "failed": 7,
+  "skipped": 0,
+  "total": 25
+}

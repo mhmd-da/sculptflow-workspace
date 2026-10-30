@@ -1,0 +1,188 @@
+{
+  "id": "656b1921d4df4fd5ae690fbec1cefb11",
+  "environment": "local",
+  "baseUrl": "http://localhost:5274",
+  "startedAt": "2026-10-12T22:00:52.6518772+00:00",
+  "finishedAt": "2026-10-12T22:00:54.8948645+00:00",
+  "phase": "finished",
+  "testClinic": "[Automation] main 656b1921 (93dd0a1b-73db-4769-89d3-e49780c4cb69)",
+  "allowExternal": true,
+  "allowMessaging": false,
+  "allowBilling": true,
+  "keepTestData": false,
+  "results": [
+    {
+      "id": "callbacks.calendar-sync",
+      "suiteId": "callbacks",
+      "name": "Calendar sync callback for an unknown appointment changes nothing",
+      "status": "passed",
+      "durationMs": 127,
+      "message": null,
+      "log": [
+        "GET /Account/Register -\u003E 200 in 33 ms",
+        "POST /Account/Register -\u003E 302 (/dashboard) in 51 ms",
+        "POST /api/procedures -\u003E 201 (http://localhost:5274/api/procedures/86981bff-7a0c-4005-bfb4-4d07b3f8931d) in 5 ms",
+        "POST /api/calendar-integrations/sync-callback -\u003E 200 in 3 ms"
+      ]
+    },
+    {
+      "id": "callbacks.benchmark-questions",
+      "suiteId": "callbacks",
+      "name": "Benchmark questions for an unknown generation are refused",
+      "status": "passed",
+      "durationMs": 5,
+      "message": null,
+      "log": [
+        "POST /api/knowledge/benchmark/generations/9840587f-fb99-47fc-8cd7-afebcdf73139/questions -\u003E 404 in 1 ms",
+        "POST /api/knowledge/benchmark/generations/85051c87-3778-4a4c-a0b4-f97bbf712f35/questions -\u003E 401 in 1 ms"
+      ]
+    },
+    {
+      "id": "callbacks.whatsapp-events",
+      "suiteId": "callbacks",
+      "name": "A template event is stored for its clinic; a health event without WhatsApp is refused",
+      "status": "passed",
+      "durationMs": 10,
+      "message": null,
+      "log": [
+        "POST /api/integrations/whatsapp/templates/events -\u003E 200 in 3 ms",
+        "GET /api/whatsapp/templates -\u003E 200 in 1 ms",
+        "POST /api/integrations/whatsapp/templates/events -\u003E 400 in 0 ms",
+        "POST /api/integrations/whatsapp/health/events -\u003E 422 in 0 ms",
+        "POST /api/integrations/whatsapp/health/events -\u003E 401 in 0 ms"
+      ]
+    },
+    {
+      "id": "callbacks.meta-unsigned",
+      "suiteId": "callbacks",
+      "name": "WhatsApp webhook refuses an unsigned or wrongly signed delivery",
+      "status": "passed",
+      "durationMs": 5,
+      "message": null,
+      "log": [
+        "POST /api/integrations/whatsapp/webhook -\u003E 401 in 0 ms",
+        "POST /api/integrations/whatsapp/webhook -\u003E 401 in 0 ms"
+      ]
+    },
+    {
+      "id": "callbacks.meta-signed",
+      "suiteId": "callbacks",
+      "name": "WhatsApp webhook accepts a correctly signed delivery for an unknown number",
+      "status": "passed",
+      "durationMs": 2,
+      "message": null,
+      "log": [
+        "POST /api/integrations/whatsapp/webhook -\u003E 200 in 1 ms"
+      ]
+    },
+    {
+      "id": "callbacks.tiktok-post",
+      "suiteId": "callbacks",
+      "name": "TikTok webhook accepts a delivery",
+      "status": "passed",
+      "durationMs": 0,
+      "message": null,
+      "log": [
+        "POST /api/integrations/tiktok/webhook -\u003E 200 in 0 ms"
+      ]
+    },
+    {
+      "id": "callbacks.ai-test-codes",
+      "suiteId": "callbacks",
+      "name": "AI test endpoints return every documented outcome",
+      "status": "passed",
+      "durationMs": 4,
+      "message": null,
+      "log": [
+        "GET /api/ai/test/codes -\u003E 200 in 0 ms",
+        "POST /api/ai/test/schedule?code=BOOKED -\u003E 200 in 0 ms",
+        "POST /api/ai/test/schedule?code=RESCHEDULED -\u003E 200 in 0 ms",
+        "POST /api/ai/test/schedule?code=CONFIRMATION_REQUIRED -\u003E 200 in 0 ms",
+        "POST /api/ai/test/schedule?code=MULTIPLE_UPCOMING_APPOINTMENTS -\u003E 200 in 0 ms",
+        "POST /api/ai/test/schedule?code=SLOT_UNAVAILABLE -\u003E 200 in 0 ms",
+        "POST /api/ai/test/schedule?code=LEAD_NOT_FOUND -\u003E 200 in 0 ms",
+        "POST /api/ai/test/schedule?code=INVALID_REQUEST -\u003E 200 in 0 ms",
+        "POST /api/ai/test/cancel?code=CANCELED -\u003E 200 in 0 ms",
+        "POST /api/ai/test/cancel?code=NO_UPCOMING_APPOINTMENT -\u003E 200 in 0 ms",
+        "POST /api/ai/test/cancel?code=MULTIPLE_UPCOMING_APPOINTMENTS -\u003E 200 in 0 ms",
+        "POST /api/ai/test/cancel?code=INVALID_REQUEST -\u003E 200 in 0 ms",
+        "POST /api/ai/test/schedule?code=NOT_A_CODE -\u003E 400 in 0 ms"
+      ]
+    },
+    {
+      "id": "oauth.google-login",
+      "suiteId": "oauth",
+      "name": "Continue with Google starts a redirect (or is cleanly off)",
+      "status": "passed",
+      "durationMs": 3,
+      "message": null,
+      "log": [
+        "GET /Account/Login -\u003E 200 in 1 ms",
+        "POST /auth/google/start -\u003E 302 (/Account/Login?externalError=failed) in 0 ms",
+        "Google start: 302 -\u003E /Account/Login",
+        "GET /auth/google/callback -\u003E 302 (/Account/Login?externalError=failed) in 0 ms"
+      ]
+    },
+    {
+      "id": "oauth.calendar",
+      "suiteId": "oauth",
+      "name": "Calendar connect redirects; a forged callback is refused",
+      "status": "passed",
+      "durationMs": 11,
+      "message": null,
+      "log": [
+        "GET /calendar-oauth/google/connect -\u003E 302 (https://accounts.google.com/o/oauth2/v2/auth?client_id=858308361757-3mnu2gvk2coc0vd98eiv38mh75r7dnte.apps.googleusercontent.com\u0026redirect_uri=https%3A%2F%2Fsculptflow-local.example%2Fcalendar-oauth%2Fgoogle%2Fcallback\u0026response_type=code\u0026scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcalendar.readonly https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcalendar.events\u0026access_type=offline\u0026prompt=consent\u0026state=CfDJ8OCqDTaMxqRGqytKu2_JXoxukP9tlf46P1n6GXyQ4hH-18bIhEiaFy0ahJzuF4MqC4T1n-HEPxt-QAtsc0Dt9DwZGtUOZ1l5Byu-35f7uTgmiZdiHxXlAJh5CH8tmVotBnPxl9nCNf10aWRYOFJLQlS8l3q382KzAqpL0Sd1bvdZlmSrsq5FpnSEAXGHg0Cn_nvIt9ICdA5KhFdPJyBUQhU) in 2 ms",
+        "google connect -\u003E https://accounts.google.com/o/oauth2/v2/auth",
+        "GET /calendar-oauth/google/callback?code=forged\u0026state=forged-656b1921 -\u003E 302 (/settings/calendar-integrations) in 2 ms",
+        "GET /calendar-oauth/outlook/connect -\u003E 302 (https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=\u0026redirect_uri=https%3A%2F%2Fsculptflow-local.example%2Fcalendar-oauth%2Foutlook%2Fcallback\u0026response_type=code\u0026response_mode=query\u0026scope=offline_access https%3A%2F%2Fgraph.microsoft.com%2FCalendars.ReadWrite https%3A%2F%2Fgraph.microsoft.com%2FUser.Read\u0026state=CfDJ8OCqDTaMxqRGqytKu2_JXoyqNmppoaEezIjlohm0Cr7980Oe0FtlMKJ94QlBgk1i5Kab4gCk-R1LsVJhLOZDrkWB889IgPgQl_59U1aMS4BHGtLzm8swAL-zNr1F2JCR_8Bg5JQcAfMp3E_Ngfpl-9s2at8Za2SZMvmCrD4NW6vSSDPeJDWj2DrOKTx8oTlZamdRnfadQJEKfaGDfhprSZyYkbCj5fL_q0qm03ZQNWGH) in 2 ms",
+        "outlook connect -\u003E https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+        "GET /calendar-oauth/outlook/callback?code=forged\u0026state=forged-656b1921 -\u003E 302 (/settings/calendar-integrations) in 2 ms",
+        "GET /calendar-oauth/yahoo/connect -\u003E 302 (/settings/calendar-integrations) in 0 ms",
+        "GET /api/calendar-integrations -\u003E 200 in 1 ms"
+      ]
+    },
+    {
+      "id": "oauth.tiktok",
+      "suiteId": "oauth",
+      "name": "TikTok connect redirects; a forged callback is refused",
+      "status": "passed",
+      "durationMs": 5,
+      "message": null,
+      "log": [
+        "GET /tiktok-oauth/connect -\u003E 302 (https://www.tiktok.com/v2/auth/authorize/?client_key=sbawe76hi1v0ks5xdw\u0026redirect_uri=https%3A%2F%2Fsculptflow-local.example%2Ftiktok-oauth%2Fcallback\u0026response_type=code\u0026scope=user.info.basic\u0026state=CfDJ8OCqDTaMxqRGqytKu2_JXozZmRcZkvfnJ8H9F273f5ZlVtHy7IPfEDedibxXmtZn_t2bR8rpwSoN__NZKcUlN-4d_T_rf1T-jChan9u-hZq73yvP8odbGz8cAnyGsHZ6gibNVCCAQHe5kL2UIa0XoMiRdXQbXfv673nGhEu8Jm7W1R-fNNxrGm-HnfUM3g8xvA) in 2 ms",
+        "TikTok connect -\u003E https://www.tiktok.com/v2/auth/authorize/",
+        "GET /tiktok-oauth/callback?code=forged\u0026state=forged-656b1921 -\u003E 302 (/settings/integrations) in 2 ms",
+        "GET /tiktok-oauth/connect -\u003E 302 (http://localhost:5274/Account/Login?ReturnUrl=%2Ftiktok-oauth%2Fconnect) in 0 ms"
+      ]
+    },
+    {
+      "id": "edge.websites-lifecycle",
+      "suiteId": "edge",
+      "name": "Deactivate and rescrape a real website source; the same address can\u0027t be added twice",
+      "status": "passed",
+      "durationMs": 2046,
+      "message": null,
+      "log": [
+        "POST /api/knowledge/websites -\u003E 202 (http://localhost:5274/api/knowledge/websites/18b56186-dbcb-4f7b-b3af-5513afa3a24c) in 7 ms",
+        "POST /api/knowledge/websites -\u003E 400 in 2 ms",
+        "GET /api/knowledge/websites/18b56186-dbcb-4f7b-b3af-5513afa3a24c -\u003E 200 in 2 ms",
+        "GET /api/knowledge/websites/18b56186-dbcb-4f7b-b3af-5513afa3a24c -\u003E 200 in 5 ms",
+        "POST /api/knowledge/websites/18b56186-dbcb-4f7b-b3af-5513afa3a24c/active -\u003E 200 in 13 ms",
+        "POST /api/knowledge/websites/18b56186-dbcb-4f7b-b3af-5513afa3a24c/rescrape -\u003E 409 in 4 ms",
+        "GET /api/knowledge/websites/18b56186-dbcb-4f7b-b3af-5513afa3a24c -\u003E 200 in 2 ms",
+        "DELETE /api/knowledge/websites/18b56186-dbcb-4f7b-b3af-5513afa3a24c -\u003E 204 in 7 ms"
+      ]
+    }
+  ],
+  "runLog": [
+    "22:00:52 Run started against local (http://localhost:5274) with 11 tests.",
+    "22:00:52 Registered test clinic \u0022[Automation] main 656b1921\u0022 (93dd0a1b-73db-4769-89d3-e49780c4cb69).",
+    "22:00:54 DELETE /api/platform-admin/automation/clinics/93dd0a1b-73db-4769-89d3-e49780c4cb69 -\u003E 204 in 8 ms",
+    "22:00:54 Deleted test clinic \u0022[Automation] main 656b1921\u0022 and all its data.",
+    "22:00:54 Done: 11 passed, 0 failed, 0 skipped."
+  ],
+  "passed": 11,
+  "failed": 0,
+  "skipped": 0,
+  "total": 11
+}

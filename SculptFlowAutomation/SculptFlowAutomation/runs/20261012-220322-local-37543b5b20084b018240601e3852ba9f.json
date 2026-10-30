@@ -1,0 +1,289 @@
+{
+  "id": "37543b5b20084b018240601e3852ba9f",
+  "environment": "local",
+  "baseUrl": "http://localhost:5274",
+  "startedAt": "2026-10-12T22:03:22.0391585+00:00",
+  "finishedAt": "2026-10-12T22:03:22.2759223+00:00",
+  "phase": "finished",
+  "testClinic": "[Automation] main 37543b5b (e095acf9-3d81-4718-8348-7e49b7ed61a0)",
+  "allowExternal": false,
+  "allowMessaging": false,
+  "allowBilling": false,
+  "keepTestData": false,
+  "results": [
+    {
+      "id": "pages.dashboard",
+      "suiteId": "pages",
+      "name": "Dashboard page",
+      "status": "passed",
+      "durationMs": 116,
+      "message": null,
+      "log": [
+        "GET /Account/Register -\u003E 200 in 31 ms",
+        "POST /Account/Register -\u003E 302 (/dashboard) in 47 ms",
+        "POST /api/procedures -\u003E 201 (http://localhost:5274/api/procedures/e4f618b9-8462-4261-8d74-dcb8f1092241) in 2 ms",
+        "GET /dashboard -\u003E 200 in 5 ms"
+      ]
+    },
+    {
+      "id": "pages.leads",
+      "suiteId": "pages",
+      "name": "Leads page",
+      "status": "passed",
+      "durationMs": 3,
+      "message": null,
+      "log": [
+        "GET /dashboard/leads -\u003E 200 in 2 ms"
+      ]
+    },
+    {
+      "id": "pages.appointments",
+      "suiteId": "pages",
+      "name": "Appointments page",
+      "status": "passed",
+      "durationMs": 2,
+      "message": null,
+      "log": [
+        "GET /dashboard/appointments -\u003E 200 in 2 ms"
+      ]
+    },
+    {
+      "id": "pages.inbox",
+      "suiteId": "pages",
+      "name": "Inbox page",
+      "status": "passed",
+      "durationMs": 2,
+      "message": null,
+      "log": [
+        "GET /inbox -\u003E 200 in 2 ms"
+      ]
+    },
+    {
+      "id": "pages.procedures",
+      "suiteId": "pages",
+      "name": "Procedures page",
+      "status": "passed",
+      "durationMs": 2,
+      "message": null,
+      "log": [
+        "GET /Procedures -\u003E 200 in 2 ms"
+      ]
+    },
+    {
+      "id": "pages.procedure-new",
+      "suiteId": "pages",
+      "name": "New procedure form page",
+      "status": "passed",
+      "durationMs": 1,
+      "message": null,
+      "log": [
+        "GET /Procedures/Edit -\u003E 200 in 1 ms"
+      ]
+    },
+    {
+      "id": "pages.knowledge",
+      "suiteId": "pages",
+      "name": "Knowledge base page",
+      "status": "passed",
+      "durationMs": 3,
+      "message": null,
+      "log": [
+        "GET /KnowledgeBase -\u003E 200 in 3 ms"
+      ]
+    },
+    {
+      "id": "pages.knowledge-new",
+      "suiteId": "pages",
+      "name": "New knowledge entry form page",
+      "status": "passed",
+      "durationMs": 1,
+      "message": null,
+      "log": [
+        "GET /KnowledgeBase/Edit -\u003E 200 in 1 ms"
+      ]
+    },
+    {
+      "id": "pages.knowledge-settings",
+      "suiteId": "pages",
+      "name": "Knowledge settings page",
+      "status": "passed",
+      "durationMs": 1,
+      "message": null,
+      "log": [
+        "GET /KnowledgeBase/Settings -\u003E 200 in 1 ms"
+      ]
+    },
+    {
+      "id": "pages.knowledge-benchmark",
+      "suiteId": "pages",
+      "name": "Knowledge benchmark page",
+      "status": "passed",
+      "durationMs": 1,
+      "message": null,
+      "log": [
+        "GET /KnowledgeBase/Benchmark -\u003E 200 in 1 ms"
+      ]
+    },
+    {
+      "id": "pages.campaigns",
+      "suiteId": "pages",
+      "name": "Campaigns page",
+      "status": "passed",
+      "durationMs": 2,
+      "message": null,
+      "log": [
+        "GET /Campaigns -\u003E 200 in 2 ms"
+      ]
+    },
+    {
+      "id": "pages.campaign-new",
+      "suiteId": "pages",
+      "name": "New campaign form page",
+      "status": "passed",
+      "durationMs": 3,
+      "message": null,
+      "log": [
+        "GET /Campaigns/Create -\u003E 200 in 3 ms"
+      ]
+    },
+    {
+      "id": "pages.staff",
+      "suiteId": "pages",
+      "name": "Staff page",
+      "status": "passed",
+      "durationMs": 2,
+      "message": null,
+      "log": [
+        "GET /Staff -\u003E 200 in 2 ms"
+      ]
+    },
+    {
+      "id": "pages.whatsapp-templates",
+      "suiteId": "pages",
+      "name": "WhatsApp templates page",
+      "status": "passed",
+      "durationMs": 2,
+      "message": null,
+      "log": [
+        "GET /WhatsApp/Templates -\u003E 200 in 2 ms"
+      ]
+    },
+    {
+      "id": "pages.whatsapp-health",
+      "suiteId": "pages",
+      "name": "WhatsApp health page",
+      "status": "passed",
+      "durationMs": 2,
+      "message": null,
+      "log": [
+        "GET /WhatsApp/Health -\u003E 200 in 2 ms"
+      ]
+    },
+    {
+      "id": "pages.clinic-info",
+      "suiteId": "pages",
+      "name": "Clinic info page",
+      "status": "passed",
+      "durationMs": 1,
+      "message": null,
+      "log": [
+        "GET /settings/clinic-info -\u003E 200 in 1 ms"
+      ]
+    },
+    {
+      "id": "pages.availability",
+      "suiteId": "pages",
+      "name": "Opening hours page",
+      "status": "passed",
+      "durationMs": 2,
+      "message": null,
+      "log": [
+        "GET /settings/clinic-info?tab=availability -\u003E 200 in 2 ms"
+      ]
+    },
+    {
+      "id": "pages.integrations",
+      "suiteId": "pages",
+      "name": "Integrations page",
+      "status": "passed",
+      "durationMs": 2,
+      "message": null,
+      "log": [
+        "GET /settings/integrations -\u003E 200 in 2 ms"
+      ]
+    },
+    {
+      "id": "pages.calendar",
+      "suiteId": "pages",
+      "name": "Calendar integrations page",
+      "status": "passed",
+      "durationMs": 1,
+      "message": null,
+      "log": [
+        "GET /settings/calendar-integrations -\u003E 200 in 1 ms"
+      ]
+    },
+    {
+      "id": "pages.billing",
+      "suiteId": "pages",
+      "name": "Billing page",
+      "status": "passed",
+      "durationMs": 4,
+      "message": null,
+      "log": [
+        "GET /settings/billing -\u003E 200 in 4 ms"
+      ]
+    },
+    {
+      "id": "pages.unknown-details",
+      "suiteId": "pages",
+      "name": "Detail pages for ids that don\u0027t exist answer not-found, not an error",
+      "status": "passed",
+      "durationMs": 50,
+      "message": null,
+      "log": [
+        "GET /Campaigns/118747ee-cebe-4062-865f-c3320d75808b -\u003E 404 in 18 ms",
+        "GET /KnowledgeBase/Websites/07c35105-e0e5-40f8-9eb1-58d48b19dbf4 -\u003E 404 in 10 ms",
+        "GET /KnowledgeBase/Benchmark/Generations/efe1fe84-6496-49b5-a9f4-9cbf14cbe345 -\u003E 200 in 12 ms",
+        "GET /KnowledgeBase/Edit/cb27956c-8aab-46bb-8731-30f8bbedfd0e -\u003E 404 in 2 ms",
+        "GET /Procedures/Edit/74e54dab-9d5c-4923-a6bb-cf6882a08768 -\u003E 404 in 1 ms",
+        "GET /dashboard/leads/bbe1789f-2084-410a-a561-6f7136f49f51 -\u003E 404 in 1 ms",
+        "GET /dashboard/appointments/789a836b-bebf-4308-93d9-c686b98ef975 -\u003E 404 in 1 ms"
+      ]
+    },
+    {
+      "id": "pages.procedure-edit",
+      "suiteId": "pages",
+      "name": "Procedure edit page for a real procedure",
+      "status": "passed",
+      "durationMs": 2,
+      "message": null,
+      "log": [
+        "GET /Procedures/Edit/e4f618b9-8462-4261-8d74-dcb8f1092241 -\u003E 200 in 1 ms"
+      ]
+    },
+    {
+      "id": "pages.lead-detail",
+      "suiteId": "pages",
+      "name": "Lead detail page",
+      "status": "passed",
+      "durationMs": 11,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/f9a88e85-837a-4d9a-8008-b521a3e0e042) in 3 ms",
+        "GET /dashboard/leads/f9a88e85-837a-4d9a-8008-b521a3e0e042 -\u003E 200 in 2 ms"
+      ]
+    }
+  ],
+  "runLog": [
+    "22:03:22 Run started against local (http://localhost:5274) with 23 tests.",
+    "22:03:22 Registered test clinic \u0022[Automation] main 37543b5b\u0022 (e095acf9-3d81-4718-8348-7e49b7ed61a0).",
+    "22:03:22 DELETE /api/platform-admin/automation/clinics/e095acf9-3d81-4718-8348-7e49b7ed61a0 -\u003E 204 in 4 ms",
+    "22:03:22 Deleted test clinic \u0022[Automation] main 37543b5b\u0022 and all its data.",
+    "22:03:22 Done: 23 passed, 0 failed, 0 skipped."
+  ],
+  "passed": 23,
+  "failed": 0,
+  "skipped": 0,
+  "total": 23
+}

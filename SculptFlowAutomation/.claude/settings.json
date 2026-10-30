@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(**/bin/**)",
+      "Read(**/obj/**)",
+      "Read(**/node_modules/**)",
+      "Read(**/.vs/**)",
+      "Read(**/*.log)",
+      "Read(**/launchSettings.json)"
+    ],
+    "ask": [
+      "Read(**/PROJECT_HANDOFF.md)",
+      "Read(../omni-feature-analysis-and-greenfield-blueprint.html)",
+      "Read(../new-omni-current-state-gap-analysis-and-roadmap.html)"
+    ]
+  }
+}

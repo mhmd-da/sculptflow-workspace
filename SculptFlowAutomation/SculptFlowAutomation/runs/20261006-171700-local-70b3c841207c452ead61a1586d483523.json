@@ -1,0 +1,42 @@
+{
+  "id": "70b3c841207c452ead61a1586d483523",
+  "environment": "local",
+  "baseUrl": "http://localhost:5274",
+  "startedAt": "2026-10-06T17:17:00.2342716+00:00",
+  "finishedAt": "2026-10-06T17:17:02.3780726+00:00",
+  "phase": "finished",
+  "testClinic": "[Automation] main 70b3c841 (2d22e6c6-456b-4263-a43c-cda5d0e2630d)",
+  "allowExternal": true,
+  "allowMessaging": false,
+  "allowBilling": false,
+  "keepTestData": false,
+  "results": [
+    {
+      "id": "websites.scrape",
+      "suiteId": "websites",
+      "name": "Scrape a single page, then remove the source",
+      "status": "failed",
+      "durationMs": 2129,
+      "message": "The crawl ended as \u0022completed_with_errors\u0022 (completed_with_errors usually means embeddings failed).",
+      "log": [
+        "GET /Account/Register -\u003E 200 in 34 ms",
+        "POST /Account/Register -\u003E 302 (/dashboard) in 48 ms",
+        "POST /api/procedures -\u003E 201 (http://localhost:5274/api/procedures/976876d5-a349-411a-a527-f181f889dd03) in 2 ms",
+        "POST /api/knowledge/websites -\u003E 202 (http://localhost:5274/api/knowledge/websites/fa3dd889-2ce9-4601-a62a-d884245f17e1) in 3 ms",
+        "GET /api/knowledge/websites/fa3dd889-2ce9-4601-a62a-d884245f17e1 -\u003E 200 in 5 ms",
+        "Final crawl status: completed_with_errors"
+      ]
+    }
+  ],
+  "runLog": [
+    "17:17:00 Run started against local (http://localhost:5274) with 1 tests.",
+    "17:17:00 Registered test clinic \u0022[Automation] main 70b3c841\u0022 (2d22e6c6-456b-4263-a43c-cda5d0e2630d).",
+    "17:17:02 DELETE /api/platform-admin/automation/clinics/2d22e6c6-456b-4263-a43c-cda5d0e2630d -\u003E 204 in 5 ms",
+    "17:17:02 Deleted test clinic \u0022[Automation] main 70b3c841\u0022 and all its data.",
+    "17:17:02 Done: 0 passed, 1 failed, 0 skipped."
+  ],
+  "passed": 0,
+  "failed": 1,
+  "skipped": 0,
+  "total": 1
+}

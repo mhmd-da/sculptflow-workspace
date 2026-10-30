@@ -1,0 +1,1366 @@
+{
+  "id": "d53d99a687924e28819ca848534de4e9",
+  "environment": "local",
+  "baseUrl": "http://localhost:5274",
+  "startedAt": "2026-10-06T21:01:21.3988521+00:00",
+  "finishedAt": "2026-10-06T21:01:27.922813+00:00",
+  "phase": "finished",
+  "testClinic": "[Automation] main d53d99a6 (9f53f73c-8ac2-406f-aab1-f27dcff9e671)",
+  "allowExternal": false,
+  "allowMessaging": false,
+  "allowBilling": true,
+  "keepTestData": false,
+  "results": [
+    {
+      "id": "health.root",
+      "suiteId": "health",
+      "name": "Home redirects to the dashboard",
+      "status": "passed",
+      "durationMs": 131,
+      "message": null,
+      "log": [
+        "GET / -\u003E 302 (/dashboard) in 122 ms"
+      ]
+    },
+    {
+      "id": "health.login-page",
+      "suiteId": "health",
+      "name": "Sign-in page loads",
+      "status": "passed",
+      "durationMs": 99,
+      "message": null,
+      "log": [
+        "GET /Account/Login -\u003E 200 in 95 ms"
+      ]
+    },
+    {
+      "id": "health.register-page",
+      "suiteId": "health",
+      "name": "Sign-up page loads",
+      "status": "passed",
+      "durationMs": 37,
+      "message": null,
+      "log": [
+        "GET /Account/Register -\u003E 200 in 36 ms"
+      ]
+    },
+    {
+      "id": "health.response-time",
+      "suiteId": "health",
+      "name": "Sign-in page answers within 3 seconds",
+      "status": "passed",
+      "durationMs": 14,
+      "message": null,
+      "log": [
+        "GET /Account/Login -\u003E 200 in 13 ms"
+      ]
+    },
+    {
+      "id": "health.dashboard-requires-login",
+      "suiteId": "health",
+      "name": "Dashboard sends signed-out visitors to sign-in",
+      "status": "passed",
+      "durationMs": 6,
+      "message": null,
+      "log": [
+        "GET /dashboard -\u003E 302 (http://localhost:5274/Account/Login?ReturnUrl=%2Fdashboard) in 5 ms"
+      ]
+    },
+    {
+      "id": "auth.register",
+      "suiteId": "auth",
+      "name": "Sign up a new clinic",
+      "status": "passed",
+      "durationMs": 1035,
+      "message": null,
+      "log": [
+        "GET /Account/Register -\u003E 200 in 5 ms",
+        "POST /Account/Register -\u003E 302 (/dashboard) in 664 ms",
+        "POST /api/procedures -\u003E 201 (http://localhost:5274/api/procedures/2aa33369-15aa-4fd5-8843-ae642cc58224) in 124 ms",
+        "GET /dashboard -\u003E 200 in 219 ms"
+      ]
+    },
+    {
+      "id": "auth.login",
+      "suiteId": "auth",
+      "name": "Sign in with email and password",
+      "status": "passed",
+      "durationMs": 113,
+      "message": null,
+      "log": [
+        "GET /Account/Login -\u003E 200 in 3 ms",
+        "POST /Account/Login -\u003E 302 (/dashboard) in 75 ms",
+        "GET /api/staff -\u003E 200 in 33 ms"
+      ]
+    },
+    {
+      "id": "auth.wrong-password",
+      "suiteId": "auth",
+      "name": "Wrong password is rejected",
+      "status": "passed",
+      "durationMs": 75,
+      "message": null,
+      "log": [
+        "GET /Account/Login -\u003E 200 in 2 ms",
+        "POST /Account/Login -\u003E 200 in 67 ms",
+        "GET /api/staff -\u003E 401 (http://localhost:5274/Account/Login?ReturnUrl=%2Fapi%2Fstaff) in 1 ms"
+      ]
+    },
+    {
+      "id": "auth.duplicate-email",
+      "suiteId": "auth",
+      "name": "Signing up twice with one email is refused",
+      "status": "passed",
+      "durationMs": 75,
+      "message": null,
+      "log": [
+        "GET /Account/Register -\u003E 200 in 3 ms",
+        "POST /Account/Register -\u003E 200 in 71 ms"
+      ]
+    },
+    {
+      "id": "auth.logout",
+      "suiteId": "auth",
+      "name": "Sign out ends the session",
+      "status": "passed",
+      "durationMs": 105,
+      "message": null,
+      "log": [
+        "GET /Account/Login -\u003E 200 in 3 ms",
+        "POST /Account/Login -\u003E 302 (/dashboard) in 68 ms",
+        "GET /dashboard -\u003E 200 in 23 ms",
+        "POST /Account/Logout -\u003E 302 (/Account/Login) in 9 ms",
+        "GET /api/staff -\u003E 401 (http://localhost:5274/Account/Login?ReturnUrl=%2Fapi%2Fstaff) in 0 ms"
+      ]
+    },
+    {
+      "id": "security.signed-out",
+      "suiteId": "security",
+      "name": "Clinic APIs refuse signed-out callers",
+      "status": "passed",
+      "durationMs": 5,
+      "message": null,
+      "log": [
+        "GET /api/leads -\u003E 401 (http://localhost:5274/Account/Login?ReturnUrl=%2Fapi%2Fleads) in 0 ms",
+        "GET /api/procedures -\u003E 401 (http://localhost:5274/Account/Login?ReturnUrl=%2Fapi%2Fprocedures) in 0 ms",
+        "GET /api/appointments -\u003E 401 (http://localhost:5274/Account/Login?ReturnUrl=%2Fapi%2Fappointments) in 0 ms",
+        "GET /api/conversations -\u003E 401 (http://localhost:5274/Account/Login?ReturnUrl=%2Fapi%2Fconversations) in 0 ms",
+        "GET /api/notifications -\u003E 401 (http://localhost:5274/Account/Login?ReturnUrl=%2Fapi%2Fnotifications) in 0 ms",
+        "GET /api/dashboard/summary -\u003E 401 (http://localhost:5274/Account/Login?ReturnUrl=%2Fapi%2Fdashboard%2Fsummary) in 0 ms",
+        "GET /api/knowledge -\u003E 401 (http://localhost:5274/Account/Login?ReturnUrl=%2Fapi%2Fknowledge) in 0 ms",
+        "GET /api/campaigns -\u003E 401 (http://localhost:5274/Account/Login?ReturnUrl=%2Fapi%2Fcampaigns) in 0 ms",
+        "GET /api/staff -\u003E 401 (http://localhost:5274/Account/Login?ReturnUrl=%2Fapi%2Fstaff) in 0 ms",
+        "GET /api/billing/summary -\u003E 401 (http://localhost:5274/Account/Login?ReturnUrl=%2Fapi%2Fbilling%2Fsummary) in 0 ms",
+        "GET /api/channel-integrations -\u003E 401 (http://localhost:5274/Account/Login?ReturnUrl=%2Fapi%2Fchannel-integrations) in 0 ms",
+        "GET /api/calendar-integrations -\u003E 401 (http://localhost:5274/Account/Login?ReturnUrl=%2Fapi%2Fcalendar-integrations) in 0 ms"
+      ]
+    },
+    {
+      "id": "security.ingest-key",
+      "suiteId": "security",
+      "name": "AI/n8n endpoints refuse a missing or wrong ingest key",
+      "status": "passed",
+      "durationMs": 51,
+      "message": null,
+      "log": [
+        "GET /api/ai/clinic-info?clinicId=e054daba-c65e-421f-a93e-e3b2b4a8f44f -\u003E 401 in 15 ms",
+        "GET /api/ai/clinic-info?clinicId=e054daba-c65e-421f-a93e-e3b2b4a8f44f -\u003E 401 in 7 ms",
+        "POST /api/messages/ingest -\u003E 401 in 23 ms"
+      ]
+    },
+    {
+      "id": "security.admin-key",
+      "suiteId": "security",
+      "name": "Platform-admin API refuses a missing or wrong key",
+      "status": "passed",
+      "durationMs": 19,
+      "message": null,
+      "log": [
+        "GET /api/platform-admin/billing/plans -\u003E 401 in 7 ms",
+        "GET /api/platform-admin/billing/plans -\u003E 401 in 4 ms",
+        "DELETE /api/platform-admin/automation/clinics/592d74a3-2129-4858-95d1-a25282956aa5 -\u003E 401 in 6 ms"
+      ]
+    },
+    {
+      "id": "security.ai-send-needs-key",
+      "suiteId": "security",
+      "name": "AI-origin message send refuses a missing ingest key",
+      "status": "passed",
+      "durationMs": 18,
+      "message": null,
+      "log": [
+        "POST /api/conversations/de59629e-a2f1-45be-a43e-fd3069898c59/messages/send?clinicId=7908cfbe-b0d4-4c85-8acb-fc7939e68397 -\u003E 401 in 17 ms"
+      ]
+    },
+    {
+      "id": "security.tenant-isolation",
+      "suiteId": "security",
+      "name": "One clinic can\u0027t read or change another clinic\u0027s data",
+      "status": "passed",
+      "durationMs": 390,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/06c0a8bd-984c-482d-8b51-6fb51df34887) in 174 ms",
+        "GET /Account/Register -\u003E 200 in 2 ms",
+        "POST /Account/Register -\u003E 302 (/dashboard) in 82 ms",
+        "POST /api/procedures -\u003E 201 (http://localhost:5274/api/procedures/b473ad10-b0b2-486a-83b3-48dcaf3d47a6) in 5 ms",
+        "GET /api/leads/06c0a8bd-984c-482d-8b51-6fb51df34887 -\u003E 404 in 30 ms",
+        "PATCH /api/leads/06c0a8bd-984c-482d-8b51-6fb51df34887 -\u003E 404 in 16 ms",
+        "GET /api/procedures/2aa33369-15aa-4fd5-8843-ae642cc58224 -\u003E 404 in 16 ms",
+        "GET /api/leads?take=200 -\u003E 200 in 49 ms",
+        "GET /api/leads/06c0a8bd-984c-482d-8b51-6fb51df34887 -\u003E 200 in 4 ms"
+      ]
+    },
+    {
+      "id": "pages.dashboard",
+      "suiteId": "pages",
+      "name": "Dashboard page",
+      "status": "passed",
+      "durationMs": 19,
+      "message": null,
+      "log": [
+        "GET /dashboard -\u003E 200 in 18 ms"
+      ]
+    },
+    {
+      "id": "pages.leads",
+      "suiteId": "pages",
+      "name": "Leads page",
+      "status": "passed",
+      "durationMs": 48,
+      "message": null,
+      "log": [
+        "GET /dashboard/leads -\u003E 200 in 48 ms"
+      ]
+    },
+    {
+      "id": "pages.appointments",
+      "suiteId": "pages",
+      "name": "Appointments page",
+      "status": "passed",
+      "durationMs": 29,
+      "message": null,
+      "log": [
+        "GET /dashboard/appointments -\u003E 200 in 29 ms"
+      ]
+    },
+    {
+      "id": "pages.inbox",
+      "suiteId": "pages",
+      "name": "Inbox page",
+      "status": "passed",
+      "durationMs": 51,
+      "message": null,
+      "log": [
+        "GET /inbox -\u003E 200 in 51 ms"
+      ]
+    },
+    {
+      "id": "pages.procedures",
+      "suiteId": "pages",
+      "name": "Procedures page",
+      "status": "passed",
+      "durationMs": 39,
+      "message": null,
+      "log": [
+        "GET /Procedures -\u003E 200 in 39 ms"
+      ]
+    },
+    {
+      "id": "pages.procedure-new",
+      "suiteId": "pages",
+      "name": "New procedure form page",
+      "status": "passed",
+      "durationMs": 19,
+      "message": null,
+      "log": [
+        "GET /Procedures/Edit -\u003E 200 in 19 ms"
+      ]
+    },
+    {
+      "id": "pages.knowledge",
+      "suiteId": "pages",
+      "name": "Knowledge base page",
+      "status": "passed",
+      "durationMs": 175,
+      "message": null,
+      "log": [
+        "GET /KnowledgeBase -\u003E 200 in 175 ms"
+      ]
+    },
+    {
+      "id": "pages.knowledge-new",
+      "suiteId": "pages",
+      "name": "New knowledge entry form page",
+      "status": "passed",
+      "durationMs": 28,
+      "message": null,
+      "log": [
+        "GET /KnowledgeBase/Edit -\u003E 200 in 28 ms"
+      ]
+    },
+    {
+      "id": "pages.knowledge-settings",
+      "suiteId": "pages",
+      "name": "Knowledge settings page",
+      "status": "passed",
+      "durationMs": 21,
+      "message": null,
+      "log": [
+        "GET /KnowledgeBase/Settings -\u003E 200 in 21 ms"
+      ]
+    },
+    {
+      "id": "pages.knowledge-benchmark",
+      "suiteId": "pages",
+      "name": "Knowledge benchmark page",
+      "status": "passed",
+      "durationMs": 22,
+      "message": null,
+      "log": [
+        "GET /KnowledgeBase/Benchmark -\u003E 200 in 22 ms"
+      ]
+    },
+    {
+      "id": "pages.campaigns",
+      "suiteId": "pages",
+      "name": "Campaigns page",
+      "status": "passed",
+      "durationMs": 47,
+      "message": null,
+      "log": [
+        "GET /Campaigns -\u003E 200 in 46 ms"
+      ]
+    },
+    {
+      "id": "pages.campaign-new",
+      "suiteId": "pages",
+      "name": "New campaign form page",
+      "status": "passed",
+      "durationMs": 51,
+      "message": null,
+      "log": [
+        "GET /Campaigns/Create -\u003E 200 in 51 ms"
+      ]
+    },
+    {
+      "id": "pages.staff",
+      "suiteId": "pages",
+      "name": "Staff page",
+      "status": "passed",
+      "durationMs": 23,
+      "message": null,
+      "log": [
+        "GET /Staff -\u003E 200 in 23 ms"
+      ]
+    },
+    {
+      "id": "pages.whatsapp-templates",
+      "suiteId": "pages",
+      "name": "WhatsApp templates page",
+      "status": "passed",
+      "durationMs": 27,
+      "message": null,
+      "log": [
+        "GET /WhatsApp/Templates -\u003E 200 in 27 ms"
+      ]
+    },
+    {
+      "id": "pages.whatsapp-health",
+      "suiteId": "pages",
+      "name": "WhatsApp health page",
+      "status": "passed",
+      "durationMs": 31,
+      "message": null,
+      "log": [
+        "GET /WhatsApp/Health -\u003E 200 in 31 ms"
+      ]
+    },
+    {
+      "id": "pages.clinic-info",
+      "suiteId": "pages",
+      "name": "Clinic info page",
+      "status": "passed",
+      "durationMs": 30,
+      "message": null,
+      "log": [
+        "GET /settings/clinic-info -\u003E 200 in 30 ms"
+      ]
+    },
+    {
+      "id": "pages.availability",
+      "suiteId": "pages",
+      "name": "Opening hours page",
+      "status": "passed",
+      "durationMs": 53,
+      "message": null,
+      "log": [
+        "GET /settings/clinic-info?tab=availability -\u003E 200 in 53 ms"
+      ]
+    },
+    {
+      "id": "pages.integrations",
+      "suiteId": "pages",
+      "name": "Integrations page",
+      "status": "passed",
+      "durationMs": 57,
+      "message": null,
+      "log": [
+        "GET /settings/integrations -\u003E 200 in 57 ms"
+      ]
+    },
+    {
+      "id": "pages.calendar",
+      "suiteId": "pages",
+      "name": "Calendar integrations page",
+      "status": "passed",
+      "durationMs": 61,
+      "message": null,
+      "log": [
+        "GET /settings/calendar-integrations -\u003E 200 in 61 ms"
+      ]
+    },
+    {
+      "id": "pages.billing",
+      "suiteId": "pages",
+      "name": "Billing page",
+      "status": "passed",
+      "durationMs": 157,
+      "message": null,
+      "log": [
+        "GET /settings/billing -\u003E 200 in 157 ms"
+      ]
+    },
+    {
+      "id": "pages.lead-detail",
+      "suiteId": "pages",
+      "name": "Lead detail page",
+      "status": "passed",
+      "durationMs": 32,
+      "message": null,
+      "log": [
+        "GET /dashboard/leads/06c0a8bd-984c-482d-8b51-6fb51df34887 -\u003E 200 in 31 ms"
+      ]
+    },
+    {
+      "id": "staff.list",
+      "suiteId": "staff",
+      "name": "Staff list includes the signed-up user",
+      "status": "passed",
+      "durationMs": 5,
+      "message": null,
+      "log": [
+        "GET /api/staff -\u003E 200 in 4 ms"
+      ]
+    },
+    {
+      "id": "procedures.crud",
+      "suiteId": "procedures",
+      "name": "Create, read and update a procedure",
+      "status": "passed",
+      "durationMs": 38,
+      "message": null,
+      "log": [
+        "POST /api/procedures -\u003E 201 (http://localhost:5274/api/procedures/a50f54e1-3c57-4172-82f9-bdea4e2bd2b8) in 4 ms",
+        "GET /api/procedures/a50f54e1-3c57-4172-82f9-bdea4e2bd2b8 -\u003E 200 in 3 ms",
+        "PUT /api/procedures/a50f54e1-3c57-4172-82f9-bdea4e2bd2b8 -\u003E 200 in 18 ms",
+        "GET /api/procedures -\u003E 200 in 10 ms"
+      ]
+    },
+    {
+      "id": "procedures.active-toggle",
+      "suiteId": "procedures",
+      "name": "Deactivated procedures drop out of the active list",
+      "status": "passed",
+      "durationMs": 37,
+      "message": null,
+      "log": [
+        "POST /api/procedures -\u003E 201 (http://localhost:5274/api/procedures/8a9828c8-c15f-4a10-933c-d552bc028dfa) in 4 ms",
+        "POST /api/procedures/8a9828c8-c15f-4a10-933c-d552bc028dfa/active -\u003E 200 in 13 ms",
+        "GET /api/procedures -\u003E 200 in 2 ms",
+        "GET /api/procedures?activeOnly=false -\u003E 200 in 2 ms",
+        "POST /api/procedures/8a9828c8-c15f-4a10-933c-d552bc028dfa/active -\u003E 200 in 5 ms",
+        "GET /api/procedures -\u003E 200 in 3 ms"
+      ]
+    },
+    {
+      "id": "procedures.validation",
+      "suiteId": "procedures",
+      "name": "A procedure without a name is rejected",
+      "status": "passed",
+      "durationMs": 3,
+      "message": null,
+      "log": [
+        "POST /api/procedures -\u003E 400 in 2 ms"
+      ]
+    },
+    {
+      "id": "leads.intake",
+      "suiteId": "leads",
+      "name": "Intake creates a lead the clinic can see",
+      "status": "passed",
+      "durationMs": 11,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/c5468ab1-689e-45b4-959c-e738676ad19f) in 7 ms",
+        "GET /api/leads/c5468ab1-689e-45b4-959c-e738676ad19f -\u003E 200 in 3 ms"
+      ]
+    },
+    {
+      "id": "leads.intake-idempotent",
+      "suiteId": "leads",
+      "name": "Re-sending the same external lead id doesn\u0027t duplicate it",
+      "status": "passed",
+      "durationMs": 12,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/3fce7e99-974c-4f68-ba11-19b6d4fbcf85) in 7 ms",
+        "POST /api/leads -\u003E 200 in 3 ms"
+      ]
+    },
+    {
+      "id": "leads.list-search",
+      "suiteId": "leads",
+      "name": "Lead list and search find the lead",
+      "status": "passed",
+      "durationMs": 32,
+      "message": null,
+      "log": [
+        "GET /api/leads?take=200 -\u003E 200 in 5 ms",
+        "GET /api/leads?search=shared%20d53d99a6 -\u003E 200 in 25 ms"
+      ]
+    },
+    {
+      "id": "leads.update",
+      "suiteId": "leads",
+      "name": "Staff can edit a lead",
+      "status": "passed",
+      "durationMs": 16,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/a606f567-5844-4feb-8218-c5f96eb056d0) in 8 ms",
+        "PATCH /api/leads/a606f567-5844-4feb-8218-c5f96eb056d0 -\u003E 200 in 6 ms"
+      ]
+    },
+    {
+      "id": "leads.status",
+      "suiteId": "leads",
+      "name": "Lead status moves through the pipeline",
+      "status": "passed",
+      "durationMs": 56,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/31fff64a-c70f-4a23-b215-7dedbf423645) in 7 ms",
+        "POST /api/leads/31fff64a-c70f-4a23-b215-7dedbf423645/status -\u003E 200 in 17 ms",
+        "POST /api/leads/31fff64a-c70f-4a23-b215-7dedbf423645/status -\u003E 200 in 7 ms",
+        "GET /api/leads?status=qualified\u0026take=200 -\u003E 200 in 21 ms"
+      ]
+    },
+    {
+      "id": "leads.status-invalid",
+      "suiteId": "leads",
+      "name": "An unknown status is rejected",
+      "status": "passed",
+      "durationMs": 4,
+      "message": null,
+      "log": [
+        "POST /api/leads/06c0a8bd-984c-482d-8b51-6fb51df34887/status -\u003E 400 in 3 ms"
+      ]
+    },
+    {
+      "id": "leads.unknown",
+      "suiteId": "leads",
+      "name": "A lead id that doesn\u0027t exist returns 404",
+      "status": "passed",
+      "durationMs": 5,
+      "message": null,
+      "log": [
+        "GET /api/leads/035a1c1a-8f9a-42d9-8c58-c8e56ce7a6ec -\u003E 404 in 3 ms"
+      ]
+    },
+    {
+      "id": "availability.save",
+      "suiteId": "availability",
+      "name": "Save weekly opening hours",
+      "status": "passed",
+      "durationMs": 101,
+      "message": null,
+      "log": [
+        "GET /settings/clinic-info -\u003E 200 in 6 ms",
+        "POST /settings/clinic-info?handler=SaveAvailability -\u003E 302 (/settings/clinic-info?tab=availability) in 80 ms",
+        "GET /settings/clinic-info?tab=availability -\u003E 200 in 12 ms"
+      ]
+    },
+    {
+      "id": "availability.slots",
+      "suiteId": "availability",
+      "name": "Open slots are offered",
+      "status": "passed",
+      "durationMs": 69,
+      "message": null,
+      "log": [
+        "GET /api/appointments/available?procedureId=2aa33369-15aa-4fd5-8843-ae642cc58224\u0026days=14 -\u003E 200 in 67 ms"
+      ]
+    },
+    {
+      "id": "availability.slots-one-day",
+      "suiteId": "availability",
+      "name": "Slots for a single date stay on that date",
+      "status": "passed",
+      "durationMs": 10,
+      "message": null,
+      "log": [
+        "GET /api/appointments/available?date=2026-10-09 -\u003E 200 in 9 ms"
+      ]
+    },
+    {
+      "id": "appointments.create",
+      "suiteId": "appointments",
+      "name": "Book an appointment for a lead",
+      "status": "passed",
+      "durationMs": 247,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/a0084acd-820f-4966-98fc-3be9054238d4) in 7 ms",
+        "GET /api/appointments/available?procedureId=2aa33369-15aa-4fd5-8843-ae642cc58224\u0026days=14 -\u003E 200 in 8 ms",
+        "POST /api/appointments -\u003E 201 (http://localhost:5274/api/appointments) in 118 ms",
+        "GET /api/appointments/00bd660d-2be7-4421-b722-b7d542e12a04 -\u003E 200 in 31 ms",
+        "GET /api/appointments/calendar?year=2026\u0026month=10 -\u003E 200 in 39 ms",
+        "GET /api/appointments?take=200 -\u003E 200 in 35 ms"
+      ]
+    },
+    {
+      "id": "appointments.status",
+      "suiteId": "appointments",
+      "name": "Confirm, then cancel an appointment",
+      "status": "passed",
+      "durationMs": 73,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/862bfd82-61fc-4835-9aae-ab55929516d7) in 6 ms",
+        "GET /api/appointments/available?procedureId=2aa33369-15aa-4fd5-8843-ae642cc58224\u0026days=14 -\u003E 200 in 9 ms",
+        "POST /api/appointments -\u003E 201 (http://localhost:5274/api/appointments) in 10 ms",
+        "PATCH /api/appointments/0c64b9f7-754a-458f-84d9-e6f23ada2cb9/status -\u003E 200 in 30 ms",
+        "PATCH /api/appointments/0c64b9f7-754a-458f-84d9-e6f23ada2cb9/status -\u003E 200 in 9 ms",
+        "PATCH /api/appointments/0c64b9f7-754a-458f-84d9-e6f23ada2cb9/status -\u003E 400 in 2 ms"
+      ]
+    },
+    {
+      "id": "appointments.calendar-validation",
+      "suiteId": "appointments",
+      "name": "Calendar rejects an invalid month",
+      "status": "passed",
+      "durationMs": 2,
+      "message": null,
+      "log": [
+        "GET /api/appointments/calendar?year=2026\u0026month=13 -\u003E 400 in 2 ms"
+      ]
+    },
+    {
+      "id": "appointments.detail-page",
+      "suiteId": "appointments",
+      "name": "Appointment detail page renders",
+      "status": "passed",
+      "durationMs": 49,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/676b94be-5ddd-49d2-a5af-d79763ca5aa9) in 5 ms",
+        "GET /api/appointments/available?procedureId=2aa33369-15aa-4fd5-8843-ae642cc58224\u0026days=14 -\u003E 200 in 8 ms",
+        "POST /api/appointments -\u003E 201 (http://localhost:5274/api/appointments) in 11 ms",
+        "GET /dashboard/appointments/bb37dafe-449c-4c1d-b884-fe28092c0839 -\u003E 200 in 22 ms"
+      ]
+    },
+    {
+      "id": "bookings.lifecycle",
+      "suiteId": "bookings",
+      "name": "Quote, take a deposit and book a procedure",
+      "status": "passed",
+      "durationMs": 170,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/79c63f41-28d8-4b87-b54b-4b63c616ec18) in 6 ms",
+        "POST /api/procedure-bookings -\u003E 201 (http://localhost:5274/api/procedure-bookings) in 74 ms",
+        "PATCH /api/procedure-bookings/9dcff4f5-be8c-4c70-8a92-00fc5a88ee8b -\u003E 200 in 26 ms",
+        "PATCH /api/procedure-bookings/9dcff4f5-be8c-4c70-8a92-00fc5a88ee8b -\u003E 200 in 9 ms",
+        "PATCH /api/procedure-bookings/9dcff4f5-be8c-4c70-8a92-00fc5a88ee8b -\u003E 200 in 8 ms",
+        "GET /api/procedure-bookings?status=booked\u0026take=200 -\u003E 200 in 36 ms"
+      ]
+    },
+    {
+      "id": "bookings.invalid-status",
+      "suiteId": "bookings",
+      "name": "An unknown booking status is rejected",
+      "status": "passed",
+      "durationMs": 14,
+      "message": null,
+      "log": [
+        "POST /api/procedure-bookings -\u003E 201 (http://localhost:5274/api/procedure-bookings) in 8 ms",
+        "PATCH /api/procedure-bookings/24e75107-833c-49e1-9708-f4cb671b2ecf -\u003E 400 in 3 ms"
+      ]
+    },
+    {
+      "id": "inbox.conversation",
+      "suiteId": "inbox",
+      "name": "Open a conversation and log messages",
+      "status": "passed",
+      "durationMs": 258,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/339789c3-3f61-4a0c-9bc6-3acb553a6ed9) in 6 ms",
+        "POST /api/conversations -\u003E 201 (http://localhost:5274/api/conversations/66d65742-5f7b-4787-8ae4-186b508b9c5a) in 63 ms",
+        "POST /api/conversations/66d65742-5f7b-4787-8ae4-186b508b9c5a/messages -\u003E 200 in 95 ms",
+        "GET /api/conversations/66d65742-5f7b-4787-8ae4-186b508b9c5a/messages -\u003E 200 in 24 ms",
+        "GET /api/conversations?take=200 -\u003E 200 in 17 ms",
+        "GET /api/conversations/66d65742-5f7b-4787-8ae4-186b508b9c5a -\u003E 200 in 14 ms",
+        "POST /api/conversations/66d65742-5f7b-4787-8ae4-186b508b9c5a/read -\u003E 204 in 29 ms"
+      ]
+    },
+    {
+      "id": "inbox.modes",
+      "suiteId": "inbox",
+      "name": "Take over from the AI, hand back, then close",
+      "status": "passed",
+      "durationMs": 57,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/05086f78-e9de-467a-a984-aafd53ff02f4) in 6 ms",
+        "POST /api/conversations -\u003E 201 (http://localhost:5274/api/conversations/449125f7-1c98-4ad4-a2f4-6d56fe361971) in 4 ms",
+        "POST /api/conversations/449125f7-1c98-4ad4-a2f4-6d56fe361971/take-over -\u003E 200 in 20 ms",
+        "POST /api/conversations/449125f7-1c98-4ad4-a2f4-6d56fe361971/return-to-ai -\u003E 200 in 12 ms",
+        "POST /api/conversations/449125f7-1c98-4ad4-a2f4-6d56fe361971/close -\u003E 200 in 12 ms"
+      ]
+    },
+    {
+      "id": "inbox.ingest",
+      "suiteId": "inbox",
+      "name": "n8n ingest stores an inbound customer message",
+      "status": "passed",
+      "durationMs": 74,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/6c0953be-9da3-4ad6-8d4b-43770b8d0a8c) in 7 ms",
+        "POST /api/conversations -\u003E 201 (http://localhost:5274/api/conversations/64b93c63-c797-4d47-ac90-734a14a55b10) in 4 ms",
+        "POST /api/messages/ingest -\u003E 200 in 52 ms",
+        "GET /api/conversations/64b93c63-c797-4d47-ac90-734a14a55b10/messages -\u003E 200 in 4 ms"
+      ]
+    },
+    {
+      "id": "inbox.ingest-unknown",
+      "suiteId": "inbox",
+      "name": "Ingest for an unknown conversation returns 404",
+      "status": "passed",
+      "durationMs": 4,
+      "message": null,
+      "log": [
+        "POST /api/messages/ingest -\u003E 404 in 2 ms"
+      ]
+    },
+    {
+      "id": "notifications.list",
+      "suiteId": "notifications",
+      "name": "List notifications and the unread count",
+      "status": "passed",
+      "durationMs": 46,
+      "message": null,
+      "log": [
+        "GET /api/notifications?take=20 -\u003E 200 in 31 ms",
+        "GET /api/notifications/unread-count -\u003E 200 in 13 ms"
+      ]
+    },
+    {
+      "id": "notifications.read-all",
+      "suiteId": "notifications",
+      "name": "Mark all as read clears the unread count",
+      "status": "passed",
+      "durationMs": 17,
+      "message": null,
+      "log": [
+        "POST /api/notifications/read-all -\u003E 204 in 13 ms",
+        "GET /api/notifications?take=20 -\u003E 200 in 3 ms"
+      ]
+    },
+    {
+      "id": "dashboard.summary",
+      "suiteId": "dashboard",
+      "name": "Summary and attention load",
+      "status": "passed",
+      "durationMs": 41,
+      "message": null,
+      "log": [
+        "GET /api/dashboard/summary -\u003E 200 in 28 ms",
+        "GET /api/dashboard/attention -\u003E 200 in 11 ms"
+      ]
+    },
+    {
+      "id": "dashboard.tables",
+      "suiteId": "dashboard",
+      "name": "Leads, appointments and procedure tables load",
+      "status": "passed",
+      "durationMs": 58,
+      "message": null,
+      "log": [
+        "GET /api/dashboard/leads?take=200 -\u003E 200 in 14 ms",
+        "GET /api/dashboard/appointments -\u003E 200 in 23 ms",
+        "GET /api/dashboard/procedures -\u003E 200 in 19 ms"
+      ]
+    },
+    {
+      "id": "knowledge.settings",
+      "suiteId": "knowledge",
+      "name": "Read and update retrieval settings",
+      "status": "passed",
+      "durationMs": 51,
+      "message": null,
+      "log": [
+        "GET /api/knowledge/settings -\u003E 200 in 16 ms",
+        "PUT /api/knowledge/settings -\u003E 200 in 28 ms",
+        "PUT /api/knowledge/settings -\u003E 400 in 2 ms"
+      ]
+    },
+    {
+      "id": "knowledge.list",
+      "suiteId": "knowledge",
+      "name": "Knowledge list loads",
+      "status": "passed",
+      "durationMs": 17,
+      "message": null,
+      "log": [
+        "GET /api/knowledge -\u003E 200 in 17 ms"
+      ]
+    },
+    {
+      "id": "knowledge.entry",
+      "suiteId": "knowledge",
+      "name": "Create, edit, deactivate and delete an entry",
+      "status": "skipped",
+      "durationMs": 0,
+      "message": "Calls a paid or third-party service. Allow \u0022external services\u0022 to run it.",
+      "log": []
+    },
+    {
+      "id": "knowledge.upload",
+      "suiteId": "knowledge",
+      "name": "Upload a text file as an entry",
+      "status": "skipped",
+      "durationMs": 0,
+      "message": "Calls a paid or third-party service. Allow \u0022external services\u0022 to run it.",
+      "log": []
+    },
+    {
+      "id": "knowledge.benchmark",
+      "suiteId": "knowledge",
+      "name": "Knowledge benchmark dashboard loads",
+      "status": "passed",
+      "durationMs": 143,
+      "message": null,
+      "log": [
+        "GET /api/knowledge/benchmark -\u003E 200 in 97 ms",
+        "GET /api/knowledge/benchmark/runs -\u003E 200 in 22 ms",
+        "GET /api/knowledge/benchmark/generations -\u003E 200 in 22 ms"
+      ]
+    },
+    {
+      "id": "websites.list",
+      "suiteId": "websites",
+      "name": "Website sources list loads",
+      "status": "passed",
+      "durationMs": 22,
+      "message": null,
+      "log": [
+        "GET /api/knowledge/websites -\u003E 200 in 21 ms"
+      ]
+    },
+    {
+      "id": "websites.scrape",
+      "suiteId": "websites",
+      "name": "Scrape a single page, then remove the source",
+      "status": "skipped",
+      "durationMs": 0,
+      "message": "Calls a paid or third-party service. Allow \u0022external services\u0022 to run it.",
+      "log": []
+    },
+    {
+      "id": "websites.invalid-url",
+      "suiteId": "websites",
+      "name": "A non-http URL is rejected",
+      "status": "passed",
+      "durationMs": 15,
+      "message": null,
+      "log": [
+        "POST /api/knowledge/websites -\u003E 400 in 13 ms"
+      ]
+    },
+    {
+      "id": "campaigns.list",
+      "suiteId": "campaigns",
+      "name": "Campaign list loads",
+      "status": "passed",
+      "durationMs": 13,
+      "message": null,
+      "log": [
+        "GET /api/campaigns -\u003E 200 in 12 ms"
+      ]
+    },
+    {
+      "id": "campaigns.audience",
+      "suiteId": "campaigns",
+      "name": "Audience preview counts eligible leads",
+      "status": "passed",
+      "durationMs": 36,
+      "message": null,
+      "log": [
+        "GET /api/campaigns/audience-preview?audienceType=all_eligible -\u003E 200 in 13 ms",
+        "GET /api/campaigns/audience-preview/leads?audienceType=all_eligible\u0026limit=10 -\u003E 200 in 21 ms"
+      ]
+    },
+    {
+      "id": "campaigns.create-needs-template",
+      "suiteId": "campaigns",
+      "name": "Creating a campaign without an approved template is refused",
+      "status": "passed",
+      "durationMs": 32,
+      "message": null,
+      "log": [
+        "POST /api/campaigns -\u003E 422 in 26 ms"
+      ]
+    },
+    {
+      "id": "whatsapp.health",
+      "suiteId": "whatsapp",
+      "name": "Health endpoint answers",
+      "status": "passed",
+      "durationMs": 25,
+      "message": null,
+      "log": [
+        "GET /api/whatsapp/health -\u003E 404 in 11 ms",
+        "GET /api/whatsapp/health/events -\u003E 200 in 13 ms"
+      ]
+    },
+    {
+      "id": "whatsapp.templates",
+      "suiteId": "whatsapp",
+      "name": "Template list loads",
+      "status": "passed",
+      "durationMs": 14,
+      "message": null,
+      "log": [
+        "GET /api/whatsapp/templates -\u003E 200 in 13 ms"
+      ]
+    },
+    {
+      "id": "channels.list",
+      "suiteId": "channels",
+      "name": "Channel integrations list loads",
+      "status": "passed",
+      "durationMs": 14,
+      "message": null,
+      "log": [
+        "GET /api/channel-integrations -\u003E 200 in 13 ms"
+      ]
+    },
+    {
+      "id": "channels.meta-verify-wrong",
+      "suiteId": "channels",
+      "name": "WhatsApp webhook handshake refuses a wrong token",
+      "status": "passed",
+      "durationMs": 6,
+      "message": null,
+      "log": [
+        "GET /api/integrations/whatsapp/webhook?hub.mode=subscribe\u0026hub.verify_token=wrong-d53d99a6\u0026hub.challenge=123 -\u003E 403 in 5 ms"
+      ]
+    },
+    {
+      "id": "channels.meta-verify",
+      "suiteId": "channels",
+      "name": "WhatsApp webhook handshake echoes the challenge",
+      "status": "passed",
+      "durationMs": 5,
+      "message": null,
+      "log": [
+        "GET /api/integrations/whatsapp/webhook?hub.mode=subscribe\u0026hub.verify_token=local-verify-auto\u0026hub.challenge=autod53d99a6 -\u003E 200 in 4 ms"
+      ]
+    },
+    {
+      "id": "channels.meta-unknown-number",
+      "suiteId": "channels",
+      "name": "WhatsApp webhook accepts a delivery for an unknown number without error",
+      "status": "passed",
+      "durationMs": 50,
+      "message": null,
+      "log": [
+        "POST /api/integrations/whatsapp/webhook -\u003E 200 in 42 ms"
+      ]
+    },
+    {
+      "id": "channels.telegram-unknown",
+      "suiteId": "channels",
+      "name": "Telegram webhook for an unknown connection returns 404",
+      "status": "passed",
+      "durationMs": 19,
+      "message": null,
+      "log": [
+        "POST /api/integrations/telegram/webhook/826ac233-bc82-4eda-9d7a-ae10c3a363f4 -\u003E 404 in 18 ms"
+      ]
+    },
+    {
+      "id": "channels.infobip-unknown",
+      "suiteId": "channels",
+      "name": "WhatsApp connection webhook for an unknown connection returns 404",
+      "status": "passed",
+      "durationMs": 13,
+      "message": null,
+      "log": [
+        "POST /api/integrations/whatsapp/connections/2ff14242-61c4-46d5-8f67-e21384de8b88/events?token=x -\u003E 404 in 13 ms"
+      ]
+    },
+    {
+      "id": "channels.tiktok-reachable",
+      "suiteId": "channels",
+      "name": "TikTok webhook endpoint is reachable",
+      "status": "passed",
+      "durationMs": 3,
+      "message": null,
+      "log": [
+        "GET /api/integrations/tiktok/webhook -\u003E 200 in 2 ms"
+      ]
+    },
+    {
+      "id": "calendar.list",
+      "suiteId": "calendar",
+      "name": "Calendar integrations list loads",
+      "status": "passed",
+      "durationMs": 23,
+      "message": null,
+      "log": [
+        "GET /api/calendar-integrations -\u003E 200 in 22 ms"
+      ]
+    },
+    {
+      "id": "calendar.connect-redirect",
+      "suiteId": "calendar",
+      "name": "Connect Google Calendar starts the sign-in redirect",
+      "status": "passed",
+      "durationMs": 34,
+      "message": null,
+      "log": [
+        "GET /calendar-oauth/google/connect -\u003E 302 (/settings/calendar-integrations) in 33 ms",
+        "Redirects to /settings/calendar-integrations"
+      ]
+    },
+    {
+      "id": "calendar.sync-callback-key",
+      "suiteId": "calendar",
+      "name": "Calendar sync callback refuses a missing ingest key",
+      "status": "passed",
+      "durationMs": 10,
+      "message": null,
+      "log": [
+        "POST /api/calendar-integrations/sync-callback -\u003E 401 in 9 ms"
+      ]
+    },
+    {
+      "id": "billing.summary",
+      "suiteId": "billing",
+      "name": "Billing summary loads",
+      "status": "passed",
+      "durationMs": 40,
+      "message": null,
+      "log": [
+        "GET /api/billing/summary -\u003E 200 in 40 ms",
+        "billingEnabled=true, plan=, status="
+      ]
+    },
+    {
+      "id": "billing.history",
+      "suiteId": "billing",
+      "name": "Usage and transactions load",
+      "status": "passed",
+      "durationMs": 44,
+      "message": null,
+      "log": [
+        "GET /api/billing/usage -\u003E 200 in 31 ms",
+        "GET /api/billing/transactions -\u003E 200 in 12 ms"
+      ]
+    },
+    {
+      "id": "ai.clinic-info",
+      "suiteId": "ai",
+      "name": "Clinic info for the agent",
+      "status": "passed",
+      "durationMs": 8,
+      "message": null,
+      "log": [
+        "GET /api/ai/clinic-info?clinicId=9f53f73c-8ac2-406f-aab1-f27dcff9e671 -\u003E 200 in 5 ms",
+        "GET /api/ai/clinic-info?clinicId=9353dba3-ab91-4130-8ccf-f6f832be7f45 -\u003E 404 in 2 ms"
+      ]
+    },
+    {
+      "id": "ai.procedures",
+      "suiteId": "ai",
+      "name": "Agent only sees active procedures",
+      "status": "passed",
+      "durationMs": 18,
+      "message": null,
+      "log": [
+        "POST /api/procedures -\u003E 201 (http://localhost:5274/api/procedures/1cb28ef4-2f80-44c6-aafa-77f3acab848a) in 4 ms",
+        "POST /api/procedures/1cb28ef4-2f80-44c6-aafa-77f3acab848a/active -\u003E 200 in 4 ms",
+        "GET /api/ai/procedures?clinicId=9f53f73c-8ac2-406f-aab1-f27dcff9e671\u0026activeOnly=false -\u003E 200 in 8 ms"
+      ]
+    },
+    {
+      "id": "ai.lead-context",
+      "suiteId": "ai",
+      "name": "Read and update a lead\u0027s context",
+      "status": "passed",
+      "durationMs": 42,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/55cfde87-6ed2-45c7-9f3e-f5142719e924) in 5 ms",
+        "GET /api/ai/leads/55cfde87-6ed2-45c7-9f3e-f5142719e924?clinicId=9f53f73c-8ac2-406f-aab1-f27dcff9e671 -\u003E 200 in 8 ms",
+        "PATCH /api/ai/leads/55cfde87-6ed2-45c7-9f3e-f5142719e924?clinicId=9f53f73c-8ac2-406f-aab1-f27dcff9e671 -\u003E 200 in 23 ms",
+        "GET /api/ai/leads/55cfde87-6ed2-45c7-9f3e-f5142719e924?clinicId=2c04342b-a3b1-48e0-b52c-1fd62defef91 -\u003E 404 in 2 ms"
+      ]
+    },
+    {
+      "id": "ai.booking-flow",
+      "suiteId": "ai",
+      "name": "Find a slot, book, reschedule and cancel",
+      "status": "passed",
+      "durationMs": 221,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/665df812-b23b-4e78-ae9d-b9736651690e) in 7 ms",
+        "GET /api/ai/appointments/available?clinicId=9f53f73c-8ac2-406f-aab1-f27dcff9e671\u0026leadId=665df812-b23b-4e78-ae9d-b9736651690e\u0026procedureId=2aa33369-15aa-4fd5-8843-ae642cc58224\u0026days=14 -\u003E 200 in 54 ms",
+        "POST /api/ai/appointments/book?clinicId=9f53f73c-8ac2-406f-aab1-f27dcff9e671 -\u003E 200 in 39 ms",
+        "POST /api/ai/appointments/book?clinicId=9f53f73c-8ac2-406f-aab1-f27dcff9e671 -\u003E 200 in 8 ms",
+        "GET /api/ai/appointments/upcoming?clinicId=9f53f73c-8ac2-406f-aab1-f27dcff9e671\u0026leadId=665df812-b23b-4e78-ae9d-b9736651690e -\u003E 200 in 26 ms",
+        "POST /api/ai/appointments/reschedule?clinicId=9f53f73c-8ac2-406f-aab1-f27dcff9e671\u0026leadId=665df812-b23b-4e78-ae9d-b9736651690e -\u003E 200 in 41 ms",
+        "POST /api/ai/appointments/cancel?clinicId=9f53f73c-8ac2-406f-aab1-f27dcff9e671\u0026leadId=665df812-b23b-4e78-ae9d-b9736651690e -\u003E 200 in 33 ms",
+        "GET /api/ai/appointments/upcoming?clinicId=9f53f73c-8ac2-406f-aab1-f27dcff9e671\u0026leadId=665df812-b23b-4e78-ae9d-b9736651690e -\u003E 200 in 2 ms"
+      ]
+    },
+    {
+      "id": "ai.slot-taken",
+      "suiteId": "ai",
+      "name": "Booking a slot that\u0027s already taken is refused",
+      "status": "passed",
+      "durationMs": 37,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/de21abb0-4e00-46fd-b89b-62f13bb76157) in 4 ms",
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/cfba72b3-a77c-49ea-b287-57216d5c410b) in 5 ms",
+        "GET /api/appointments/available?procedureId=2aa33369-15aa-4fd5-8843-ae642cc58224\u0026days=14 -\u003E 200 in 6 ms",
+        "POST /api/ai/appointments/book?clinicId=9f53f73c-8ac2-406f-aab1-f27dcff9e671 -\u003E 200 in 13 ms",
+        "POST /api/ai/appointments/book?clinicId=9f53f73c-8ac2-406f-aab1-f27dcff9e671 -\u003E 200 in 5 ms"
+      ]
+    },
+    {
+      "id": "ai.schedule",
+      "suiteId": "ai",
+      "name": "schedule_consultation books when the patient has nothing upcoming",
+      "status": "passed",
+      "durationMs": 46,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/1202f6a4-cfd2-42ab-ad74-cd7f7e7d42fc) in 5 ms",
+        "GET /api/appointments/available?procedureId=2aa33369-15aa-4fd5-8843-ae642cc58224\u0026days=14 -\u003E 200 in 6 ms",
+        "POST /api/ai/appointments/schedule?clinicId=9f53f73c-8ac2-406f-aab1-f27dcff9e671\u0026leadId=1202f6a4-cfd2-42ab-ad74-cd7f7e7d42fc -\u003E 200 in 31 ms"
+      ]
+    },
+    {
+      "id": "ai.handoff",
+      "suiteId": "ai",
+      "name": "Agent hands a conversation to a human",
+      "status": "passed",
+      "durationMs": 36,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/242ecf64-35b2-45e1-926a-38783909aecd) in 5 ms",
+        "POST /api/conversations -\u003E 201 (http://localhost:5274/api/conversations/c98f119e-c41d-4895-9337-526ea12a8cc2) in 4 ms",
+        "POST /api/ai/conversations/c98f119e-c41d-4895-9337-526ea12a8cc2/handoff?clinicId=9f53f73c-8ac2-406f-aab1-f27dcff9e671 -\u003E 200 in 25 ms"
+      ]
+    },
+    {
+      "id": "ai.ai-send-blocked-in-human-mode",
+      "suiteId": "ai",
+      "name": "AI reply is refused once a human has taken over",
+      "status": "passed",
+      "durationMs": 35,
+      "message": null,
+      "log": [
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/6a7cb2fc-7e39-4848-b4ee-273b63b26f1f) in 6 ms",
+        "POST /api/conversations -\u003E 201 (http://localhost:5274/api/conversations/1edd414c-b2f6-4e56-9a84-aa082de807b7) in 3 ms",
+        "POST /api/conversations/1edd414c-b2f6-4e56-9a84-aa082de807b7/take-over -\u003E 200 in 5 ms",
+        "POST /api/conversations/1edd414c-b2f6-4e56-9a84-aa082de807b7/messages/send?clinicId=9f53f73c-8ac2-406f-aab1-f27dcff9e671 -\u003E 409 in 19 ms"
+      ]
+    },
+    {
+      "id": "ai.knowledge-search",
+      "suiteId": "ai",
+      "name": "Knowledge search finds a fresh entry",
+      "status": "skipped",
+      "durationMs": 0,
+      "message": "Calls a paid or third-party service. Allow \u0022external services\u0022 to run it.",
+      "log": []
+    },
+    {
+      "id": "ai.test-codes",
+      "suiteId": "ai",
+      "name": "AI test endpoints list their codes",
+      "status": "passed",
+      "durationMs": 3,
+      "message": null,
+      "log": [
+        "GET /api/ai/test/codes -\u003E 200 in 2 ms"
+      ]
+    },
+    {
+      "id": "admin.catalog",
+      "suiteId": "admin",
+      "name": "Plans, entitlements and rate cards load",
+      "status": "passed",
+      "durationMs": 79,
+      "message": null,
+      "log": [
+        "GET /api/platform-admin/billing/plans -\u003E 200 in 42 ms",
+        "GET /api/platform-admin/billing/entitlements -\u003E 200 in 3 ms",
+        "GET /api/platform-admin/billing/rate-cards -\u003E 200 in 24 ms",
+        "GET /api/platform-admin/billing/provider-billing -\u003E 200 in 6 ms"
+      ]
+    },
+    {
+      "id": "admin.accounts",
+      "suiteId": "admin",
+      "name": "The test clinic shows up in billing accounts",
+      "status": "passed",
+      "durationMs": 39,
+      "message": null,
+      "log": [
+        "GET /api/platform-admin/billing/accounts -\u003E 200 in 38 ms"
+      ]
+    },
+    {
+      "id": "admin.clinic",
+      "suiteId": "admin",
+      "name": "Clinic billing detail, ledger, usage and reconciliation load",
+      "status": "passed",
+      "durationMs": 132,
+      "message": null,
+      "log": [
+        "GET /api/platform-admin/billing/clinics/9f53f73c-8ac2-406f-aab1-f27dcff9e671 -\u003E 200 in 75 ms",
+        "GET /api/platform-admin/billing/clinics/9f53f73c-8ac2-406f-aab1-f27dcff9e671/ledger -\u003E 200 in 12 ms",
+        "GET /api/platform-admin/billing/clinics/9f53f73c-8ac2-406f-aab1-f27dcff9e671/usage -\u003E 200 in 24 ms",
+        "GET /api/platform-admin/billing/clinics/9f53f73c-8ac2-406f-aab1-f27dcff9e671/channel-accounts -\u003E 200 in 8 ms",
+        "GET /api/platform-admin/billing/clinics/9f53f73c-8ac2-406f-aab1-f27dcff9e671/reconciliation -\u003E 200 in 10 ms"
+      ]
+    },
+    {
+      "id": "admin.report",
+      "suiteId": "admin",
+      "name": "Revenue report loads",
+      "status": "passed",
+      "durationMs": 26,
+      "message": null,
+      "log": [
+        "GET /api/platform-admin/billing/report -\u003E 200 in 26 ms"
+      ]
+    },
+    {
+      "id": "admin.top-up",
+      "suiteId": "admin",
+      "name": "Wallet top-up is applied once and the books still balance",
+      "status": "passed",
+      "durationMs": 110,
+      "message": null,
+      "log": [
+        "POST /api/platform-admin/billing/clinics/9f53f73c-8ac2-406f-aab1-f27dcff9e671/wallet/top-ups -\u003E 200 in 91 ms",
+        "POST /api/platform-admin/billing/clinics/9f53f73c-8ac2-406f-aab1-f27dcff9e671/wallet/top-ups -\u003E 200 in 5 ms",
+        "GET /api/platform-admin/billing/clinics/9f53f73c-8ac2-406f-aab1-f27dcff9e671/ledger?pageSize=100 -\u003E 200 in 5 ms",
+        "GET /api/platform-admin/billing/clinics/9f53f73c-8ac2-406f-aab1-f27dcff9e671/reconciliation -\u003E 200 in 4 ms",
+        "POST /api/platform-admin/billing/clinics/9f53f73c-8ac2-406f-aab1-f27dcff9e671/wallet/top-ups -\u003E 400 in 0 ms"
+      ]
+    },
+    {
+      "id": "admin.automation-clinics",
+      "suiteId": "admin",
+      "name": "Leftover automation clinics are listed",
+      "status": "passed",
+      "durationMs": 18,
+      "message": null,
+      "log": [
+        "GET /api/platform-admin/automation/clinics -\u003E 200 in 17 ms"
+      ]
+    },
+    {
+      "id": "admin.automation-guard",
+      "suiteId": "admin",
+      "name": "Cleanup refuses to delete a clinic that isn\u0027t an automation clinic",
+      "status": "passed",
+      "durationMs": 123,
+      "message": null,
+      "log": [
+        "GET /Account/Register -\u003E 200 in 3 ms",
+        "POST /Account/Register -\u003E 302 (/dashboard) in 72 ms",
+        "POST /api/procedures -\u003E 201 (http://localhost:5274/api/procedures/79f728ba-1800-4038-9673-4c4632d86dec) in 5 ms",
+        "GET /settings/clinic-info -\u003E 200 in 4 ms",
+        "POST /settings/clinic-info -\u003E 302 (/settings/clinic-info) in 8 ms",
+        "DELETE /api/platform-admin/automation/clinics/0435141e-941b-4c44-b58d-f786d00d2477 -\u003E 409 in 18 ms",
+        "GET /settings/clinic-info -\u003E 200 in 4 ms",
+        "POST /settings/clinic-info -\u003E 302 (/settings/clinic-info) in 4 ms"
+      ]
+    },
+    {
+      "id": "journey.full",
+      "suiteId": "journey",
+      "name": "Lead to booked surgery",
+      "status": "passed",
+      "durationMs": 108,
+      "message": null,
+      "log": [
+        "Step 1: lead arrives from a lead form",
+        "POST /api/leads -\u003E 201 (http://localhost:5274/api/leads/eec9d095-fb43-478c-93a7-09774aa4b5b1) in 5 ms",
+        "Step 2: patient writes in, n8n ingests the message",
+        "POST /api/conversations -\u003E 201 (http://localhost:5274/api/conversations/9c830c31-987c-429a-8ab6-68538c79c768) in 3 ms",
+        "POST /api/messages/ingest -\u003E 200 in 8 ms",
+        "Step 3: AI agent qualifies the lead and books a slot",
+        "PATCH /api/ai/leads/eec9d095-fb43-478c-93a7-09774aa4b5b1?clinicId=9f53f73c-8ac2-406f-aab1-f27dcff9e671 -\u003E 200 in 3 ms",
+        "GET /api/appointments/available?procedureId=2aa33369-15aa-4fd5-8843-ae642cc58224\u0026days=14 -\u003E 200 in 10 ms",
+        "POST /api/ai/appointments/book?clinicId=9f53f73c-8ac2-406f-aab1-f27dcff9e671 -\u003E 200 in 15 ms",
+        "Step 4: staff see it in the inbox, on the calendar and on the lead",
+        "GET /api/conversations/9c830c31-987c-429a-8ab6-68538c79c768/messages -\u003E 200 in 3 ms",
+        "GET /api/appointments/calendar?year=2026\u0026month=10 -\u003E 200 in 5 ms",
+        "GET /api/leads/eec9d095-fb43-478c-93a7-09774aa4b5b1 -\u003E 200 in 2 ms",
+        "Lead status after booking: consultation_booked",
+        "Step 5: patient attends; staff record the visit",
+        "PATCH /api/appointments/2bbac4cd-2fd9-4228-aab1-31763e0dfe5d/status -\u003E 200 in 6 ms",
+        "POST /api/leads/eec9d095-fb43-478c-93a7-09774aa4b5b1/status -\u003E 200 in 3 ms",
+        "Step 6: quote, deposit and surgery booking",
+        "POST /api/procedure-bookings -\u003E 201 (http://localhost:5274/api/procedure-bookings) in 7 ms",
+        "PATCH /api/procedure-bookings/75e0902f-a052-4d4b-b1a8-f7cbd5169b4a -\u003E 200 in 4 ms",
+        "PATCH /api/procedure-bookings/75e0902f-a052-4d4b-b1a8-f7cbd5169b4a -\u003E 200 in 4 ms",
+        "POST /api/leads/eec9d095-fb43-478c-93a7-09774aa4b5b1/status -\u003E 200 in 4 ms",
+        "Step 7: dashboard reflects the journey",
+        "GET /api/leads/eec9d095-fb43-478c-93a7-09774aa4b5b1 -\u003E 200 in 2 ms",
+        "GET /api/dashboard/summary -\u003E 200 in 4 ms",
+        "GET /api/procedure-bookings?status=booked\u0026take=200 -\u003E 200 in 3 ms"
+      ]
+    }
+  ],
+  "runLog": [
+    "21:01:21 Run started against local (http://localhost:5274) with 107 tests.",
+    "21:01:22 Registered test clinic \u0022[Automation] main d53d99a6\u0022 (9f53f73c-8ac2-406f-aab1-f27dcff9e671).",
+    "21:01:23 Registered test clinic \u0022[Automation] other d53d99a6\u0022 (276b7352-9435-4556-be7f-dea8cfcb1650).",
+    "21:01:27 Registered test clinic \u0022[Automation] guard d53d99a6\u0022 (0435141e-941b-4c44-b58d-f786d00d2477).",
+    "21:01:27 DELETE /api/platform-admin/automation/clinics/9f53f73c-8ac2-406f-aab1-f27dcff9e671 -\u003E 204 in 39 ms",
+    "21:01:27 Deleted test clinic \u0022[Automation] main d53d99a6\u0022 and all its data.",
+    "21:01:27 DELETE /api/platform-admin/automation/clinics/276b7352-9435-4556-be7f-dea8cfcb1650 -\u003E 204 in 6 ms",
+    "21:01:27 Deleted test clinic \u0022[Automation] other d53d99a6\u0022 and all its data.",
+    "21:01:27 DELETE /api/platform-admin/automation/clinics/0435141e-941b-4c44-b58d-f786d00d2477 -\u003E 204 in 6 ms",
+    "21:01:27 Deleted test clinic \u0022[Automation] guard d53d99a6\u0022 and all its data.",
+    "21:01:27 Done: 103 passed, 0 failed, 4 skipped."
+  ],
+  "passed": 103,
+  "failed": 0,
+  "skipped": 4,
+  "total": 107
+}

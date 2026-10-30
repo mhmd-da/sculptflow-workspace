@@ -1,0 +1,513 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SculptFlow test run 2026-10-13 17:38</title><style>body{font:14px/1.5 system-ui,sans-serif;margin:0;padding:24px;background:#f7f7f8;color:#1d1d1f}h1{font-size:20px;margin:0 0 4px}.meta{color:#666;margin-bottom:16px}.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-weight:600;margin-right:6px}.passed{background:#e3f6e8;color:#17692f}.failed{background:#fde7e7;color:#a11b1b}.skipped{background:#eee;color:#555}table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden}td,th{padding:8px 10px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}th{background:#fafafa;font-weight:600}details pre{white-space:pre-wrap;font-size:12px;background:#f4f4f5;padding:8px;border-radius:6px;margin:6px 0 0}.msg{color:#a11b1b}.skipmsg{color:#666}pre.log{white-space:pre-wrap;background:#fff;padding:12px;border-radius:8px}</style></head><body><h1>SculptFlow test run</h1><div class="meta">local · http://localhost:5275 · started 2026-10-13 17:38:34Z · took 13.3 s</div><p><span class="pill passed">167 passed</span><span class="pill failed">1 failed</span><span class="pill skipped">10 skipped</span></p><table><thead><tr><th>Test</th><th>Result</th><th>Time</th></tr></thead><tbody><tr><td><strong>Home redirects to the dashboard</strong><br><small>health.root</small><details><summary>Requests (1)</summary><pre>GET / -&gt; 302 (/dashboard) in 147 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>156 ms</td></tr><tr><td><strong>Sign-in page loads</strong><br><small>health.login-page</small><details><summary>Requests (1)</summary><pre>GET /Account/Login -&gt; 200 in 103 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>109 ms</td></tr><tr><td><strong>Sign-up page loads</strong><br><small>health.register-page</small><details><summary>Requests (1)</summary><pre>GET /Account/Register -&gt; 200 in 49 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>50 ms</td></tr><tr><td><strong>Sign-in page answers within 3 seconds</strong><br><small>health.response-time</small><details><summary>Requests (1)</summary><pre>GET /Account/Login -&gt; 200 in 17 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>19 ms</td></tr><tr><td><strong>Dashboard sends signed-out visitors to sign-in</strong><br><small>health.dashboard-requires-login</small><details><summary>Requests (1)</summary><pre>GET /dashboard -&gt; 302 (http://localhost:5275/Account/Login?ReturnUrl=%2Fdashboard) in 3 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>5 ms</td></tr><tr><td><strong>Sign up a new clinic</strong><br><small>auth.register</small><details><summary>Requests (4)</summary><pre>GET /Account/Register -&gt; 200 in 8 ms
+POST /Account/Register -&gt; 302 (/dashboard) in 729 ms
+POST /api/procedures -&gt; 201 (http://localhost:5275/api/procedures/9e0ea1bf-3137-4396-a3d7-6a6c703a8c82) in 159 ms
+GET /dashboard -&gt; 200 in 346 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>1264 ms</td></tr><tr><td><strong>Sign in with email and password</strong><br><small>auth.login</small><details><summary>Requests (3)</summary><pre>GET /Account/Login -&gt; 200 in 37 ms
+POST /Account/Login -&gt; 302 (/dashboard) in 82 ms
+GET /api/staff -&gt; 200 in 46 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>168 ms</td></tr><tr><td><strong>Wrong password is rejected</strong><br><small>auth.wrong-password</small><details><summary>Requests (3)</summary><pre>GET /Account/Login -&gt; 200 in 2 ms
+POST /Account/Login -&gt; 200 in 87 ms
+GET /api/staff -&gt; 401 (http://localhost:5275/Account/Login?ReturnUrl=%2Fapi%2Fstaff) in 1 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>95 ms</td></tr><tr><td><strong>Signing up twice with one email is refused</strong><br><small>auth.duplicate-email</small><details><summary>Requests (2)</summary><pre>GET /Account/Register -&gt; 200 in 3 ms
+POST /Account/Register -&gt; 200 in 78 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>82 ms</td></tr><tr><td><strong>Sign out ends the session</strong><br><small>auth.logout</small><details><summary>Requests (5)</summary><pre>GET /Account/Login -&gt; 200 in 5 ms
+POST /Account/Login -&gt; 302 (/dashboard) in 88 ms
+GET /dashboard -&gt; 200 in 27 ms
+POST /Account/Logout -&gt; 302 (/Account/Login) in 12 ms
+GET /api/staff -&gt; 401 (http://localhost:5275/Account/Login?ReturnUrl=%2Fapi%2Fstaff) in 0 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>135 ms</td></tr><tr><td><strong>Clinic APIs refuse signed-out callers</strong><br><small>security.signed-out</small><details><summary>Requests (12)</summary><pre>GET /api/leads -&gt; 401 (http://localhost:5275/Account/Login?ReturnUrl=%2Fapi%2Fleads) in 0 ms
+GET /api/procedures -&gt; 401 (http://localhost:5275/Account/Login?ReturnUrl=%2Fapi%2Fprocedures) in 0 ms
+GET /api/appointments -&gt; 401 (http://localhost:5275/Account/Login?ReturnUrl=%2Fapi%2Fappointments) in 0 ms
+GET /api/conversations -&gt; 401 (http://localhost:5275/Account/Login?ReturnUrl=%2Fapi%2Fconversations) in 0 ms
+GET /api/notifications -&gt; 401 (http://localhost:5275/Account/Login?ReturnUrl=%2Fapi%2Fnotifications) in 0 ms
+GET /api/dashboard/summary -&gt; 401 (http://localhost:5275/Account/Login?ReturnUrl=%2Fapi%2Fdashboard%2Fsummary) in 0 ms
+GET /api/knowledge -&gt; 401 (http://localhost:5275/Account/Login?ReturnUrl=%2Fapi%2Fknowledge) in 0 ms
+GET /api/campaigns -&gt; 401 (http://localhost:5275/Account/Login?ReturnUrl=%2Fapi%2Fcampaigns) in 0 ms
+GET /api/staff -&gt; 401 (http://localhost:5275/Account/Login?ReturnUrl=%2Fapi%2Fstaff) in 0 ms
+GET /api/billing/summary -&gt; 401 (http://localhost:5275/Account/Login?ReturnUrl=%2Fapi%2Fbilling%2Fsummary) in 0 ms
+GET /api/channel-integrations -&gt; 401 (http://localhost:5275/Account/Login?ReturnUrl=%2Fapi%2Fchannel-integrations) in 0 ms
+GET /api/calendar-integrations -&gt; 401 (http://localhost:5275/Account/Login?ReturnUrl=%2Fapi%2Fcalendar-integrations) in 0 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>7 ms</td></tr><tr><td><strong>AI/n8n endpoints refuse a missing or wrong ingest key</strong><br><small>security.ingest-key</small><details><summary>Requests (3)</summary><pre>GET /api/ai/clinic-info?clinicId=b24e94ac-eb84-46c3-b154-9dba34aa3984 -&gt; 401 in 15 ms
+GET /api/ai/clinic-info?clinicId=b24e94ac-eb84-46c3-b154-9dba34aa3984 -&gt; 401 in 6 ms
+POST /api/messages/ingest -&gt; 401 in 25 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>54 ms</td></tr><tr><td><strong>Platform-admin API refuses a missing or wrong key</strong><br><small>security.admin-key</small><details><summary>Requests (3)</summary><pre>GET /api/platform-admin/billing/plans -&gt; 401 in 21 ms
+GET /api/platform-admin/billing/plans -&gt; 401 in 5 ms
+DELETE /api/platform-admin/automation/clinics/3f499b81-b0a1-41ee-b964-b847ef84d280 -&gt; 401 in 9 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>36 ms</td></tr><tr><td><strong>AI-origin message send refuses a missing ingest key</strong><br><small>security.ai-send-needs-key</small><details><summary>Requests (1)</summary><pre>POST /api/conversations/c35c8e03-995e-4705-8c4b-d48df71279df/messages/send?clinicId=231402fd-1e8a-475b-b1c6-450ec7907412 -&gt; 401 in 55 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>57 ms</td></tr><tr><td><strong>One clinic can&#39;t read or change another clinic&#39;s data</strong><br><small>security.tenant-isolation</small><details><summary>Requests (9)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/621419e8-582f-472d-ad19-f90364f481b2) in 185 ms
+GET /Account/Register -&gt; 200 in 2 ms
+POST /Account/Register -&gt; 302 (/dashboard) in 94 ms
+POST /api/procedures -&gt; 201 (http://localhost:5275/api/procedures/5cc690a0-04ab-4b6b-9a5d-7d053b86825c) in 4 ms
+GET /api/leads/621419e8-582f-472d-ad19-f90364f481b2 -&gt; 404 in 29 ms
+PATCH /api/leads/621419e8-582f-472d-ad19-f90364f481b2 -&gt; 404 in 15 ms
+GET /api/procedures/9e0ea1bf-3137-4396-a3d7-6a6c703a8c82 -&gt; 404 in 18 ms
+GET /api/leads?take=200 -&gt; 200 in 42 ms
+GET /api/leads/621419e8-582f-472d-ad19-f90364f481b2 -&gt; 200 in 6 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>409 ms</td></tr><tr><td><strong>Dashboard page</strong><br><small>pages.dashboard</small><details><summary>Requests (1)</summary><pre>GET /dashboard -&gt; 200 in 11 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>12 ms</td></tr><tr><td><strong>Leads page</strong><br><small>pages.leads</small><details><summary>Requests (1)</summary><pre>GET /dashboard/leads -&gt; 200 in 60 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>60 ms</td></tr><tr><td><strong>Appointments page</strong><br><small>pages.appointments</small><details><summary>Requests (1)</summary><pre>GET /dashboard/appointments -&gt; 200 in 31 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>31 ms</td></tr><tr><td><strong>Inbox page</strong><br><small>pages.inbox</small><details><summary>Requests (1)</summary><pre>GET /inbox -&gt; 200 in 61 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>61 ms</td></tr><tr><td><strong>Procedures page</strong><br><small>pages.procedures</small><details><summary>Requests (1)</summary><pre>GET /Procedures -&gt; 200 in 53 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>53 ms</td></tr><tr><td><strong>New procedure form page</strong><br><small>pages.procedure-new</small><details><summary>Requests (1)</summary><pre>GET /Procedures/Edit -&gt; 200 in 13 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>13 ms</td></tr><tr><td><strong>Knowledge base page</strong><br><small>pages.knowledge</small><details><summary>Requests (1)</summary><pre>GET /KnowledgeBase -&gt; 200 in 108 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>108 ms</td></tr><tr><td><strong>New knowledge entry form page</strong><br><small>pages.knowledge-new</small><details><summary>Requests (1)</summary><pre>GET /KnowledgeBase/Edit -&gt; 200 in 27 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>27 ms</td></tr><tr><td><strong>Knowledge settings page</strong><br><small>pages.knowledge-settings</small><details><summary>Requests (1)</summary><pre>GET /KnowledgeBase/Settings -&gt; 200 in 24 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>24 ms</td></tr><tr><td><strong>Knowledge benchmark page</strong><br><small>pages.knowledge-benchmark</small><details><summary>Requests (1)</summary><pre>GET /KnowledgeBase/Benchmark -&gt; 200 in 28 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>28 ms</td></tr><tr><td><strong>Campaigns page</strong><br><small>pages.campaigns</small><details><summary>Requests (1)</summary><pre>GET /Campaigns -&gt; 200 in 57 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>57 ms</td></tr><tr><td><strong>New campaign form page</strong><br><small>pages.campaign-new</small><details><summary>Requests (1)</summary><pre>GET /Campaigns/Create -&gt; 200 in 54 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>54 ms</td></tr><tr><td><strong>Staff page</strong><br><small>pages.staff</small><details><summary>Requests (1)</summary><pre>GET /Staff -&gt; 200 in 22 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>22 ms</td></tr><tr><td><strong>WhatsApp templates page</strong><br><small>pages.whatsapp-templates</small><details><summary>Requests (1)</summary><pre>GET /WhatsApp/Templates -&gt; 200 in 30 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>30 ms</td></tr><tr><td><strong>WhatsApp health page</strong><br><small>pages.whatsapp-health</small><details><summary>Requests (1)</summary><pre>GET /WhatsApp/Health -&gt; 200 in 34 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>34 ms</td></tr><tr><td><strong>Clinic info page</strong><br><small>pages.clinic-info</small><details><summary>Requests (1)</summary><pre>GET /settings/clinic-info -&gt; 200 in 30 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>30 ms</td></tr><tr><td><strong>Opening hours page</strong><br><small>pages.availability</small><details><summary>Requests (1)</summary><pre>GET /settings/clinic-info?tab=availability -&gt; 200 in 57 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>57 ms</td></tr><tr><td><strong>Integrations page</strong><br><small>pages.integrations</small><details><summary>Requests (1)</summary><pre>GET /settings/integrations -&gt; 200 in 71 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>71 ms</td></tr><tr><td><strong>Calendar integrations page</strong><br><small>pages.calendar</small><details><summary>Requests (1)</summary><pre>GET /settings/calendar-integrations -&gt; 200 in 58 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>58 ms</td></tr><tr><td><strong>Billing page</strong><br><small>pages.billing</small><details><summary>Requests (1)</summary><pre>GET /settings/billing -&gt; 200 in 151 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>151 ms</td></tr><tr><td><strong>Detail pages for ids that don&#39;t exist answer not-found, not an error</strong><br><small>pages.unknown-details</small><details><summary>Requests (7)</summary><pre>GET /Campaigns/04c23712-e1de-4ce4-bdda-d7bab1437310 -&gt; 404 in 54 ms
+GET /KnowledgeBase/Websites/7b261543-ec51-4237-85a3-6fb702d08315 -&gt; 404 in 28 ms
+GET /KnowledgeBase/Benchmark/Generations/08c8cf9c-3a86-4e47-b3a8-f8daf2121d1a -&gt; 200 in 29 ms
+GET /KnowledgeBase/Edit/7c6714fa-bbf4-4243-bab5-2dab78e30a36 -&gt; 404 in 18 ms
+GET /Procedures/Edit/1aa01a18-36e7-4a1d-be08-26ff10e387e4 -&gt; 404 in 5 ms
+GET /dashboard/leads/a92d459b-c475-4368-90dc-ba5d285bba72 -&gt; 404 in 16 ms
+GET /dashboard/appointments/6faeffdd-317e-4276-96d5-6bb43703d556 -&gt; 404 in 30 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>184 ms</td></tr><tr><td><strong>Procedure edit page for a real procedure</strong><br><small>pages.procedure-edit</small><details><summary>Requests (1)</summary><pre>GET /Procedures/Edit/9e0ea1bf-3137-4396-a3d7-6a6c703a8c82 -&gt; 200 in 3 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>4 ms</td></tr><tr><td><strong>Lead detail page</strong><br><small>pages.lead-detail</small><details><summary>Requests (1)</summary><pre>GET /dashboard/leads/621419e8-582f-472d-ad19-f90364f481b2 -&gt; 200 in 47 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>47 ms</td></tr><tr><td><strong>Staff list includes the signed-up user</strong><br><small>staff.list</small><details><summary>Requests (1)</summary><pre>GET /api/staff -&gt; 200 in 6 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>7 ms</td></tr><tr><td><strong>Create, read and update a procedure</strong><br><small>procedures.crud</small><details><summary>Requests (4)</summary><pre>POST /api/procedures -&gt; 201 (http://localhost:5275/api/procedures/815ac112-2a08-48ff-b029-d59d72f1ae0e) in 12 ms
+GET /api/procedures/815ac112-2a08-48ff-b029-d59d72f1ae0e -&gt; 200 in 6 ms
+PUT /api/procedures/815ac112-2a08-48ff-b029-d59d72f1ae0e -&gt; 200 in 32 ms
+GET /api/procedures -&gt; 200 in 12 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>67 ms</td></tr><tr><td><strong>Deactivated procedures drop out of the active list</strong><br><small>procedures.active-toggle</small><details><summary>Requests (6)</summary><pre>POST /api/procedures -&gt; 201 (http://localhost:5275/api/procedures/5ef9bc84-791f-42b1-bad1-666d14391b3a) in 4 ms
+POST /api/procedures/5ef9bc84-791f-42b1-bad1-666d14391b3a/active -&gt; 200 in 14 ms
+GET /api/procedures -&gt; 200 in 3 ms
+GET /api/procedures?activeOnly=false -&gt; 200 in 2 ms
+POST /api/procedures/5ef9bc84-791f-42b1-bad1-666d14391b3a/active -&gt; 200 in 3 ms
+GET /api/procedures -&gt; 200 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>35 ms</td></tr><tr><td><strong>A procedure without a name is rejected</strong><br><small>procedures.validation</small><details><summary>Requests (1)</summary><pre>POST /api/procedures -&gt; 400 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>3 ms</td></tr><tr><td><strong>Intake creates a lead the clinic can see</strong><br><small>leads.intake</small><details><summary>Requests (2)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/84c0d36e-d227-41e0-983a-85fd8a4e6abe) in 8 ms
+GET /api/leads/84c0d36e-d227-41e0-983a-85fd8a4e6abe -&gt; 200 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>12 ms</td></tr><tr><td><strong>Re-sending the same external lead id doesn&#39;t duplicate it</strong><br><small>leads.intake-idempotent</small><details><summary>Requests (2)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/072201e5-da05-4afc-9aa1-669ea738d4aa) in 4 ms
+POST /api/leads -&gt; 200 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>10 ms</td></tr><tr><td><strong>Lead list and search find the lead</strong><br><small>leads.list-search</small><details><summary>Requests (2)</summary><pre>GET /api/leads?take=200 -&gt; 200 in 4 ms
+GET /api/leads?search=shared%20b935a12a -&gt; 200 in 25 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>31 ms</td></tr><tr><td><strong>Staff can edit a lead</strong><br><small>leads.update</small><details><summary>Requests (2)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/e5cb84a0-701d-43fb-a547-b0fac665b7d5) in 10 ms
+PATCH /api/leads/e5cb84a0-701d-43fb-a547-b0fac665b7d5 -&gt; 200 in 7 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>19 ms</td></tr><tr><td><strong>Lead status moves through the pipeline</strong><br><small>leads.status</small><details><summary>Requests (4)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/c1637236-94bd-411c-a18b-6d436d79c7b5) in 7 ms
+POST /api/leads/c1637236-94bd-411c-a18b-6d436d79c7b5/status -&gt; 200 in 19 ms
+POST /api/leads/c1637236-94bd-411c-a18b-6d436d79c7b5/status -&gt; 200 in 8 ms
+GET /api/leads?status=qualified&amp;take=200 -&gt; 200 in 24 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>62 ms</td></tr><tr><td><strong>An unknown status is rejected</strong><br><small>leads.status-invalid</small><details><summary>Requests (1)</summary><pre>POST /api/leads/621419e8-582f-472d-ad19-f90364f481b2/status -&gt; 400 in 4 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>6 ms</td></tr><tr><td><strong>A lead id that doesn&#39;t exist returns 404</strong><br><small>leads.unknown</small><details><summary>Requests (1)</summary><pre>GET /api/leads/8da0b63c-1644-4d9f-bbc5-eab2d61a7023 -&gt; 404 in 4 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>5 ms</td></tr><tr><td><strong>Save weekly opening hours</strong><br><small>availability.save</small><details><summary>Requests (3)</summary><pre>GET /settings/clinic-info -&gt; 200 in 7 ms
+POST /settings/clinic-info?handler=SaveAvailability -&gt; 302 (/settings/clinic-info?tab=availability) in 85 ms
+GET /settings/clinic-info?tab=availability -&gt; 200 in 15 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>111 ms</td></tr><tr><td><strong>Open slots are offered</strong><br><small>availability.slots</small><details><summary>Requests (1)</summary><pre>GET /api/appointments/available?procedureId=9e0ea1bf-3137-4396-a3d7-6a6c703a8c82&amp;days=14 -&gt; 200 in 78 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>81 ms</td></tr><tr><td><strong>Slots for a single date stay on that date</strong><br><small>availability.slots-one-day</small><details><summary>Requests (1)</summary><pre>GET /api/appointments/available?date=2026-10-16 -&gt; 200 in 9 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>11 ms</td></tr><tr><td><strong>Book an appointment for a lead</strong><br><small>appointments.create</small><details><summary>Requests (6)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/f990b680-3ed5-4ca2-a1f0-55d99bddb181) in 10 ms
+GET /api/appointments/available?procedureId=9e0ea1bf-3137-4396-a3d7-6a6c703a8c82&amp;days=14 -&gt; 200 in 9 ms
+POST /api/appointments -&gt; 201 (http://localhost:5275/api/appointments) in 112 ms
+GET /api/appointments/a01fcbc3-a0e1-4f3d-b9d4-212b2b18488b -&gt; 200 in 7 ms
+GET /api/appointments/calendar?year=2026&amp;month=10 -&gt; 200 in 56 ms
+GET /api/appointments?take=200 -&gt; 200 in 37 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>251 ms</td></tr><tr><td><strong>Confirm, then cancel an appointment</strong><br><small>appointments.status</small><details><summary>Requests (6)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/c28929d1-ace0-44f0-b833-63946b347b97) in 8 ms
+GET /api/appointments/available?procedureId=9e0ea1bf-3137-4396-a3d7-6a6c703a8c82&amp;days=14 -&gt; 200 in 12 ms
+POST /api/appointments -&gt; 201 (http://localhost:5275/api/appointments) in 15 ms
+PATCH /api/appointments/749af664-0368-4b83-b0f6-58ca4ac264a4/status -&gt; 200 in 38 ms
+PATCH /api/appointments/749af664-0368-4b83-b0f6-58ca4ac264a4/status -&gt; 200 in 14 ms
+PATCH /api/appointments/749af664-0368-4b83-b0f6-58ca4ac264a4/status -&gt; 400 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>95 ms</td></tr><tr><td><strong>Calendar rejects an invalid month</strong><br><small>appointments.calendar-validation</small><details><summary>Requests (1)</summary><pre>GET /api/appointments/calendar?year=2026&amp;month=13 -&gt; 400 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>3 ms</td></tr><tr><td><strong>Appointment detail page renders</strong><br><small>appointments.detail-page</small><details><summary>Requests (4)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/aad70ba0-0fd9-48d8-9ffd-79c982473715) in 10 ms
+GET /api/appointments/available?procedureId=9e0ea1bf-3137-4396-a3d7-6a6c703a8c82&amp;days=14 -&gt; 200 in 18 ms
+POST /api/appointments -&gt; 201 (http://localhost:5275/api/appointments) in 17 ms
+GET /dashboard/appointments/224a7610-a37c-4dc9-9395-a5a5e0319249 -&gt; 200 in 21 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>70 ms</td></tr><tr><td><strong>Quote, take a deposit and book a procedure</strong><br><small>bookings.lifecycle</small><details><summary>Requests (6)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/1c885b70-d874-4a48-ab40-85c1328a8ea7) in 7 ms
+POST /api/procedure-bookings -&gt; 201 (http://localhost:5275/api/procedure-bookings) in 80 ms
+PATCH /api/procedure-bookings/62ab6d27-f68a-42ee-845e-8c7e5401262f -&gt; 200 in 25 ms
+PATCH /api/procedure-bookings/62ab6d27-f68a-42ee-845e-8c7e5401262f -&gt; 200 in 10 ms
+PATCH /api/procedure-bookings/62ab6d27-f68a-42ee-845e-8c7e5401262f -&gt; 200 in 8 ms
+GET /api/procedure-bookings?status=booked&amp;take=200 -&gt; 200 in 38 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>179 ms</td></tr><tr><td><strong>An unknown booking status is rejected</strong><br><small>bookings.invalid-status</small><details><summary>Requests (2)</summary><pre>POST /api/procedure-bookings -&gt; 201 (http://localhost:5275/api/procedure-bookings) in 14 ms
+PATCH /api/procedure-bookings/58ec2755-6ba5-4c60-b86a-7a43c6d65b9b -&gt; 400 in 4 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>22 ms</td></tr><tr><td><strong>Open a conversation and log messages</strong><br><small>inbox.conversation</small><details><summary>Requests (7)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/3be1e246-429d-4b7f-aeaa-6a822142b938) in 7 ms
+POST /api/conversations -&gt; 201 (http://localhost:5275/api/conversations/0db09911-bcc7-40dd-862d-5cdf5c782504) in 64 ms
+POST /api/conversations/0db09911-bcc7-40dd-862d-5cdf5c782504/messages -&gt; 200 in 96 ms
+GET /api/conversations/0db09911-bcc7-40dd-862d-5cdf5c782504/messages -&gt; 200 in 23 ms
+GET /api/conversations?take=200 -&gt; 200 in 18 ms
+GET /api/conversations/0db09911-bcc7-40dd-862d-5cdf5c782504 -&gt; 200 in 15 ms
+POST /api/conversations/0db09911-bcc7-40dd-862d-5cdf5c782504/read -&gt; 204 in 29 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>260 ms</td></tr><tr><td><strong>Take over from the AI, hand back, then close</strong><br><small>inbox.modes</small><details><summary>Requests (5)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/465f9864-541a-4181-ae20-9224b4ce7308) in 6 ms
+POST /api/conversations -&gt; 201 (http://localhost:5275/api/conversations/0079014a-b15d-4524-8b95-fd1d0fc1fcd1) in 5 ms
+POST /api/conversations/0079014a-b15d-4524-8b95-fd1d0fc1fcd1/take-over -&gt; 200 in 22 ms
+POST /api/conversations/0079014a-b15d-4524-8b95-fd1d0fc1fcd1/return-to-ai -&gt; 200 in 13 ms
+POST /api/conversations/0079014a-b15d-4524-8b95-fd1d0fc1fcd1/close -&gt; 200 in 17 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>66 ms</td></tr><tr><td><strong>n8n ingest stores an inbound customer message</strong><br><small>inbox.ingest</small><details><summary>Requests (4)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/937956b0-2e4f-4ab7-845d-df764c65ae83) in 9 ms
+POST /api/conversations -&gt; 201 (http://localhost:5275/api/conversations/0aeafcfc-a32d-4339-afa6-64f85d8b0e33) in 7 ms
+POST /api/messages/ingest -&gt; 200 in 58 ms
+GET /api/conversations/0aeafcfc-a32d-4339-afa6-64f85d8b0e33/messages -&gt; 200 in 51 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>136 ms</td></tr><tr><td><strong>Ingest for an unknown conversation returns 404</strong><br><small>inbox.ingest-unknown</small><details><summary>Requests (1)</summary><pre>POST /api/messages/ingest -&gt; 404 in 6 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>8 ms</td></tr><tr><td><strong>List notifications and the unread count</strong><br><small>notifications.list</small><details><summary>Requests (2)</summary><pre>GET /api/notifications?take=20 -&gt; 200 in 126 ms
+GET /api/notifications/unread-count -&gt; 200 in 21 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>151 ms</td></tr><tr><td><strong>Mark all as read clears the unread count</strong><br><small>notifications.read-all</small><details><summary>Requests (2)</summary><pre>POST /api/notifications/read-all -&gt; 204 in 13 ms
+GET /api/notifications?take=20 -&gt; 200 in 5 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>19 ms</td></tr><tr><td><strong>Summary and attention load</strong><br><small>dashboard.summary</small><details><summary>Requests (2)</summary><pre>GET /api/dashboard/summary -&gt; 200 in 32 ms
+GET /api/dashboard/attention -&gt; 200 in 11 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>44 ms</td></tr><tr><td><strong>Leads, appointments and procedure tables load</strong><br><small>dashboard.tables</small><details><summary>Requests (3)</summary><pre>GET /api/dashboard/leads?take=200 -&gt; 200 in 15 ms
+GET /api/dashboard/appointments -&gt; 200 in 24 ms
+GET /api/dashboard/procedures -&gt; 200 in 18 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>62 ms</td></tr><tr><td><strong>Read and update retrieval settings</strong><br><small>knowledge.settings</small><details><summary>Requests (3)</summary><pre>GET /api/knowledge/settings -&gt; 200 in 14 ms
+PUT /api/knowledge/settings -&gt; 200 in 25 ms
+PUT /api/knowledge/settings -&gt; 400 in 3 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>46 ms</td></tr><tr><td><strong>Knowledge list loads</strong><br><small>knowledge.list</small><details><summary>Requests (1)</summary><pre>GET /api/knowledge -&gt; 200 in 15 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>16 ms</td></tr><tr><td><strong>Create, edit, deactivate and delete an entry</strong><br><small>knowledge.entry</small><div class="skipmsg">Calls a paid or third-party service. Allow &quot;external services&quot; to run it.</div></td><td><span class="pill skipped">skipped</span></td><td>0 ms</td></tr><tr><td><strong>Upload a text file as an entry</strong><br><small>knowledge.upload</small><div class="skipmsg">Calls a paid or third-party service. Allow &quot;external services&quot; to run it.</div></td><td><span class="pill skipped">skipped</span></td><td>0 ms</td></tr><tr><td><strong>Knowledge benchmark dashboard loads</strong><br><small>knowledge.benchmark</small><details><summary>Requests (3)</summary><pre>GET /api/knowledge/benchmark -&gt; 200 in 104 ms
+GET /api/knowledge/benchmark/runs -&gt; 200 in 22 ms
+GET /api/knowledge/benchmark/generations -&gt; 200 in 29 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>156 ms</td></tr><tr><td><strong>Website sources list loads</strong><br><small>websites.list</small><details><summary>Requests (1)</summary><pre>GET /api/knowledge/websites -&gt; 200 in 18 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>19 ms</td></tr><tr><td><strong>Scrape a single page, then remove the source</strong><br><small>websites.scrape</small><div class="skipmsg">Calls a paid or third-party service. Allow &quot;external services&quot; to run it.</div></td><td><span class="pill skipped">skipped</span></td><td>0 ms</td></tr><tr><td><strong>A non-http URL is rejected</strong><br><small>websites.invalid-url</small><details><summary>Requests (1)</summary><pre>POST /api/knowledge/websites -&gt; 400 in 14 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>16 ms</td></tr><tr><td><strong>Campaign list loads</strong><br><small>campaigns.list</small><details><summary>Requests (1)</summary><pre>GET /api/campaigns -&gt; 200 in 12 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>12 ms</td></tr><tr><td><strong>Audience preview counts eligible leads</strong><br><small>campaigns.audience</small><details><summary>Requests (2)</summary><pre>GET /api/campaigns/audience-preview?audienceType=all_eligible -&gt; 200 in 17 ms
+GET /api/campaigns/audience-preview/leads?audienceType=all_eligible&amp;limit=10 -&gt; 200 in 28 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>47 ms</td></tr><tr><td><strong>Creating a campaign without an approved template is refused</strong><br><small>campaigns.create-needs-template</small><details><summary>Requests (1)</summary><pre>POST /api/campaigns -&gt; 422 in 45 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>53 ms</td></tr><tr><td><strong>Health endpoint answers</strong><br><small>whatsapp.health</small><details><summary>Requests (2)</summary><pre>GET /api/whatsapp/health -&gt; 404 in 9 ms
+GET /api/whatsapp/health/events -&gt; 200 in 12 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>23 ms</td></tr><tr><td><strong>Template list loads</strong><br><small>whatsapp.templates</small><details><summary>Requests (1)</summary><pre>GET /api/whatsapp/templates -&gt; 200 in 12 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>13 ms</td></tr><tr><td><strong>Channel integrations list loads</strong><br><small>channels.list</small><details><summary>Requests (1)</summary><pre>GET /api/channel-integrations -&gt; 200 in 13 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>13 ms</td></tr><tr><td><strong>WhatsApp webhook handshake refuses a wrong token</strong><br><small>channels.meta-verify-wrong</small><details><summary>Requests (1)</summary><pre>GET /api/integrations/whatsapp/webhook?hub.mode=subscribe&amp;hub.verify_token=wrong-b935a12a&amp;hub.challenge=123 -&gt; 403 in 5 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>6 ms</td></tr><tr><td><strong>WhatsApp webhook handshake echoes the challenge</strong><br><small>channels.meta-verify</small><details><summary>Requests (1)</summary><pre>GET /api/integrations/whatsapp/webhook?hub.mode=subscribe&amp;hub.verify_token=local-verify-auto&amp;hub.challenge=autob935a12a -&gt; 200 in 4 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>5 ms</td></tr><tr><td><strong>Telegram webhook for an unknown connection returns 404</strong><br><small>channels.telegram-unknown</small><details><summary>Requests (1)</summary><pre>POST /api/integrations/telegram/webhook/ec4f4fdf-1060-4f65-a3d5-c286b452ab6e -&gt; 404 in 14 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>15 ms</td></tr><tr><td><strong>TikTok webhook endpoint is reachable</strong><br><small>channels.tiktok-reachable</small><details><summary>Requests (1)</summary><pre>GET /api/integrations/tiktok/webhook -&gt; 200 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>3 ms</td></tr><tr><td><strong>Calendar integrations list loads</strong><br><small>calendar.list</small><details><summary>Requests (1)</summary><pre>GET /api/calendar-integrations -&gt; 200 in 18 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>18 ms</td></tr><tr><td><strong>Connect Google Calendar starts the sign-in redirect</strong><br><small>calendar.connect-redirect</small><details><summary>Requests (2)</summary><pre>GET /calendar-oauth/google/connect -&gt; 302 (https://accounts.google.com/o/oauth2/v2/auth?client_id=858308361757-3mnu2gvk2coc0vd98eiv38mh75r7dnte.apps.googleusercontent.com&amp;redirect_uri=https%3A%2F%2Fsculptflow-local.example%2Fcalendar-oauth%2Fgoogle%2Fcallback&amp;response_type=code&amp;scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcalendar.readonly https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcalendar.events&amp;access_type=offline&amp;prompt=consent&amp;state=CfDJ8OCqDTaMxqRGqytKu2_JXowQKDI_4WrruXFwLOosZWLwI7iaQsJ6wT5FsZLi89ReWSJAVaBBRnRbOvlR2l1MPYPEV1dYaeL_ZLe5i-cwGJsLvctwSHsv81nJD0lkQDOVxgLlsY5vtbBqql8JVq_mTzBMEWnBu2LwiinDg0KxwwfHDXDZ-_xEVNED5uSfqSn5nvK4LYuFAQqyNvGnfh8g7xc) in 80 ms
+Redirects to https://accounts.google.com/o/oauth2/v2/auth</pre></details></td><td><span class="pill passed">passed</span></td><td>81 ms</td></tr><tr><td><strong>Calendar sync callback refuses a missing ingest key</strong><br><small>calendar.sync-callback-key</small><details><summary>Requests (1)</summary><pre>POST /api/calendar-integrations/sync-callback -&gt; 401 in 10 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>10 ms</td></tr><tr><td><strong>Billing summary loads</strong><br><small>billing.summary</small><details><summary>Requests (2)</summary><pre>GET /api/billing/summary -&gt; 200 in 37 ms
+billingEnabled=true, plan=, status=</pre></details></td><td><span class="pill passed">passed</span></td><td>38 ms</td></tr><tr><td><strong>Usage and transactions load</strong><br><small>billing.history</small><details><summary>Requests (2)</summary><pre>GET /api/billing/usage -&gt; 200 in 27 ms
+GET /api/billing/transactions -&gt; 200 in 13 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>41 ms</td></tr><tr><td><strong>Clinic info for the agent</strong><br><small>ai.clinic-info</small><details><summary>Requests (2)</summary><pre>GET /api/ai/clinic-info?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 7 ms
+GET /api/ai/clinic-info?clinicId=3f8712d2-567f-4e9f-8480-5b7367698eab -&gt; 404 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>10 ms</td></tr><tr><td><strong>Agent only sees active procedures</strong><br><small>ai.procedures</small><details><summary>Requests (3)</summary><pre>POST /api/procedures -&gt; 201 (http://localhost:5275/api/procedures/653b352d-da1a-4487-8670-757615585512) in 5 ms
+POST /api/procedures/653b352d-da1a-4487-8670-757615585512/active -&gt; 200 in 4 ms
+GET /api/ai/procedures?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;activeOnly=false -&gt; 200 in 8 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>19 ms</td></tr><tr><td><strong>Read and update a lead&#39;s context</strong><br><small>ai.lead-context</small><details><summary>Requests (4)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/b10dad05-13ca-478c-91d5-2a811284c8ae) in 7 ms
+GET /api/ai/leads/b10dad05-13ca-478c-91d5-2a811284c8ae?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 10 ms
+PATCH /api/ai/leads/b10dad05-13ca-478c-91d5-2a811284c8ae?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 32 ms
+GET /api/ai/leads/b10dad05-13ca-478c-91d5-2a811284c8ae?clinicId=f18a3130-307a-4f62-9b21-411e45b9446e -&gt; 404 in 6 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>59 ms</td></tr><tr><td><strong>Find a slot, book, reschedule and cancel</strong><br><small>ai.booking-flow</small><details><summary>Requests (8)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/3fd410ce-da0b-4a7a-abab-196d19291729) in 17 ms
+GET /api/ai/appointments/available?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;leadId=3fd410ce-da0b-4a7a-abab-196d19291729&amp;procedureId=9e0ea1bf-3137-4396-a3d7-6a6c703a8c82&amp;days=14 -&gt; 200 in 41 ms
+POST /api/ai/appointments/book?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 42 ms
+POST /api/ai/appointments/book?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 8 ms
+GET /api/ai/appointments/upcoming?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;leadId=3fd410ce-da0b-4a7a-abab-196d19291729 -&gt; 200 in 11 ms
+POST /api/ai/appointments/reschedule?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;leadId=3fd410ce-da0b-4a7a-abab-196d19291729 -&gt; 200 in 52 ms
+POST /api/ai/appointments/cancel?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;leadId=3fd410ce-da0b-4a7a-abab-196d19291729 -&gt; 200 in 48 ms
+GET /api/ai/appointments/upcoming?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;leadId=3fd410ce-da0b-4a7a-abab-196d19291729 -&gt; 200 in 4 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>237 ms</td></tr><tr><td><strong>Booking a slot that&#39;s already taken is refused</strong><br><small>ai.slot-taken</small><details><summary>Requests (5)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/8e6eac0e-4507-45f6-9551-973c593eae5a) in 6 ms
+POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/8a1e34f6-93cc-4353-b560-bab7d4ee1872) in 6 ms
+GET /api/appointments/available?procedureId=9e0ea1bf-3137-4396-a3d7-6a6c703a8c82&amp;days=14 -&gt; 200 in 8 ms
+POST /api/ai/appointments/book?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 15 ms
+POST /api/ai/appointments/book?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 7 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>47 ms</td></tr><tr><td><strong>schedule_consultation books when the patient has nothing upcoming</strong><br><small>ai.schedule</small><details><summary>Requests (3)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/1d28999e-eb2a-4039-96df-29d5f2ac63e6) in 6 ms
+GET /api/appointments/available?procedureId=9e0ea1bf-3137-4396-a3d7-6a6c703a8c82&amp;days=14 -&gt; 200 in 8 ms
+POST /api/ai/appointments/schedule?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;leadId=1d28999e-eb2a-4039-96df-29d5f2ac63e6 -&gt; 200 in 31 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>49 ms</td></tr><tr><td><strong>Agent hands a conversation to a human</strong><br><small>ai.handoff</small><details><summary>Requests (3)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/cc10d409-bed7-4c32-8a21-047f3d02a1cc) in 7 ms
+POST /api/conversations -&gt; 201 (http://localhost:5275/api/conversations/26a28a52-965b-456b-8bb3-41287f973849) in 6 ms
+POST /api/ai/conversations/26a28a52-965b-456b-8bb3-41287f973849/handoff?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 31 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>46 ms</td></tr><tr><td><strong>AI reply is refused once a human has taken over</strong><br><small>ai.ai-send-blocked-in-human-mode</small><details><summary>Requests (4)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/d6fe3c83-99c8-45b3-8529-a74c3841bbf5) in 7 ms
+POST /api/conversations -&gt; 201 (http://localhost:5275/api/conversations/a0dcd60b-a986-4e5e-9f21-7d26908490d6) in 5 ms
+POST /api/conversations/a0dcd60b-a986-4e5e-9f21-7d26908490d6/take-over -&gt; 200 in 6 ms
+POST /api/conversations/a0dcd60b-a986-4e5e-9f21-7d26908490d6/messages/send?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 409 in 19 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>41 ms</td></tr><tr><td><strong>Knowledge search finds a fresh entry</strong><br><small>ai.knowledge-search</small><div class="skipmsg">Calls a paid or third-party service. Allow &quot;external services&quot; to run it.</div></td><td><span class="pill skipped">skipped</span></td><td>0 ms</td></tr><tr><td><strong>AI test endpoints list their codes</strong><br><small>ai.test-codes</small><details><summary>Requests (1)</summary><pre>GET /api/ai/test/codes -&gt; 200 in 4 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>4 ms</td></tr><tr><td><strong>Dashboard, cases, generations, runs and source documents load</strong><br><small>benchmark.reads</small><details><summary>Requests (5)</summary><pre>GET /api/knowledge/benchmark -&gt; 200 in 13 ms
+GET /api/knowledge/benchmark/cases -&gt; 200 in 32 ms
+GET /api/knowledge/benchmark/generations?take=5 -&gt; 200 in 5 ms
+GET /api/knowledge/benchmark/runs?take=5 -&gt; 200 in 3 ms
+GET /api/knowledge/benchmark/source-documents -&gt; 200 in 24 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>80 ms</td></tr><tr><td><strong>Unknown cases, runs and generations return 404</strong><br><small>benchmark.unknown</small><details><summary>Requests (11)</summary><pre>GET /api/knowledge/benchmark/cases/cecacf39-8429-4303-aaf0-3b77d839ce83 -&gt; 404 in 30 ms
+PUT /api/knowledge/benchmark/cases/cecacf39-8429-4303-aaf0-3b77d839ce83 -&gt; 404 in 17 ms
+POST /api/knowledge/benchmark/cases/cecacf39-8429-4303-aaf0-3b77d839ce83/review -&gt; 404 in 12 ms
+DELETE /api/knowledge/benchmark/cases/cecacf39-8429-4303-aaf0-3b77d839ce83 -&gt; 404 in 16 ms
+GET /api/knowledge/benchmark/runs/cecacf39-8429-4303-aaf0-3b77d839ce83 -&gt; 404 in 21 ms
+GET /api/knowledge/benchmark/runs/cecacf39-8429-4303-aaf0-3b77d839ce83/results -&gt; 404 in 13 ms
+GET /api/knowledge/benchmark/runs/cecacf39-8429-4303-aaf0-3b77d839ce83/generations -&gt; 404 in 12 ms
+GET /api/knowledge/benchmark/runs/cecacf39-8429-4303-aaf0-3b77d839ce83/results/2ca37506-b352-482c-9394-d51f9c7534e6 -&gt; 404 in 29 ms
+GET /api/knowledge/benchmark/generations/cecacf39-8429-4303-aaf0-3b77d839ce83 -&gt; 404 in 17 ms
+POST /api/knowledge/benchmark/generations/cecacf39-8429-4303-aaf0-3b77d839ce83/cancel -&gt; 404 in 12 ms
+GET /api/knowledge/benchmark/source-documents/cecacf39-8429-4303-aaf0-3b77d839ce83/chunks -&gt; 404 in 12 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>202 ms</td></tr><tr><td><strong>A manual case must point at one of the clinic&#39;s chunks; a run needs a valid scope</strong><br><small>benchmark.validation</small><details><summary>Requests (4)</summary><pre>POST /api/knowledge/benchmark/cases -&gt; 400 in 20 ms
+POST /api/knowledge/benchmark/runs -&gt; 400 in 11 ms
+POST /api/knowledge/benchmark/runs -&gt; 400 in 2 ms
+POST /api/knowledge/benchmark/runs -&gt; 400 in 3 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>41 ms</td></tr><tr><td><strong>Write a manual case from a real chunk, edit, review, delete</strong><br><small>benchmark.manual-case</small><div class="skipmsg">Calls a paid or third-party service. Allow &quot;external services&quot; to run it.</div></td><td><span class="pill skipped">skipped</span></td><td>0 ms</td></tr><tr><td><strong>Ask n8n to generate test cases from the clinic&#39;s knowledge</strong><br><small>benchmark.generate</small><div class="skipmsg">Calls a paid or third-party service. Allow &quot;external services&quot; to run it.</div></td><td><span class="pill skipped">skipped</span></td><td>0 ms</td></tr><tr><td><strong>Score the clinic&#39;s cases in a run</strong><br><small>benchmark.run</small><div class="skipmsg">Calls a paid or third-party service. Allow &quot;external services&quot; to run it.</div></td><td><span class="pill skipped">skipped</span></td><td>0 ms</td></tr><tr><td><strong>Calendar sync callback for an unknown appointment changes nothing</strong><br><small>callbacks.calendar-sync</small><details><summary>Requests (1)</summary><pre>POST /api/calendar-integrations/sync-callback -&gt; 200 in 14 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>18 ms</td></tr><tr><td><strong>Benchmark questions for an unknown generation are refused</strong><br><small>callbacks.benchmark-questions</small><details><summary>Requests (2)</summary><pre>POST /api/knowledge/benchmark/generations/036989a1-8cb2-4f75-8308-1d21d4feb932/questions -&gt; 404 in 18 ms
+POST /api/knowledge/benchmark/generations/a257d42b-73e2-47a4-91da-f7e138a59be8/questions -&gt; 401 in 1 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>21 ms</td></tr><tr><td><strong>A template event is stored for its clinic; a health event without WhatsApp is refused</strong><br><small>callbacks.whatsapp-events</small><details><summary>Requests (5)</summary><pre>POST /api/integrations/whatsapp/templates/events -&gt; 200 in 104 ms
+GET /api/whatsapp/templates -&gt; 200 in 6 ms
+POST /api/integrations/whatsapp/templates/events -&gt; 400 in 2 ms
+POST /api/integrations/whatsapp/health/events -&gt; 422 in 22 ms
+POST /api/integrations/whatsapp/health/events -&gt; 401 in 1 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>145 ms</td></tr><tr><td><strong>WhatsApp webhook refuses an unsigned or wrongly signed delivery</strong><br><small>callbacks.meta-unsigned</small><details><summary>Requests (2)</summary><pre>POST /api/integrations/whatsapp/webhook -&gt; 401 in 26 ms
+POST /api/integrations/whatsapp/webhook -&gt; 401 in 1 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>43 ms</td></tr><tr><td><strong>WhatsApp webhook accepts a correctly signed delivery for an unknown number</strong><br><small>callbacks.meta-signed</small><details><summary>Requests (1)</summary><pre>POST /api/integrations/whatsapp/webhook -&gt; 200 in 42 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>43 ms</td></tr><tr><td><strong>TikTok webhook accepts a delivery</strong><br><small>callbacks.tiktok-post</small><details><summary>Requests (1)</summary><pre>POST /api/integrations/tiktok/webhook -&gt; 200 in 6 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>7 ms</td></tr><tr><td><strong>AI test endpoints return every documented outcome</strong><br><small>callbacks.ai-test-codes</small><details><summary>Requests (13)</summary><pre>GET /api/ai/test/codes -&gt; 200 in 3 ms
+POST /api/ai/test/schedule?code=BOOKED -&gt; 200 in 8 ms
+POST /api/ai/test/schedule?code=RESCHEDULED -&gt; 200 in 2 ms
+POST /api/ai/test/schedule?code=CONFIRMATION_REQUIRED -&gt; 200 in 3 ms
+POST /api/ai/test/schedule?code=MULTIPLE_UPCOMING_APPOINTMENTS -&gt; 200 in 2 ms
+POST /api/ai/test/schedule?code=SLOT_UNAVAILABLE -&gt; 200 in 1 ms
+POST /api/ai/test/schedule?code=LEAD_NOT_FOUND -&gt; 200 in 2 ms
+POST /api/ai/test/schedule?code=INVALID_REQUEST -&gt; 200 in 1 ms
+POST /api/ai/test/cancel?code=CANCELED -&gt; 200 in 6 ms
+POST /api/ai/test/cancel?code=NO_UPCOMING_APPOINTMENT -&gt; 200 in 1 ms
+POST /api/ai/test/cancel?code=MULTIPLE_UPCOMING_APPOINTMENTS -&gt; 200 in 1 ms
+POST /api/ai/test/cancel?code=INVALID_REQUEST -&gt; 200 in 1 ms
+POST /api/ai/test/schedule?code=NOT_A_CODE -&gt; 400 in 1 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>44 ms</td></tr><tr><td><strong>Continue with Google starts a redirect (or is cleanly off)</strong><br><small>oauth.google-login</small><details><summary>Requests (4)</summary><pre>GET /Account/Login -&gt; 200 in 4 ms
+POST /auth/google/start -&gt; 302 (/Account/Login?externalError=failed) in 3 ms
+Google start: 302 -&gt; /Account/Login
+GET /auth/google/callback -&gt; 302 (/Account/Login?externalError=failed) in 10 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>18 ms</td></tr><tr><td><strong>Calendar connect redirects; a forged callback is refused</strong><br><small>oauth.calendar</small><details><summary>Requests (8)</summary><pre>GET /calendar-oauth/google/connect -&gt; 302 (https://accounts.google.com/o/oauth2/v2/auth?client_id=858308361757-3mnu2gvk2coc0vd98eiv38mh75r7dnte.apps.googleusercontent.com&amp;redirect_uri=https%3A%2F%2Fsculptflow-local.example%2Fcalendar-oauth%2Fgoogle%2Fcallback&amp;response_type=code&amp;scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcalendar.readonly https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcalendar.events&amp;access_type=offline&amp;prompt=consent&amp;state=CfDJ8OCqDTaMxqRGqytKu2_JXowLsgiP4B84fpC5UsPkt_qCAc2-RbLuS-k8QRRPfy3Snm5QXgodNObDQ4Pht9IH4hC9-bRBw5h24h3gF0eNt0pz3SfiqTofoI8Y_9so83qzFIrJ8t0sbsb0SOWdv6wL3R-NTMFYhtqRXqoFfxxYkeF0ySKv3J3XVFhdcH_OxmXP4EOtOqYYH2_FfCiRvD86aF4) in 15 ms
+google connect -&gt; https://accounts.google.com/o/oauth2/v2/auth
+GET /calendar-oauth/google/callback?code=forged&amp;state=forged-b935a12a -&gt; 302 (/settings/calendar-integrations) in 44 ms
+GET /calendar-oauth/outlook/connect -&gt; 302 (https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=&amp;redirect_uri=https%3A%2F%2Fsculptflow-local.example%2Fcalendar-oauth%2Foutlook%2Fcallback&amp;response_type=code&amp;response_mode=query&amp;scope=offline_access https%3A%2F%2Fgraph.microsoft.com%2FCalendars.ReadWrite https%3A%2F%2Fgraph.microsoft.com%2FUser.Read&amp;state=CfDJ8OCqDTaMxqRGqytKu2_JXowvC9UkI3-prJCyz8ZCBHAh9eWsW0FVcN-Eb7wtRE3sJV4FvEYOa83L0aRzSt5Ls593jS0i0IxpOZ19cht4LYwgaG-RxdqiXHcTyGPK23l8EbqaL_aF5znFzM8FtuTcLAm2BdbHIO9OfMdvUYh4jyemYoSHLxQcVKuW_YCDyUwwFlDCeDQipiac_TFRQqnqi1HMrXkDM28EqWeX09_3axFi) in 8 ms
+outlook connect -&gt; https://login.microsoftonline.com/common/oauth2/v2.0/authorize
+GET /calendar-oauth/outlook/callback?code=forged&amp;state=forged-b935a12a -&gt; 302 (/settings/calendar-integrations) in 12 ms
+GET /calendar-oauth/yahoo/connect -&gt; 302 (/settings/calendar-integrations) in 2 ms
+GET /api/calendar-integrations -&gt; 200 in 18 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>102 ms</td></tr><tr><td><strong>TikTok connect redirects; a forged callback is refused</strong><br><small>oauth.tiktok</small><details><summary>Requests (4)</summary><pre>GET /tiktok-oauth/connect -&gt; 302 (https://www.tiktok.com/v2/auth/authorize/?client_key=sbawe76hi1v0ks5xdw&amp;redirect_uri=https%3A%2F%2Fsculptflow-local.example%2Ftiktok-oauth%2Fcallback&amp;response_type=code&amp;scope=user.info.basic&amp;state=CfDJ8OCqDTaMxqRGqytKu2_JXoyeGyKTzvxdmOxvCPrx_QkvyBNeUG_IdcNBvUzkrHyMsYD7PhQ9loTRIJmbHIZbxalf8F2JveD63ge_Cxyu-Mqf0LdeT8jpvN13tw5DhC_Tp6OdkYyT9jBOsMVtC6p1YtqjAX6L62E2iGHdO8C7MtN9zxWU5AoWqjV_UKaI6khj4A) in 85 ms
+TikTok connect -&gt; https://www.tiktok.com/v2/auth/authorize/
+GET /tiktok-oauth/callback?code=forged&amp;state=forged-b935a12a -&gt; 302 (/settings/integrations) in 30 ms
+GET /tiktok-oauth/connect -&gt; 302 (http://localhost:5275/Account/Login?ReturnUrl=%2Ftiktok-oauth%2Fconnect) in 0 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>118 ms</td></tr><tr><td><strong>A closed conversation can be reopened; an open one stays open</strong><br><small>edge.reopen</small><details><summary>Requests (6)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/78e939c9-4dd5-4cd2-88c4-0465f77c56ee) in 12 ms
+POST /api/conversations -&gt; 201 (http://localhost:5275/api/conversations/18f4ed7d-46a3-4bc6-b737-abf6f53c1054) in 12 ms
+POST /api/conversations/18f4ed7d-46a3-4bc6-b737-abf6f53c1054/close -&gt; 200 in 14 ms
+POST /api/conversations/18f4ed7d-46a3-4bc6-b737-abf6f53c1054/reopen -&gt; 200 in 18 ms
+POST /api/conversations/18f4ed7d-46a3-4bc6-b737-abf6f53c1054/reopen -&gt; 200 in 2 ms
+POST /api/conversations/ac9caa1a-3030-4b99-b2f9-0fea2193ca3a/reopen -&gt; 404 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>64 ms</td></tr><tr><td><strong>A patient message reopens a closed conversation</strong><br><small>edge.auto-reopen</small><details><summary>Requests (5)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/216b56bd-2bc9-4dac-945d-d25b99d145a6) in 7 ms
+POST /api/conversations -&gt; 201 (http://localhost:5275/api/conversations/93af1883-1a37-43a5-9cd1-8b6131ab713c) in 5 ms
+POST /api/conversations/93af1883-1a37-43a5-9cd1-8b6131ab713c/close -&gt; 200 in 4 ms
+POST /api/messages/ingest -&gt; 200 in 26 ms
+GET /api/conversations/93af1883-1a37-43a5-9cd1-8b6131ab713c -&gt; 200 in 5 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>49 ms</td></tr><tr><td><strong>The same inbound message ingested twice is stored once</strong><br><small>edge.ingest-duplicate</small><details><summary>Requests (6)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/1679e4d4-745d-49ca-b949-968a179bb3f4) in 23 ms
+POST /api/conversations -&gt; 201 (http://localhost:5275/api/conversations/ca9d0baa-d8a2-4cda-8060-8bd170f430db) in 5 ms
+POST /api/messages/ingest -&gt; 200 in 9 ms
+POST /api/messages/ingest -&gt; 200 in 11 ms
+GET /api/conversations/ca9d0baa-d8a2-4cda-8060-8bd170f430db/messages -&gt; 200 in 4 ms
+POST /api/messages/ingest -&gt; 400 in 1 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>57 ms</td></tr><tr><td><strong>Opening a conversation for a lead that doesn&#39;t exist is rejected (not a server error)</strong><br><small>edge.conversation-unknown-lead</small><details><summary>Requests (1)</summary><pre>POST /api/conversations -&gt; 404 in 4 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>5 ms</td></tr><tr><td><strong>A message with an unknown sender type is rejected (400, not a server error)</strong><br><small>edge.message-sender</small><details><summary>Requests (2)</summary><pre>POST /api/conversations -&gt; 201 (http://localhost:5275/api/conversations/f7968c7f-cc4e-43bc-9af3-dff49b3048c3) in 5 ms
+POST /api/conversations/f7968c7f-cc4e-43bc-9af3-dff49b3048c3/messages -&gt; 400 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>10 ms</td></tr><tr><td><strong>Bad message bodies and unknown media are refused</strong><br><small>edge.messages</small><details><summary>Requests (6)</summary><pre>POST /api/conversations -&gt; 201 (http://localhost:5275/api/conversations/abf4c5ea-b32f-4d3e-9211-c5a71a8df0de) in 7 ms
+POST /api/conversations/abf4c5ea-b32f-4d3e-9211-c5a71a8df0de/messages -&gt; 400 in 3 ms
+POST /api/conversations/0fcc9191-204f-49de-9324-72d9a1dfe960/messages -&gt; 404 in 1 ms
+GET /api/messages/551e6eb3-8bea-4984-998c-30b9610b1d84/media -&gt; 404 in 19 ms
+POST /api/conversations -&gt; 400 in 2 ms
+POST /api/conversations/abf4c5ea-b32f-4d3e-9211-c5a71a8df0de/messages/send-template -&gt; 422 in 17 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>53 ms</td></tr><tr><td><strong>Staff reply on a conversation with no connected channel is refused, not lost</strong><br><small>edge.staff-send</small><details><summary>Requests (4)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/c48e073f-b9b1-4b13-b910-5586485fac3c) in 11 ms
+POST /api/conversations -&gt; 201 (http://localhost:5275/api/conversations/92921081-47b7-4f4d-aec4-c8ffbbb5f70a) in 4 ms
+POST /api/conversations/92921081-47b7-4f4d-aec4-c8ffbbb5f70a/messages/send -&gt; 422 in 7 ms
+Staff send answered 422 Body: {&quot;error&quot;:&quot;Your subscription isn&#39;t active, so messages can&#39;t be sent. See Settings → Billing.&quot;}</pre></details></td><td><span class="pill passed">passed</span></td><td>26 ms</td></tr><tr><td><strong>Mark one notification read</strong><br><small>edge.notifications</small><details><summary>Requests (5)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/6093faa5-260b-482f-a3b0-f591711cde09) in 9 ms
+GET /api/notifications?take=5 -&gt; 200 in 7 ms
+POST /api/notifications/757854bf-cd53-45d3-9940-95d6e0f5ab68/read -&gt; 204 in 21 ms
+POST /api/notifications/e386e08d-072c-4e63-9b1e-92a4263edf48/read -&gt; 204 in 2 ms
+GET /api/notifications?take=100000 -&gt; 200 in 4 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>47 ms</td></tr><tr><td><strong>A negative skip is clamped on every list (no server error)</strong><br><small>edge.negative-skip</small><details><summary>Requests (7)</summary><pre>GET /api/notifications?skip=-5 -&gt; 200 in 5 ms
+GET /api/leads?skip=-5 -&gt; 200 in 7 ms
+GET /api/appointments?skip=-5 -&gt; 200 in 5 ms
+GET /api/procedure-bookings?skip=-5 -&gt; 200 in 19 ms
+GET /api/conversations?skip=-5 -&gt; 200 in 6 ms
+GET /api/dashboard/leads?skip=-5 -&gt; 200 in 4 ms
+GET /api/whatsapp/health/events?skip=-5 -&gt; 200 in 4 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>55 ms</td></tr><tr><td><strong>Huge or negative paging values are clamped, not errors</strong><br><small>edge.paging</small><details><summary>Requests (13)</summary><pre>GET /api/leads?take=100000&amp;skip=0 -&gt; 200 in 5 ms
+GET /api/leads?take=0 -&gt; 200 in 4 ms
+GET /api/appointments?take=100000&amp;skip=0 -&gt; 200 in 4 ms
+GET /api/appointments?take=0 -&gt; 200 in 4 ms
+GET /api/procedure-bookings?take=100000&amp;skip=0 -&gt; 200 in 4 ms
+GET /api/procedure-bookings?take=0 -&gt; 200 in 3 ms
+GET /api/conversations?take=100000&amp;skip=0 -&gt; 200 in 3 ms
+GET /api/conversations?take=0 -&gt; 200 in 3 ms
+GET /api/dashboard/leads?take=100000&amp;skip=0 -&gt; 200 in 3 ms
+GET /api/dashboard/leads?take=0 -&gt; 200 in 2 ms
+GET /api/dashboard/appointments?take=100000&amp;skip=0 -&gt; 200 in 3 ms
+GET /api/dashboard/appointments?take=0 -&gt; 200 in 3 ms
+GET /api/billing/usage?page=0&amp;pageSize=100000 -&gt; 200 in 3 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>51 ms</td></tr><tr><td><strong>Campaign actions on unknown ids return 404; bad schedules are rejected</strong><br><small>edge.campaigns</small><details><summary>Requests (8)</summary><pre>GET /api/campaigns/5df92257-750b-4d4a-953f-03c375b0bd5e -&gt; 404 in 8 ms
+POST /api/campaigns/5df92257-750b-4d4a-953f-03c375b0bd5e/schedule -&gt; 404 in 15 ms
+POST /api/campaigns/5df92257-750b-4d4a-953f-03c375b0bd5e/send -&gt; 404 in 9 ms
+POST /api/campaigns/5df92257-750b-4d4a-953f-03c375b0bd5e/process-batch -&gt; 404 in 9 ms
+POST /api/campaigns/5df92257-750b-4d4a-953f-03c375b0bd5e/cancel -&gt; 404 in 8 ms
+GET /api/campaigns/audience-preview?audienceType=nonsense -&gt; 400 in 1 ms
+GET /api/campaigns/audience-preview?audienceType=reactivation_no_consultation -&gt; 200 in 13 ms
+POST /api/campaigns -&gt; 400 in 1 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>71 ms</td></tr><tr><td><strong>Template lookups and validation</strong><br><small>edge.templates</small><details><summary>Requests (6)</summary><pre>GET /api/whatsapp/templates/a9fd97ed-dcf2-40b4-81bb-058475e5230e -&gt; 404 in 20 ms
+POST /api/whatsapp/templates/ca25d983-4c66-494c-a268-53af36991a9e/sync -&gt; 404 in 10 ms
+POST /api/whatsapp/templates -&gt; 400 in 14 ms
+POST /api/whatsapp/templates -&gt; 400 in 3 ms
+POST /api/whatsapp/templates -&gt; 201 (http://localhost:5275/api/whatsapp/templates/e749ce8c-e24e-4c95-b8d4-eb9d446af69e) in 7 ms
+GET /api/whatsapp/templates/e749ce8c-e24e-4c95-b8d4-eb9d446af69e -&gt; 200 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>62 ms</td></tr><tr><td><strong>A template name WhatsApp would refuse (capitals, spaces, symbols) is rejected up front</strong><br><small>edge.template-name</small><details><summary>Requests (1)</summary><pre>POST /api/whatsapp/templates -&gt; 400 in 1 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>2 ms</td></tr><tr><td><strong>Channel actions without a connected channel are refused cleanly</strong><br><small>edge.channels</small><details><summary>Requests (6)</summary><pre>POST /api/channel-integrations/whatsapp/disconnect -&gt; 204 in 11 ms
+POST /api/channel-integrations/telegram/refresh -&gt; 200 in 11 ms
+POST /api/channel-integrations/telegram/connect -&gt; 400 in 19 ms
+PUT /api/channel-integrations -&gt; 400 in 12 ms
+PUT /api/channel-integrations -&gt; 200 in 62 ms
+GET /api/channel-integrations -&gt; 200 in 3 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>124 ms</td></tr><tr><td><strong>Disconnecting an unknown channel type is rejected</strong><br><small>edge.channel-unknown</small><details><summary>Requests (1)</summary><pre>POST /api/channel-integrations/pigeon/disconnect -&gt; 400 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>2 ms</td></tr><tr><td><strong>Fake Telegram, WhatsApp and Facebook credentials are rejected and nothing gets connected</strong><br><small>edge.channels-external</small><div class="skipmsg">Calls a paid or third-party service. Allow &quot;external services&quot; to run it.</div></td><td><span class="pill skipped">skipped</span></td><td>0 ms</td></tr><tr><td><strong>Calendar actions on an unconnected or unknown provider are refused</strong><br><small>edge.calendar</small><details><summary>Requests (9)</summary><pre>POST /api/calendar-integrations/google/refresh-calendars -&gt; 400 in 10 ms
+POST /api/calendar-integrations/google/select-calendar -&gt; 400 in 11 ms
+POST /api/calendar-integrations/google/sync-enabled -&gt; 400 in 10 ms
+POST /api/calendar-integrations/google/disconnect -&gt; 204 in 31 ms
+POST /api/calendar-integrations/outlook/refresh-calendars -&gt; 400 in 3 ms
+POST /api/calendar-integrations/outlook/select-calendar -&gt; 400 in 3 ms
+POST /api/calendar-integrations/outlook/sync-enabled -&gt; 400 in 4 ms
+POST /api/calendar-integrations/outlook/disconnect -&gt; 204 in 4 ms
+POST /api/calendar-integrations/yahoo/refresh-calendars -&gt; 400 in 1 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>85 ms</td></tr><tr><td><strong>Website source actions: unknown ids, deactivate and rescrape</strong><br><small>edge.websites</small><details><summary>Requests (6)</summary><pre>GET /api/knowledge/websites/3fb16441-0609-4aaa-b991-14d4cbe323c9 -&gt; 404 in 9 ms
+POST /api/knowledge/websites/3fb16441-0609-4aaa-b991-14d4cbe323c9/active -&gt; 404 in 14 ms
+POST /api/knowledge/websites/3fb16441-0609-4aaa-b991-14d4cbe323c9/rescrape -&gt; 404 in 16 ms
+DELETE /api/knowledge/websites/3fb16441-0609-4aaa-b991-14d4cbe323c9 -&gt; 404 in 10 ms
+POST /api/knowledge/websites -&gt; 400 in 8 ms
+POST /api/knowledge/websites -&gt; 400 in 12 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>72 ms</td></tr><tr><td><strong>Deactivate and rescrape a real website source; the same address can&#39;t be added twice</strong><br><small>edge.websites-lifecycle</small><div class="skipmsg">Calls a paid or third-party service. Allow &quot;external services&quot; to run it.</div></td><td><span class="pill skipped">skipped</span></td><td>0 ms</td></tr><tr><td><strong>Knowledge validation and unknown ids</strong><br><small>edge.knowledge</small><details><summary>Requests (8)</summary><pre>POST /api/knowledge -&gt; 400 in 11 ms
+POST /api/knowledge -&gt; 400 in 2 ms
+GET /api/knowledge/a33fb3bf-a30a-4193-8243-e3ff3ea8326e -&gt; 404 in 8 ms
+PUT /api/knowledge/9959cd50-a946-4678-bc27-313870ee54d2 -&gt; 404 in 12 ms
+DELETE /api/knowledge/c7a879d2-69ec-448f-883b-fd08dac5b67a -&gt; 404 in 17 ms
+PUT /api/knowledge/settings -&gt; 400 in 2 ms
+PUT /api/knowledge/settings -&gt; 400 in 2 ms
+POST /api/knowledge/upload -&gt; 400 in 16 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>76 ms</td></tr><tr><td><strong>Lead intake for a clinic that doesn&#39;t exist is rejected (not a server error)</strong><br><small>edge.lead-unknown-clinic</small><details><summary>Requests (1)</summary><pre>POST /api/leads -&gt; 404 in 3 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>5 ms</td></tr><tr><td><strong>Lead intake with no name, phone or email is rejected</strong><br><small>edge.lead-empty</small><details><summary>Requests (1)</summary><pre>POST /api/leads -&gt; 400 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>3 ms</td></tr><tr><td><strong>Lead intake validation</strong><br><small>edge.leads</small><details><summary>Requests (3)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/63f1d46c-0d0b-4efd-9602-32395a89f862) in 4 ms
+PATCH /api/leads/934d2cfc-67d1-4e78-90e1-f960e1925606 -&gt; 404 in 3 ms
+POST /api/leads/15367efe-7dd5-4168-b07e-d361cdd05365/status -&gt; 404 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>12 ms</td></tr><tr><td><strong>Appointment validation: unknown lead, outside hours, in the past</strong><br><small>edge.appointments</small><details><summary>Requests (9)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/99451793-77df-402f-b8ff-6d51c070a951) in 8 ms
+POST /api/appointments -&gt; 400 in 3 ms
+POST /api/appointments -&gt; 201 (http://localhost:5275/api/appointments) in 24 ms
+Staff booking at 03:00 (clinic closed) answered 201
+POST /api/appointments -&gt; 201 (http://localhost:5275/api/appointments) in 15 ms
+Staff booking in the past answered 201
+PATCH /api/appointments/9c70de63-53fa-4a2b-ad93-6cecb958636b/status -&gt; 404 in 6 ms
+GET /api/appointments/available?days=-3 -&gt; 200 in 9 ms
+GET /api/appointments/available?procedureId=a4025c62-db14-4c6f-8041-9c155f723c75 -&gt; 400 in 5 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>84 ms</td></tr><tr><td><strong>AI booking refuses a closed time, the past and an unknown lead</strong><br><small>edge.ai-booking-rules</small><details><summary>Requests (8)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/9b544466-bcb5-43a0-8fb9-97e13022942f) in 6 ms
+POST /api/ai/appointments/book?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 7 ms
+POST /api/ai/appointments/book?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 6 ms
+GET /api/appointments/available?procedureId=9e0ea1bf-3137-4396-a3d7-6a6c703a8c82&amp;days=14 -&gt; 200 in 23 ms
+POST /api/ai/appointments/book?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 6 ms
+POST /api/ai/appointments/cancel?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;leadId=9b544466-bcb5-43a0-8fb9-97e13022942f -&gt; 200 in 7 ms
+GET /api/appointments/available?procedureId=9e0ea1bf-3137-4396-a3d7-6a6c703a8c82&amp;days=14 -&gt; 200 in 13 ms
+POST /api/ai/appointments/reschedule?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;leadId=9b544466-bcb5-43a0-8fb9-97e13022942f -&gt; 404 in 13 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>95 ms</td></tr><tr><td><strong>Plans, entitlements and rate cards load</strong><br><small>admin.catalog</small><details><summary>Requests (4)</summary><pre>GET /api/platform-admin/billing/plans -&gt; 200 in 64 ms
+GET /api/platform-admin/billing/entitlements -&gt; 200 in 4 ms
+GET /api/platform-admin/billing/rate-cards -&gt; 200 in 46 ms
+GET /api/platform-admin/billing/provider-billing -&gt; 200 in 11 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>132 ms</td></tr><tr><td><strong>The test clinic shows up in billing accounts</strong><br><small>admin.accounts</small><details><summary>Requests (1)</summary><pre>GET /api/platform-admin/billing/accounts -&gt; 200 in 50 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>51 ms</td></tr><tr><td><strong>Clinic billing detail, ledger, usage and reconciliation load</strong><br><small>admin.clinic</small><details><summary>Requests (5)</summary><pre>GET /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 139 ms
+GET /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/ledger -&gt; 200 in 11 ms
+GET /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/usage -&gt; 200 in 25 ms
+GET /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/channel-accounts -&gt; 200 in 8 ms
+GET /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/reconciliation -&gt; 200 in 10 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>198 ms</td></tr><tr><td><strong>Revenue report loads</strong><br><small>admin.report</small><details><summary>Requests (1)</summary><pre>GET /api/platform-admin/billing/report -&gt; 200 in 25 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>25 ms</td></tr><tr><td><strong>Wallet top-up is applied once and the books still balance</strong><br><small>admin.top-up</small><details><summary>Requests (5)</summary><pre>POST /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/wallet/top-ups -&gt; 200 in 86 ms
+POST /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/wallet/top-ups -&gt; 200 in 12 ms
+GET /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/ledger?pageSize=100 -&gt; 200 in 20 ms
+GET /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/reconciliation -&gt; 200 in 5 ms
+POST /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/wallet/top-ups -&gt; 400 in 0 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>129 ms</td></tr><tr><td><strong>Leftover automation clinics are listed</strong><br><small>admin.automation-clinics</small><details><summary>Requests (1)</summary><pre>GET /api/platform-admin/automation/clinics -&gt; 200 in 19 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>20 ms</td></tr><tr><td><strong>Cleanup refuses to delete a clinic that isn&#39;t an automation clinic</strong><br><small>admin.automation-guard</small><details><summary>Requests (8)</summary><pre>GET /Account/Register -&gt; 200 in 3 ms
+POST /Account/Register -&gt; 302 (/dashboard) in 79 ms
+POST /api/procedures -&gt; 201 (http://localhost:5275/api/procedures/8a424671-217c-4a34-ba68-5ca107a41a6a) in 6 ms
+GET /settings/clinic-info -&gt; 200 in 5 ms
+POST /settings/clinic-info -&gt; 302 (/settings/clinic-info) in 7 ms
+DELETE /api/platform-admin/automation/clinics/ec0fbf42-ef69-42ca-8e6b-74548779e4a4 -&gt; 409 in 18 ms
+GET /settings/clinic-info -&gt; 200 in 4 ms
+POST /settings/clinic-info -&gt; 302 (/settings/clinic-info) in 4 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>130 ms</td></tr><tr><td><strong>Unknown plans, rates and usage return 404; bad input returns 400</strong><br><small>admin-billing.lookups</small><details><summary>Requests (11)</summary><pre>GET /api/platform-admin/billing/plans/no-such-plan-b935a12a -&gt; 404 in 10 ms
+GET /api/platform-admin/billing/rate-cards/no-such-card-b935a12a/rates -&gt; 404 in 14 ms
+POST /api/platform-admin/billing/rates/ad852cb2-674e-434a-9031-bff587a37923/close -&gt; 404 in 19 ms
+POST /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/usage/1510cb10-4ff5-4b44-8e9b-f8dfb4e46f56/refund -&gt; 404 in 19 ms
+GET /api/platform-admin/billing/clinics/587f47dd-125c-4bfc-9b8b-1ca86cc430e5 -&gt; 404 in 2 ms
+PUT /api/platform-admin/billing/channel-accounts/d3653e6b-2cac-4c92-a423-27b017f0773c/provider-billing -&gt; 404 in 13 ms
+POST /api/platform-admin/billing/channel-accounts/539e9a97-dee7-4f75-adad-aa49789af7d8/provider-billing/reset -&gt; 404 in 8 ms
+PUT /api/platform-admin/billing/plans/no-such-plan-b935a12a -&gt; 404 in 24 ms
+PUT /api/platform-admin/billing/plans/no-such-plan-b935a12a/entitlements -&gt; 404 in 9 ms
+POST /api/platform-admin/billing/plans -&gt; 400 in 7 ms
+POST /api/platform-admin/billing/plans -&gt; 400 in 5 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>147 ms</td></tr><tr><td><strong>Price quote answers for a known event type and refuses a malformed one</strong><br><small>admin-billing.quote</small><details><summary>Requests (3)</summary><pre>GET /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/quote?eventType=whatsapp_marketing_message&amp;country=LB -&gt; 404 in 30 ms
+Quote: 404
+GET /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/quote?eventType=BAD%20TYPE -&gt; 404 in 3 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>35 ms</td></tr><tr><td><strong>Manual adjustments: idempotent, reasoned, balanced</strong><br><small>admin-billing.adjustment</small><details><summary>Requests (9)</summary><pre>POST /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/wallet/top-ups -&gt; 200 in 13 ms
+POST /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/wallet/adjustments -&gt; 200 in 28 ms
+POST /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/wallet/adjustments -&gt; 200 in 5 ms
+GET /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/ledger?pageSize=100 -&gt; 200 in 3 ms
+GET /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/reconciliation -&gt; 200 in 5 ms
+POST /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/wallet/adjustments -&gt; 400 in 1 ms
+POST /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/wallet/adjustments -&gt; 400 in 0 ms
+POST /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/wallet/adjustments -&gt; 422 in 3 ms
+POST /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/wallet/top-ups -&gt; 400 in 0 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>68 ms</td></tr><tr><td><strong>Start, cancel, resume and renew a plan on the test clinic</strong><br><small>admin-billing.subscription</small><details><summary>Requests (11)</summary><pre>GET /api/platform-admin/billing/plans -&gt; 200 in 3 ms
+Using plan starter-local
+POST /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/subscription -&gt; 200 in 94 ms
+GET /api/billing/summary -&gt; 200 in 26 ms
+POST /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/subscription/cancel -&gt; 200 in 20 ms
+GET /api/billing/summary -&gt; 200 in 11 ms
+POST /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/subscription/resume -&gt; 200 in 13 ms
+GET /api/billing/summary -&gt; 200 in 15 ms
+POST /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/subscription/renew -&gt; 200 in 20 ms
+POST /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/subscription -&gt; 400 in 5 ms
+GET /api/platform-admin/billing/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/reconciliation -&gt; 200 in 4 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>220 ms</td></tr><tr><td><strong>Clinic-only rate card: create, add a rate, close it, edit the card</strong><br><small>admin-billing.rate-card</small><details><summary>Requests (10)</summary><pre>POST /api/platform-admin/billing/rate-cards -&gt; 200 in 46 ms
+POST /api/platform-admin/billing/rate-cards -&gt; 400 in 2 ms
+POST /api/platform-admin/billing/rate-cards -&gt; 400 in 1 ms
+POST /api/platform-admin/billing/rate-cards/auto-b935a12a/rates -&gt; 200 in 94 ms
+POST /api/platform-admin/billing/rate-cards/auto-b935a12a/rates -&gt; 400 in 2 ms
+POST /api/platform-admin/billing/rate-cards/auto-b935a12a/rates -&gt; 400 in 2 ms
+GET /api/platform-admin/billing/rate-cards/auto-b935a12a/rates -&gt; 200 in 26 ms
+POST /api/platform-admin/billing/rates/9296578d-d622-4997-aaf7-e35f50cf2ca4/close -&gt; 200 in 12 ms
+GET /api/platform-admin/billing/rate-cards/auto-b935a12a/rates?history=true -&gt; 200 in 11 ms
+PUT /api/platform-admin/billing/rate-cards/auto-b935a12a -&gt; 200 in 38 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>261 ms</td></tr><tr><td><strong>Clinic list, search, filter and options</strong><br><small>admin-clinics.list</small><details><summary>Requests (6)</summary><pre>GET /api/platform-admin/clinics?search=%5BAutomation%5D%20main%20b935a12a -&gt; 200 in 29 ms
+GET /api/platform-admin/clinics?active=true&amp;search=b935a12a -&gt; 200 in 13 ms
+GET /api/platform-admin/clinics?active=false&amp;search=b935a12a -&gt; 200 in 5 ms
+GET /api/platform-admin/clinics?search=no-such-clinic-9f724b2a5ad042edb07e7d8a841e7ea7 -&gt; 200 in 5 ms
+GET /api/platform-admin/clinics/options -&gt; 200 in 16 ms
+GET /api/platform-admin/clinics?page=0 -&gt; 200 in 10 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>82 ms</td></tr><tr><td><strong>Clinic detail and counts match what the clinic did</strong><br><small>admin-clinics.detail</small><details><summary>Requests (3)</summary><pre>GET /api/platform-admin/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 15 ms
+GET /api/platform-admin/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324/counts -&gt; 200 in 58 ms
+GET /api/platform-admin/clinics/700cdf47-9457-486a-8930-af8a19f168c9 -&gt; 404 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>77 ms</td></tr><tr><td><strong>Edit clinic details; invalid timezone and empty name are rejected</strong><br><small>admin-clinics.update</small><details><summary>Requests (6)</summary><pre>PUT /api/platform-admin/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 25 ms
+GET /api/platform-admin/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 2 ms
+GET /api/ai/clinic-info?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 1 ms
+PUT /api/platform-admin/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 400 in 0 ms
+PUT /api/platform-admin/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 400 in 0 ms
+PUT /api/platform-admin/clinics/8d4b6044-668a-4264-b5a6-3c2ee001ba2d -&gt; 404 in 1 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>35 ms</td></tr><tr><td><strong>A deactivated clinic is locked out, and reactivating restores access</strong><br><small>admin-clinics.deactivate</small><div class="msg">While the clinic was deactivated its signed-in staff could still use the API (GET /api/leads -&gt; 200). clinics.is_active isn&#39;t enforced.</div><details><summary>Requests (11)</summary><pre>GET /Account/Register -&gt; 200 in 2 ms
+POST /Account/Register -&gt; 302 (/dashboard) in 71 ms
+POST /api/procedures -&gt; 201 (http://localhost:5275/api/procedures/645bcecc-59ca-4ea1-b716-3a218db3cac3) in 5 ms
+GET /api/leads -&gt; 200 in 3 ms
+PUT /api/platform-admin/clinics/61fcc618-0850-4b2b-b16d-b91d8e5b4aa4/active -&gt; 200 in 11 ms
+GET /api/platform-admin/clinics/61fcc618-0850-4b2b-b16d-b91d8e5b4aa4 -&gt; 200 in 1 ms
+GET /api/leads -&gt; 200 in 15 ms
+GET /Account/Login -&gt; 200 in 4 ms
+POST /Account/Login -&gt; 302 (/dashboard) in 66 ms
+PUT /api/platform-admin/clinics/61fcc618-0850-4b2b-b16d-b91d8e5b4aa4/active -&gt; 200 in 3 ms
+GET /api/leads -&gt; 200 in 3 ms</pre></details></td><td><span class="pill failed">failed</span></td><td>195 ms</td></tr><tr><td><strong>Staff list and detail</strong><br><small>admin-staff.list</small><details><summary>Requests (5)</summary><pre>GET /api/staff -&gt; 200 in 3 ms
+GET /api/platform-admin/staff?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 39 ms
+GET /api/platform-admin/staff?search=auto-b935a12a-main-4d4387%40sculptflow-automation.test -&gt; 200 in 11 ms
+GET /api/platform-admin/staff/2930d2e9-ff13-41b3-9712-ddd525ca5d5e -&gt; 200 in 32 ms
+GET /api/platform-admin/staff/no-such-user-b935a12a -&gt; 404 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>91 ms</td></tr><tr><td><strong>A locked account can&#39;t sign in until unlocked</strong><br><small>admin-staff.lock</small><details><summary>Requests (10)</summary><pre>GET /Account/Register -&gt; 200 in 3 ms
+POST /Account/Register -&gt; 302 (/dashboard) in 90 ms
+POST /api/procedures -&gt; 201 (http://localhost:5275/api/procedures/f4287c47-d78b-470e-9984-c0adcd6f9f8f) in 3 ms
+GET /api/staff -&gt; 200 in 2 ms
+PUT /api/platform-admin/staff/44070ef4-85b9-4630-80cf-28d2e449dab9/locked -&gt; 200 in 31 ms
+GET /Account/Login -&gt; 200 in 3 ms
+POST /Account/Login -&gt; 200 in 2 ms
+PUT /api/platform-admin/staff/44070ef4-85b9-4630-80cf-28d2e449dab9/locked -&gt; 200 in 7 ms
+GET /Account/Login -&gt; 200 in 2 ms
+POST /Account/Login -&gt; 302 (/dashboard) in 60 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>209 ms</td></tr><tr><td><strong>Disabling a membership cuts API access; enabling restores it</strong><br><small>admin-staff.membership</small><details><summary>Requests (8)</summary><pre>GET /Account/Register -&gt; 200 in 3 ms
+POST /Account/Register -&gt; 302 (/dashboard) in 78 ms
+POST /api/procedures -&gt; 201 (http://localhost:5275/api/procedures/1b731c6f-6f5f-4af1-aa67-c88fa19f6b96) in 4 ms
+GET /api/staff -&gt; 200 in 2 ms
+PUT /api/platform-admin/staff/8deac55d-fe09-4437-9dd5-152a6070b079/membership-active -&gt; 200 in 17 ms
+GET /api/leads -&gt; 403 (http://localhost:5275/Account/Login?ReturnUrl=%2Fapi%2Fleads) in 3 ms
+PUT /api/platform-admin/staff/8deac55d-fe09-4437-9dd5-152a6070b079/membership-active -&gt; 200 in 6 ms
+GET /api/leads -&gt; 200 in 3 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>122 ms</td></tr><tr><td><strong>Admin password reset: new password works, old one doesn&#39;t, weak one is refused</strong><br><small>admin-staff.password</small><details><summary>Requests (10)</summary><pre>GET /Account/Register -&gt; 200 in 2 ms
+POST /Account/Register -&gt; 302 (/dashboard) in 71 ms
+POST /api/procedures -&gt; 201 (http://localhost:5275/api/procedures/3b664730-f6bc-43df-ad17-168b2a1c0026) in 5 ms
+GET /api/staff -&gt; 200 in 3 ms
+PUT /api/platform-admin/staff/2cf4c762-ca95-45a4-bf17-b88e4dccd17f/password -&gt; 400 in 10 ms
+PUT /api/platform-admin/staff/2cf4c762-ca95-45a4-bf17-b88e4dccd17f/password -&gt; 200 in 70 ms
+GET /Account/Login -&gt; 200 in 3 ms
+POST /Account/Login -&gt; 200 in 66 ms
+GET /Account/Login -&gt; 200 in 2 ms
+POST /Account/Login -&gt; 302 (/dashboard) in 64 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>302 ms</td></tr><tr><td><strong>Mark the email confirmed and back</strong><br><small>admin-staff.email-confirmed</small><details><summary>Requests (5)</summary><pre>GET /api/staff -&gt; 200 in 3 ms
+PUT /api/platform-admin/staff/2930d2e9-ff13-41b3-9712-ddd525ca5d5e/email-confirmed -&gt; 200 in 11 ms
+GET /api/platform-admin/staff/2930d2e9-ff13-41b3-9712-ddd525ca5d5e -&gt; 200 in 4 ms
+PUT /api/platform-admin/staff/2930d2e9-ff13-41b3-9712-ddd525ca5d5e/email-confirmed -&gt; 200 in 4 ms
+PUT /api/platform-admin/staff/no-such-user-b935a12a/email-confirmed -&gt; 404 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>27 ms</td></tr><tr><td><strong>Lead list, filters, detail, events and edit</strong><br><small>admin-leads.leads</small><details><summary>Requests (10)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/e4aefb1a-0e4e-457f-b210-e59c0a8c2718) in 6 ms
+GET /api/platform-admin/leads?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 28 ms
+GET /api/platform-admin/leads?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;status=new&amp;search=admin-lead -&gt; 200 in 14 ms
+GET /api/platform-admin/leads?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;status=lost -&gt; 200 in 12 ms
+GET /api/platform-admin/leads/e4aefb1a-0e4e-457f-b210-e59c0a8c2718 -&gt; 200 in 35 ms
+GET /api/platform-admin/leads/e4aefb1a-0e4e-457f-b210-e59c0a8c2718/events -&gt; 200 in 31 ms
+PUT /api/platform-admin/leads/e4aefb1a-0e4e-457f-b210-e59c0a8c2718 -&gt; 200 in 28 ms
+GET /api/leads/e4aefb1a-0e4e-457f-b210-e59c0a8c2718 -&gt; 200 in 3 ms
+PUT /api/platform-admin/leads/e4aefb1a-0e4e-457f-b210-e59c0a8c2718 -&gt; 400 in 1 ms
+GET /api/platform-admin/leads/ca76f6d3-7840-4701-b529-49fbd78a66ba -&gt; 404 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>168 ms</td></tr><tr><td><strong>Conversation list, detail, messages, mode and status</strong><br><small>admin-leads.conversations</small><details><summary>Requests (15)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/8a44eeae-8ecb-4ba3-8461-a110bdd41532) in 9 ms
+POST /api/conversations -&gt; 201 (http://localhost:5275/api/conversations/f30bcd01-395f-43c7-8f26-241d8d5e08e9) in 5 ms
+POST /api/conversations/f30bcd01-395f-43c7-8f26-241d8d5e08e9/messages -&gt; 200 in 14 ms
+GET /api/platform-admin/leads/conversations?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;leadId=8a44eeae-8ecb-4ba3-8461-a110bdd41532 -&gt; 200 in 42 ms
+GET /api/platform-admin/leads/conversations?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;channel=website&amp;mode=ai&amp;status=active -&gt; 200 in 12 ms
+GET /api/platform-admin/leads/conversations/f30bcd01-395f-43c7-8f26-241d8d5e08e9 -&gt; 200 in 24 ms
+GET /api/platform-admin/leads/conversations/f30bcd01-395f-43c7-8f26-241d8d5e08e9/messages?take=10 -&gt; 200 in 17 ms
+GET /api/platform-admin/leads/messages?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;search=Admin%20view%20b935a12a -&gt; 200 in 24 ms
+GET /api/platform-admin/leads/messages?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;failedOnly=true -&gt; 200 in 8 ms
+PUT /api/platform-admin/leads/conversations/f30bcd01-395f-43c7-8f26-241d8d5e08e9/mode -&gt; 200 in 24 ms
+GET /api/conversations/f30bcd01-395f-43c7-8f26-241d8d5e08e9 -&gt; 200 in 5 ms
+PUT /api/platform-admin/leads/conversations/f30bcd01-395f-43c7-8f26-241d8d5e08e9/mode -&gt; 400 in 1 ms
+PUT /api/platform-admin/leads/conversations/f30bcd01-395f-43c7-8f26-241d8d5e08e9/status -&gt; 200 in 18 ms
+PUT /api/platform-admin/leads/conversations/f30bcd01-395f-43c7-8f26-241d8d5e08e9/status -&gt; 400 in 0 ms
+GET /api/platform-admin/leads/conversations/53b6be5b-5791-4d26-aafc-4f6b0c1aef23 -&gt; 404 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>220 ms</td></tr><tr><td><strong>Appointment list and status change</strong><br><small>admin-leads.appointments</small><details><summary>Requests (9)</summary><pre>POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/2f7a7445-f875-4767-88ff-bb23ada63a1e) in 7 ms
+GET /api/appointments/available?procedureId=9e0ea1bf-3137-4396-a3d7-6a6c703a8c82&amp;days=14 -&gt; 200 in 19 ms
+POST /api/appointments -&gt; 201 (http://localhost:5275/api/appointments) in 19 ms
+GET /api/platform-admin/leads/appointments?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;leadId=2f7a7445-f875-4767-88ff-bb23ada63a1e -&gt; 200 in 92 ms
+GET /api/platform-admin/leads/appointments?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;upcomingOnly=true&amp;status=booked -&gt; 200 in 37 ms
+PUT /api/platform-admin/leads/appointments/c27656d8-4485-4e43-8a64-f7f66d4c600f/status -&gt; 200 in 30 ms
+GET /api/appointments/c27656d8-4485-4e43-8a64-f7f66d4c600f -&gt; 200 in 5 ms
+PUT /api/platform-admin/leads/appointments/c27656d8-4485-4e43-8a64-f7f66d4c600f/status -&gt; 400 in 3 ms
+PUT /api/platform-admin/leads/appointments/6c1f9d7f-c7bd-40ae-8d2e-ba2a3990a04f/status -&gt; 404 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>220 ms</td></tr><tr><td><strong>Procedure list and activate/deactivate</strong><br><small>admin-content.procedures</small><details><summary>Requests (6)</summary><pre>POST /api/procedures -&gt; 201 (http://localhost:5275/api/procedures/e9888941-5a69-4f71-84a4-0441eccc46f6) in 4 ms
+GET /api/platform-admin/content/procedures?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 23 ms
+PUT /api/platform-admin/content/procedures/e9888941-5a69-4f71-84a4-0441eccc46f6/active -&gt; 200 in 28 ms
+GET /api/procedures -&gt; 200 in 4 ms
+PUT /api/platform-admin/content/procedures/e9888941-5a69-4f71-84a4-0441eccc46f6/active -&gt; 200 in 5 ms
+PUT /api/platform-admin/content/procedures/302b2897-b8a9-4435-bcd8-169c286226c8/active -&gt; 404 in 1 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>70 ms</td></tr><tr><td><strong>Clinic search settings: read, update, validate</strong><br><small>admin-content.knowledge-settings</small><details><summary>Requests (6)</summary><pre>GET /api/platform-admin/content/knowledge/settings/1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 9 ms
+PUT /api/platform-admin/content/knowledge/settings/1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 12 ms
+GET /api/knowledge/settings -&gt; 200 in 3 ms
+PUT /api/platform-admin/content/knowledge/settings/1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 400 in 1 ms
+PUT /api/platform-admin/content/knowledge/settings/1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 400 in 1 ms
+GET /api/platform-admin/content/knowledge/settings/9734b2a2-8762-441a-96c1-57ab77bbc3df -&gt; 404 in 1 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>33 ms</td></tr><tr><td><strong>Knowledge, websites, templates and campaigns lists load</strong><br><small>admin-content.lists</small><details><summary>Requests (9)</summary><pre>GET /api/platform-admin/content/knowledge?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;active=true&amp;search=x -&gt; 200 in 24 ms
+GET /api/platform-admin/content/knowledge/websites?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 17 ms
+GET /api/platform-admin/content/templates?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;status=approved -&gt; 200 in 18 ms
+GET /api/platform-admin/content/campaigns?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;status=running -&gt; 200 in 38 ms
+GET /api/platform-admin/content/knowledge/eb2e51a5-3018-436f-a260-78d475322473 -&gt; 404 in 19 ms
+PUT /api/platform-admin/content/knowledge/b3ccd533-4b07-42f5-b0c2-b45d343fcda6/active -&gt; 404 in 8 ms
+GET /api/platform-admin/content/campaigns/a0ad898c-4b92-45ea-a521-5f6578e6bb66 -&gt; 404 in 30 ms
+GET /api/platform-admin/content/campaigns/e8f0228e-9118-4235-80d2-81af628185fa/recipients -&gt; 200 in 24 ms
+POST /api/platform-admin/content/campaigns/d79e7860-dad4-4ac8-8176-b57144f4f119/cancel -&gt; 404 in 9 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>191 ms</td></tr><tr><td><strong>Knowledge entry detail and deactivate from the admin</strong><br><small>admin-content.knowledge-document</small><div class="skipmsg">Calls a paid or third-party service. Allow &quot;external services&quot; to run it.</div></td><td><span class="pill skipped">skipped</span></td><td>0 ms</td></tr><tr><td><strong>Channel, calendar and TikTok lists load</strong><br><small>admin-channels.lists</small><details><summary>Requests (4)</summary><pre>GET /api/platform-admin/channels?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 17 ms
+GET /api/platform-admin/channels?problemsOnly=true&amp;channel=whatsapp -&gt; 200 in 6 ms
+GET /api/platform-admin/channels/calendars?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 17 ms
+GET /api/platform-admin/channels/tiktok?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 19 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>62 ms</td></tr><tr><td><strong>Unknown channel ids return 404 for every action</strong><br><small>admin-channels.unknown</small><details><summary>Requests (6)</summary><pre>GET /api/platform-admin/channels/f376fed0-b73a-4ede-b1c0-e73eb93a0251 -&gt; 404 in 30 ms
+GET /api/platform-admin/channels/f376fed0-b73a-4ede-b1c0-e73eb93a0251/health-events -&gt; 200 in 29 ms
+POST /api/platform-admin/channels/f376fed0-b73a-4ede-b1c0-e73eb93a0251/disconnect -&gt; 404 in 22 ms
+POST /api/platform-admin/channels/calendars/f376fed0-b73a-4ede-b1c0-e73eb93a0251/disconnect -&gt; 404 in 27 ms
+PUT /api/platform-admin/channels/calendars/f376fed0-b73a-4ede-b1c0-e73eb93a0251/sync -&gt; 404 in 10 ms
+POST /api/platform-admin/channels/tiktok/f376fed0-b73a-4ede-b1c0-e73eb93a0251/disconnect -&gt; 404 in 12 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>133 ms</td></tr><tr><td><strong>Totals and recent clinics include the test clinic</strong><br><small>admin-overview.totals</small><details><summary>Requests (3)</summary><pre>GET /api/platform-admin/overview/totals -&gt; 200 in 64 ms
+GET /api/platform-admin/overview/recent-clinics?take=50 -&gt; 200 in 17 ms
+GET /api/platform-admin/overview/problems -&gt; 200 in 82 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>164 ms</td></tr><tr><td><strong>Message chart covers the asked number of days</strong><br><small>admin-overview.daily-messages</small><details><summary>Requests (3)</summary><pre>GET /api/platform-admin/overview/daily-messages?days=7 -&gt; 200 in 25 ms
+GET /api/platform-admin/overview/daily-messages?days=0 -&gt; 200 in 3 ms
+GET /api/platform-admin/overview/daily-messages?days=100000 -&gt; 200 in 1 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>31 ms</td></tr><tr><td><strong>Event log, filtered by clinic and type</strong><br><small>admin-overview.events</small><details><summary>Requests (2)</summary><pre>GET /api/platform-admin/overview/event-types -&gt; 200 in 9 ms
+GET /api/platform-admin/overview/events?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324&amp;eventType=lead_created -&gt; 200 in 33 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>44 ms</td></tr><tr><td><strong>Settings list shows every declared setting without secret values</strong><br><small>admin-settings.list</small><details><summary>Requests (1)</summary><pre>GET /api/platform-admin/settings -&gt; 200 in 26 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>28 ms</td></tr><tr><td><strong>Out-of-range and unknown settings are rejected</strong><br><small>admin-settings.validation</small><details><summary>Requests (6)</summary><pre>GET /api/platform-admin/settings -&gt; 200 in 5 ms
+PUT /api/platform-admin/settings/Availability/DefaultBufferMinutes -&gt; 400 in 50 ms
+PUT /api/platform-admin/settings/Availability/DefaultBufferMinutes -&gt; 400 in 4 ms
+PUT /api/platform-admin/settings/NoSuchSection/NoSuchKeyb935a12a -&gt; 400 in 3 ms
+DELETE /api/platform-admin/settings/NoSuchSection/NoSuchKeyb935a12a -&gt; 400 in 18 ms
+GET /api/platform-admin/settings -&gt; 200 in 2 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>94 ms</td></tr><tr><td><strong>List, read and remove the test clinic&#39;s cached entitlements</strong><br><small>admin-cache.keys</small><details><summary>Requests (10)</summary><pre>GET /api/billing/summary -&gt; 200 in 10 ms
+GET /api/platform-admin/cache/keys -&gt; 200 in 9 ms
+GET /api/platform-admin/cache/keys?prefix=billing%3Aentitlements%3A1842b2acee89432aa1a2a16c2c9c3324 -&gt; 200 in 2 ms
+Cached keys for the test clinic: 0
+DELETE /api/platform-admin/cache/key?key=billing%3Aentitlements%3A1842b2acee89432aa1a2a16c2c9c3324 -&gt; 404 in 9 ms
+GET /api/platform-admin/cache/keys?prefix=billing%3Aentitlements%3A1842b2acee89432aa1a2a16c2c9c3324 -&gt; 200 in 0 ms
+DELETE /api/platform-admin/cache/keys?prefix=billing%3Aentitlements%3A1842b2acee89432aa1a2a16c2c9c3324 -&gt; 200 in 7 ms
+GET /api/platform-admin/cache/key?key=automation:no-such-key:b935a12a -&gt; 404 in 7 ms
+GET /api/platform-admin/cache/key -&gt; 400 in 0 ms
+DELETE /api/platform-admin/cache/keys?prefix= -&gt; 400 in 0 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>49 ms</td></tr><tr><td><strong>Clearing the whole cache works and the app keeps serving</strong><br><small>admin-cache.clear-all</small><details><summary>Requests (3)</summary><pre>DELETE /api/platform-admin/cache -&gt; 200 in 8 ms
+GET /api/platform-admin/settings -&gt; 200 in 2 ms
+GET /api/billing/summary -&gt; 200 in 11 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>23 ms</td></tr><tr><td><strong>Lead to booked surgery</strong><br><small>journey.full</small><details><summary>Requests (26)</summary><pre>Step 1: lead arrives from a lead form
+POST /api/leads -&gt; 201 (http://localhost:5275/api/leads/2b74edfb-fb74-4a87-a393-8c39e4850404) in 15 ms
+Step 2: patient writes in, n8n ingests the message
+POST /api/conversations -&gt; 201 (http://localhost:5275/api/conversations/eeac6d9e-cda6-4787-bab7-223ab87105ae) in 8 ms
+POST /api/messages/ingest -&gt; 200 in 11 ms
+Step 3: AI agent qualifies the lead and books a slot
+PATCH /api/ai/leads/2b74edfb-fb74-4a87-a393-8c39e4850404?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 2 ms
+GET /api/appointments/available?procedureId=9e0ea1bf-3137-4396-a3d7-6a6c703a8c82&amp;days=14 -&gt; 200 in 24 ms
+POST /api/ai/appointments/book?clinicId=1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 200 in 10 ms
+Step 4: staff see it in the inbox, on the calendar and on the lead
+GET /api/conversations/eeac6d9e-cda6-4787-bab7-223ab87105ae/messages -&gt; 200 in 2 ms
+GET /api/appointments/calendar?year=2026&amp;month=10 -&gt; 200 in 3 ms
+GET /api/leads/2b74edfb-fb74-4a87-a393-8c39e4850404 -&gt; 200 in 6 ms
+Lead status after booking: consultation_booked
+Step 5: patient attends; staff record the visit
+PATCH /api/appointments/8b205587-18c2-4927-9b95-7290457e8d41/status -&gt; 200 in 22 ms
+POST /api/leads/2b74edfb-fb74-4a87-a393-8c39e4850404/status -&gt; 200 in 5 ms
+Step 6: quote, deposit and surgery booking
+POST /api/procedure-bookings -&gt; 201 (http://localhost:5275/api/procedure-bookings) in 13 ms
+PATCH /api/procedure-bookings/a3ca2b99-2a61-44ef-b600-9ffb1014af51 -&gt; 200 in 7 ms
+PATCH /api/procedure-bookings/a3ca2b99-2a61-44ef-b600-9ffb1014af51 -&gt; 200 in 7 ms
+POST /api/leads/2b74edfb-fb74-4a87-a393-8c39e4850404/status -&gt; 200 in 6 ms
+Step 7: dashboard reflects the journey
+GET /api/leads/2b74edfb-fb74-4a87-a393-8c39e4850404 -&gt; 200 in 3 ms
+GET /api/dashboard/summary -&gt; 200 in 4 ms
+GET /api/procedure-bookings?status=booked&amp;take=200 -&gt; 200 in 3 ms</pre></details></td><td><span class="pill passed">passed</span></td><td>167 ms</td></tr></tbody></table><h2 style="font-size:16px">Run log</h2><pre class="log">17:38:34 Run started against local (http://localhost:5275) with 178 tests.
+17:38:36 Registered test clinic &quot;[Automation] main b935a12a&quot; (1842b2ac-ee89-432a-a1a2-a16c2c9c3324).
+17:38:37 Registered test clinic &quot;[Automation] other b935a12a&quot; (7bfb4470-7b61-49d5-9176-b0f64b719e3c).
+17:38:44 Registered test clinic &quot;[Automation] guard b935a12a&quot; (ec0fbf42-ef69-42ca-8e6b-74548779e4a4).
+17:38:45 Registered test clinic &quot;[Automation] inactive b935a12a&quot; (61fcc618-0850-4b2b-b16d-b91d8e5b4aa4).
+17:38:45 Registered test clinic &quot;[Automation] locked b935a12a&quot; (cb239286-3c19-4a19-b12e-4e77d017d2db).
+17:38:45 Registered test clinic &quot;[Automation] member b935a12a&quot; (43b1960c-eb35-46ea-97ab-2e033a6d9cc5).
+17:38:46 Registered test clinic &quot;[Automation] password b935a12a&quot; (c7e680fb-19a5-4865-bfd6-d3926608c08e).
+17:38:48 DELETE /api/platform-admin/automation/clinics/1842b2ac-ee89-432a-a1a2-a16c2c9c3324 -&gt; 204 in 29 ms
+17:38:48 Deleted test clinic &quot;[Automation] main b935a12a&quot; and all its data.
+17:38:48 DELETE /api/platform-admin/automation/clinics/7bfb4470-7b61-49d5-9176-b0f64b719e3c -&gt; 204 in 15 ms
+17:38:48 Deleted test clinic &quot;[Automation] other b935a12a&quot; and all its data.
+17:38:48 DELETE /api/platform-admin/automation/clinics/ec0fbf42-ef69-42ca-8e6b-74548779e4a4 -&gt; 204 in 12 ms
+17:38:48 Deleted test clinic &quot;[Automation] guard b935a12a&quot; and all its data.
+17:38:48 DELETE /api/platform-admin/automation/clinics/61fcc618-0850-4b2b-b16d-b91d8e5b4aa4 -&gt; 204 in 6 ms
+17:38:48 Deleted test clinic &quot;[Automation] inactive b935a12a&quot; and all its data.
+17:38:48 DELETE /api/platform-admin/automation/clinics/cb239286-3c19-4a19-b12e-4e77d017d2db -&gt; 204 in 6 ms
+17:38:48 Deleted test clinic &quot;[Automation] locked b935a12a&quot; and all its data.
+17:38:48 DELETE /api/platform-admin/automation/clinics/43b1960c-eb35-46ea-97ab-2e033a6d9cc5 -&gt; 204 in 6 ms
+17:38:48 Deleted test clinic &quot;[Automation] member b935a12a&quot; and all its data.
+17:38:48 DELETE /api/platform-admin/automation/clinics/c7e680fb-19a5-4865-bfd6-d3926608c08e -&gt; 204 in 5 ms
+17:38:48 Deleted test clinic &quot;[Automation] password b935a12a&quot; and all its data.
+17:38:48 Done: 167 passed, 1 failed, 10 skipped.</pre></body></html>
