@@ -7,7 +7,7 @@ standing rules). This file holds only what applies to all of them.
 |---|---|
 | `SculptFlowApp` | Main app: clinic dashboard, APIs, DB, integrations, `/api/platform-admin` endpoints |
 | `SculptFlowAdmin` | Platform-admin portal (calls the main app's platform-admin APIs; no main-table access) |
-| `SculptFlowAutomation` | Automation tester (throwaway `[Automation]` clinic per run) |
+| `SculptFlowAutomation` | `Omni.Automation` tester: throwaway `[Automation]` clients per run, QA findings as tests (see its README) |
 
 Work out which project a task belongs to before exploring, and read that project's `CLAUDE.md` first. Don't look at sibling
 projects unless the task is cross-project (e.g. a new portal feature = main-app endpoint + portal client/service/page).

@@ -15,6 +15,13 @@
 *.p12
 *.pem
 
+# Automation run reports and screenshots (can show test-client logins and data)
+/SculptFlowAutomation/Omni.Automation/runs/
+
+# QA reports and their screenshots (contain test logins)
+/docs/qa-report-*.html
+/docs/qa-evidence-*/
+
 # Dependencies and generated files
 node_modules/
 bin/
@@ -28,3 +35,5 @@ coverage/
 .vscode/
 Thumbs.db
 .DS_Store
+# Local run profiles (never committed: they can hold keys)
+/SculptFlowAutomation/**/Properties/launchSettings.json

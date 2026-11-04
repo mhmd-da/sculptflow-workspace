@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Omni.Automation</RootNamespace>
+    <UserSecretsId>15fc6a2c-67ab-4d2a-8fcb-427294d31eae</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Optional database access (Needs.Database tests) and the opt-in browser suites (Needs.Browser). -->
+    <PackageReference Include="Npgsql" Version="10.*" />
+    <PackageReference Include="Microsoft.Playwright" Version="1.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Run reports are local output, not source. -->
+    <Content Remove="runs\**" />
+    <None Remove="runs\**" />
+  </ItemGroup>
+
+</Project>
