@@ -150,6 +150,46 @@ public static class OpsBookingsSuite
             Expect.EqualText("canceled", (await OpsHelpers.SetStatusAsync(ctx, client, id, "canceled")).ExpectOk().Prop("status"), "Status after cancel");
             (await OpsHelpers.SetStatusAsync(ctx, client, Guid.NewGuid(), "confirmed")).ExpectStatus(404);
         }, needs: OpsHelpers.PlanNeeds, risk: Risk.Billing)
+        .Test("edit", "Bookings: a member moves a booking and changes its place and notes (PATCH /api/bookings/{id}); the move is logged and notified", async ctx =>
+        {
+            var client = await OpsHelpers.BookingClientAsync(ctx);
+            var contact = await OpsHelpers.ContactAsync(ctx, client, "edit");
+            var id = await OpsHelpers.BookOkAsync(ctx, client, contact, OpsHelpers.At(7, 10));
+            (await OpsHelpers.SetStatusAsync(ctx, client, id, "confirmed")).ExpectOk();
+            var start = OpsHelpers.At(7, 15);
+            var edited = (await client.Http.PatchAsync($"/api/bookings/{id}",
+                new { scheduledStart = start, scheduledEnd = start.AddMinutes(45), serviceId = client.BaseServiceId, locationType = "phone", notes = "Moved by phone" }, ctx.Ct)).ExpectOk();
+            Expect.Equal(start, DateTimeOffset.Parse(edited.Str("scheduledStart"), CultureInfo.InvariantCulture), "Start after the move");
+            Expect.Equal(start.AddMinutes(45), DateTimeOffset.Parse(edited.Str("scheduledEnd"), CultureInfo.InvariantCulture), "End after the move");
+            Expect.EqualText("phone", edited.Prop("locationType"), "Place");
+            Expect.EqualText("Moved by phone", edited.Prop("notes"), "Notes");
+            Expect.EqualText("confirmed", edited.Prop("status"), "Status (a member's move keeps it)");
+            var month = (await client.Http.GetAsync($"/api/bookings/calendar?year={start.Year}&month={start.Month}", ct: ctx.Ct)).ExpectOk();
+            Expect.ContainsId(month.Array("items"), id, "Month calendar after the move");
+            var moved = await ctx.Db.ScalarAsync<long>("select count(*) from activity.events where booking_id = @b and event_type = 'booking_rescheduled'", new { b = id }, ctx.Ct);
+            Expect.True(moved == 1, $"Moving booking {id} logged {moved} booking_rescheduled events (expected 1).");
+            var notified = await ctx.Db.ScalarAsync<long>("select count(*) from activity.notifications where booking_id = @b and type = 'BOOKING_RESCHEDULED'", new { b = id }, ctx.Ct);
+            Expect.True(notified >= 1, $"Moving booking {id} created no BOOKING_RESCHEDULED notification.");
+        }, needs: OpsHelpers.PlanNeeds | Needs.Database, risk: Risk.Billing, finding: "t5-ops-04")
+        .Test("edit-refused", "Bookings: a canceled booking, an end before the start and an unknown place can't be saved (400); another client's booking is 404", async ctx =>
+        {
+            var client = await OpsHelpers.BookingClientAsync(ctx);
+            var contact = await OpsHelpers.ContactAsync(ctx, client, "editno");
+            var id = await OpsHelpers.BookOkAsync(ctx, client, contact, OpsHelpers.At(7, 11));
+            var start = OpsHelpers.At(7, 12);
+            (await client.Http.PatchAsync($"/api/bookings/{id}", new { scheduledStart = start, scheduledEnd = start.AddMinutes(-15) }, ctx.Ct)).ExpectClientError("Saving an end before the start");
+            (await client.Http.PatchAsync($"/api/bookings/{id}", new { scheduledStart = start, locationType = "garden" }, ctx.Ct)).ExpectClientError("Saving an unknown place");
+            (await OpsHelpers.SetStatusAsync(ctx, client, id, "canceled")).ExpectOk();
+            (await client.Http.PatchAsync($"/api/bookings/{id}", new { scheduledStart = start }, ctx.Ct)).ExpectClientError("Moving a canceled booking");
+            var other = await OpsHelpers.BookingClientAsync(ctx, "ops-b");
+            (await other.Http.PatchAsync($"/api/bookings/{id}", new { scheduledStart = start }, ctx.Ct)).ExpectStatus(404);
+        }, needs: OpsHelpers.PlanNeeds, risk: Risk.Billing, finding: "t5-ops-04")
+        .Test("walk-in", "Bookings: a walk-in added by hand (POST /api/contacts/manual) can be booked right away", async ctx =>
+        {
+            var client = await OpsHelpers.BookingClientAsync(ctx);
+            var contact = (await client.Http.PostAsync("/api/contacts/manual", new { fullName = $"Walk-in {ctx.Tag} {Guid.NewGuid():N}"[..40] }, ct: ctx.Ct)).ExpectStatus(201).Id();
+            await OpsHelpers.BookOkAsync(ctx, client, contact, OpsHelpers.At(7, 13));
+        }, needs: OpsHelpers.PlanNeeds, risk: Risk.Billing, finding: "t5-ops-04")
         .Test("isolation", "Bookings: another client's booking is 404 to read or change", async ctx =>
         {
             var client = await OpsHelpers.BookingClientAsync(ctx);

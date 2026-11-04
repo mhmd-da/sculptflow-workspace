@@ -28,6 +28,51 @@ public static class AdminClientsSuite
                 r.Array("items");
             }
         }, needs: Needs.Session | Needs.AdminKey)
+        .Test("create", "New client: the portal opens a client with no user yet and invites its owner by email (owner_invite)", async ctx =>
+        {
+            var name = $"{TestContext.ClientNamePrefix} opened {ctx.Tag}";
+            var owner = SignupHelpers.NewEmail(ctx, "owner");
+            var created = (await ctx.Admin.PostAsync($"{AdminHelpers.Api}/clients",
+                new { name, businessTypeCode = "general", ownerEmail = owner, ownerName = "Auto Owner", planCode = (string?)null, language = "fr" }, ct: ctx.Ct)).ExpectStatus(201);
+            var id = Guid.Parse(created.Str("clientId"));
+            ctx.TrackOpenedClient(id, name, owner);
+            var detail = await AdminHelpers.ClientDetailAsync(ctx, id);
+            Expect.EqualText(name, detail["name"], "Client name");
+            Expect.EqualText("fr", detail["defaultLanguage"], "Dashboard language");
+            Expect.EqualText(owner, detail["email"], "Client email (the owner's)");
+            var counts = (await ctx.Admin.GetAsync($"{AdminHelpers.Api}/clients/{id}/counts", ct: ctx.Ct)).ExpectOk();
+            Expect.Equal(0, counts.Prop("members").GetValue<int>(), "Members before the owner accepts");
+            if (!created.Prop("inviteSent")!.GetValue<bool>())
+            {
+                ctx.Log("The owner invite email didn't go on this target (no working email provider); the client was still opened.");
+                return;
+            }
+            if (ctx.Env.HasDatabase)
+            {
+                var invites = await ctx.Db.ScalarAsync<long>("select count(*) from identity.account_tokens where client_id = @c and purpose = 'owner_invite' and used_at is null and revoked_at is null", new { c = id }, ctx.Ct);
+                Expect.True(invites == 1, $"Client {id} has {invites} open owner invites (expected 1).");
+            }
+            var resent = (await ctx.Admin.PostAsync($"{AdminHelpers.Api}/clients/{id}/owner-invite", new { }, ct: ctx.Ct)).ExpectOk();
+            Expect.EqualText(owner, resent.Prop("email"), "Resent to");
+        }, needs: Needs.AdminKey, finding: "t6-admin-20")
+        .Test("create-refused", "New client: a missing name, a bad or used owner email, an unknown type, language or plan are 400 and open nothing", async ctx =>
+        {
+            var existing = await ctx.ClientAsync();
+            var tag = $"{TestContext.ClientNamePrefix} refused {ctx.Tag}";
+            object Body(string? name = null, string? email = null, string type = "general", string? plan = null, string language = "en") =>
+                new { name = name ?? tag, businessTypeCode = type, ownerEmail = email ?? SignupHelpers.NewEmail(ctx, "refused"), ownerName = (string?)null, planCode = plan, language };
+            foreach (var (body, what) in new[]
+            {
+                (Body(name: " "), "no name"), (Body(email: "nope"), "a bad owner email"), (Body(email: existing.Email), "an owner email that already signs in"),
+                (Body(type: "no-such-type"), "an unknown business type"), (Body(plan: "no-such-plan"), "an unknown plan"), (Body(language: "xx"), "an unknown language"),
+            })
+            {
+                (await ctx.Admin.PostAsync($"{AdminHelpers.Api}/clients", body, ct: ctx.Ct)).ExpectClientError($"Opening a client with {what}");
+            }
+            var found = (await ctx.Admin.GetAsync($"{AdminHelpers.Api}/clients?search={Uri.EscapeDataString(tag)}", ct: ctx.Ct)).ExpectOk().Array("items");
+            Expect.Equal(0, found.Count, "Clients opened by refused requests");
+            (await ctx.Admin.PostAsync($"{AdminHelpers.Api}/clients/{existing.ClientId}/owner-invite", new { }, ct: ctx.Ct)).ExpectStatus(404);
+        }, needs: Needs.Session | Needs.AdminKey, finding: "t6-admin-20")
         .Test("active-filter", "The active filter includes an active client and excludes it with active=false", async ctx =>
         {
             var client = await ctx.ClientAsync();

@@ -161,6 +161,18 @@ public sealed partial class TestContext : IAsyncDisposable
         }
     }
 
+    /// <summary>A client a test opened through the platform-admin API (no user yet, QA t6-admin-20): deleted with the run like
+    /// the registered ones (the main app's cleanup accepts it while its invited owner's email is a test address).</summary>
+    public void TrackOpenedClient(Guid clientId, string name, string ownerEmail)
+    {
+        var client = new TestClient
+        {
+            Label = "opened", Name = name, Email = ownerEmail, Password = "(none: the owner never joined)", FullName = "(invited owner)",
+            BusinessType = "general", Http = NewHttp(), ClientId = clientId,
+        };
+        lock (_testClients) _testClients.Add(client);
+    }
+
     /// <summary>Registers a new automation client through the sign-up page. It is deleted with the run.</summary>
     public async Task<TestClient> RegisterClientAsync(string label, string businessType = "general")
     {

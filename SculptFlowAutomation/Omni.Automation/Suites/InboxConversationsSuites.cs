@@ -90,6 +90,12 @@ public static class InboxConversationsSuite
             var oldest = list.Array("items").Last()!;
             var name = oldest["contactFullName"]!.ToString();
 
+            // The server searches and counts every conversation, not the first page.
+            var found = (await client.Http.GetAsync($"/api/conversations?search={Uri.EscapeDataString(name)}", ct: ctx.Ct)).ExpectOk();
+            Expect.True(found.Array("items").Any(i => i?["id"]?.ToString() == oldest["id"]!.ToString()),
+                $"Searching \"{name}\" didn't find the 55th conversation.");
+            Expect.True(list.Json?["counts"]?["all"]?.GetValue<int>() >= 55, $"The tab counts don't cover every conversation: {list.Json?["counts"]?.ToJsonString()}.");
+
             // Signs in by hand: Browser.OpenAsync clicks the first submit button on the sign-in page, which is the language menu's.
             await using var page = await ctx.Browser.OpenAnonymousAsync();
             await page.Page.GotoAsync(ctx.Browser.Url("/Account/Login"), new() { WaitUntil = Microsoft.Playwright.WaitUntilState.DOMContentLoaded });
@@ -101,7 +107,12 @@ public static class InboxConversationsSuite
                 page.Page.ClickAsync("form.au-auth__form button[type=submit]"));
             await page.Page.GotoAsync(ctx.Browser.Url($"/inbox?conversationId={oldest["id"]}"),
                 new() { WaitUntil = Microsoft.Playwright.WaitUntilState.DOMContentLoaded, Timeout = 60000 });
-            await page.Page.WaitForFunctionAsync("() => (document.getElementById('inbox-thread-name')?.textContent || '').trim().length > 0", null, new() { Timeout = 30000 });
+            // The header first says "Unknown" while it loads the contact of a conversation outside the first page.
+            try
+            {
+                await page.Page.WaitForFunctionAsync("name => (document.getElementById('inbox-thread-name')?.textContent || '').trim() === name", name, new() { Timeout = 30000 });
+            }
+            catch (TimeoutException) { /* checked below with what is shown */ }
             var shown = (await page.Page.TextContentAsync("#inbox-thread-name"))?.Trim();
             await ctx.Browser.ScreenshotAsync(page, "inbox-oldest-conversation");
             Expect.True(shown == name, $"The 55th conversation opened with the name \"{shown}\" instead of \"{name}\": the Inbox only loads the 50 newest conversations.");

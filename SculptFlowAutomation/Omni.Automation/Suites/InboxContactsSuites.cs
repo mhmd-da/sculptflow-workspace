@@ -140,12 +140,40 @@ public static class InboxContactsSuite
             var id = await InboxHelpers.NewContactAsync(ctx, client, "badphone");
             (await client.Http.PatchAsync($"/api/contacts/{id}", new { phone = "call me maybe" }, ctx.Ct)).ExpectClientError("Saving the phone \"call me maybe\"");
         }, needs: Api, finding: "t3-inbox-08")
-        .Test("patch-empty-name", "Contacts: an empty name is refused (400)", async ctx =>
+        .Test("patch-empty-name", "Contacts: a contact keeps a name or a phone (clearing both is refused, 400)", async ctx =>
         {
+            // Agreed 2026-11-04 (QA t3-inbox-12): a phone alone is enough, as for a contact added by hand.
             var client = await ctx.ClientAsync();
             var id = await InboxHelpers.NewContactAsync(ctx, client, "noname");
-            (await client.Http.PatchAsync($"/api/contacts/{id}", new { fullName = "" }, ctx.Ct)).ExpectClientError("Saving an empty name");
+            (await client.Http.PatchAsync($"/api/contacts/{id}", new { fullName = "", phone = "" }, ctx.Ct)).ExpectClientError("Clearing both the name and the phone");
+            (await client.Http.PatchAsync($"/api/contacts/{id}", new { fullName = "  " }, ctx.Ct)).ExpectOk();
         }, needs: Api, finding: "t3-inbox-08")
+        .Test("patch-duplicate-phone", "Contacts: another contact's phone is refused (400) and names that contact", async ctx =>
+        {
+            var client = await ctx.ClientAsync();
+            var phone = ctx.Fixtures.NewPhone();
+            await InboxHelpers.NewContactAsync(ctx, client, "phoneowner", fullName: $"Phone Owner {ctx.Tag}", phone: phone);
+            var id = await InboxHelpers.NewContactAsync(ctx, client, "phonecopy");
+            var response = await client.Http.PatchAsync($"/api/contacts/{id}", new { phone }, ctx.Ct);
+            response.ExpectClientError("Saving another contact's phone");
+            Expect.True(response.Body.Contains($"Phone Owner {ctx.Tag}"), $"The refusal should name the contact who has the phone.{response.Snippet(200)}");
+        }, needs: Api, finding: "t3-inbox-08")
+        .Test("add-by-hand", "Contacts: a member adds a contact by hand (POST /api/contacts/manual): source manual, entry stage, digits-only phone", async ctx =>
+        {
+            var client = await ctx.ClientAsync();
+            var digits = ctx.Fixtures.NewPhone().TrimStart('+');
+            var typed = $"+{digits[..3]} {digits[3..5]} {digits[5..]}";
+            var contact = (await client.Http.PostAsync("/api/contacts/manual", new { fullName = $"Walk-in {ctx.Tag}", phone = typed, email = (string?)null, notes = "Called the front desk" }, ct: ctx.Ct)).ExpectStatus(201);
+            Expect.EqualText($"Walk-in {ctx.Tag}", contact.Prop("fullName"), "Full name");
+            Expect.EqualText(digits, contact.Prop("phone"), "Phone (digits only)");
+            Expect.EqualText("manual", contact.Prop("source"), "Source");
+            Expect.EqualText("new", contact.Prop("stageKey"), "Stage");
+
+            (await client.Http.PostAsync("/api/contacts/manual", new { fullName = "Copy", phone = digits }, ct: ctx.Ct)).ExpectClientError("Adding a second contact with the same phone");
+            (await client.Http.PostAsync("/api/contacts/manual", new { fullName = " ", phone = " " }, ct: ctx.Ct)).ExpectClientError("Adding a contact without a name or phone");
+            (await client.Http.PostAsync("/api/contacts/manual", new { fullName = "X", email = "nope" }, ct: ctx.Ct)).ExpectClientError("Adding a contact with a bad email");
+            (await ctx.Anonymous.PostAsync("/api/contacts/manual", new { fullName = "X" }, ct: ctx.Ct)).ExpectStatus(401);
+        }, needs: Needs.Session | Needs.IngestKey, finding: "t3-inbox-12")
         .Test("patch-too-long", "Contacts: a 60-character phone or a 300-character name is refused with 400, not a 500", async ctx =>
         {
             var client = await ctx.ClientAsync();

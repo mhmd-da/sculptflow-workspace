@@ -1119,10 +1119,10 @@ public static partial class AiLiveSuite
             Expect.Equal("true", account["botAnswers"]?.ToString().ToLowerInvariant(), "botAnswers");
             Expect.True(account["blockReason"] is null, $"The account shows a block reason: {account["blockReason"]}.");
         }, needs: Live, risk: Risk.Billing)
-        .Test("reply", "Live AI: an inbound message gets an AI run, the reply is kept in the bot's memory, and its send fails at the fake Telegram", async ctx =>
+        .Test("reply", "Live AI: a reply the channel refuses is kept as a failed AI message and the conversation goes to the team", async ctx =>
         {
-            // A reply message row is only written after the provider accepts it, so with the fake Telegram the reply text lives in
-            // crm.bot_memory and the trace shows the attempt (send.requested kind ai → send.provider_failed).
+            // The fake Telegram refuses every send, like an expired WhatsApp token (QA t10-07): the reply must stay visible (a
+            // failed AI message) and the conversation go to the team with a notification, instead of vanishing.
             var live = await SharedAsync(ctx);
             var chat = ctx.Webhooks.NewChatId();
             var since = await SayAsync(ctx, live, chat, "Hello! Can I book a consultation this week?");
@@ -1134,8 +1134,14 @@ public static partial class AiLiveSuite
             Expect.True(!string.IsNullOrWhiteSpace(reply), "The bot's memory holds no reply text for the message.");
             Expect.True(AttemptedReply(steps), $"No AI send was attempted: {string.Join(" > ", Names(steps))}.");
             Expect.True(steps.Any(s => s.StartsWith("send.provider_failed")), $"The send to the fake Telegram didn't fail as expected: {string.Join(" > ", Names(steps))}.");
-            Expect.True(await AiMessageAsync(ctx, conversation, since) is null, "A reply that never reached Telegram was stored as a sent AI message.");
-        }, needs: Live, risk: Model)
+            var kept = await AiMessageAsync(ctx, conversation, since);
+            Expect.True(kept is not null && kept["delivery_status"]?.ToString() == "failed" && kept["failed_at"] is not null,
+                $"The undelivered reply isn't kept as a failed AI message (found: {(kept is null ? "nothing" : string.Join(", ", kept.Select(p => $"{p.Key}={p.Value}")))}).");
+            Expect.Equal("human", await ModeAsync(ctx, conversation), "Mode after the AI's reply failed");
+            var notified = await ctx.Db.ScalarAsync<long>("select count(*) from activity.notifications where conversation_id = @conversation and type = 'HANDOFF'",
+                new { conversation }, ctx.Ct);
+            Expect.Equal(1L, notified, "HANDOFF notifications for the failed reply");
+        }, needs: Live, risk: Model, finding: "t10-07")
         .Test("reply-charge", "Live AI: the ai_reply is reserved, then released when the send fails (nothing charged)", async ctx =>
         {
             var live = await SharedAsync(ctx);
