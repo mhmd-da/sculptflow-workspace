@@ -133,7 +133,7 @@ public static class AdminClientsSuite
             }
             finally { await AdminHelpers.RestoreClientAsync(ctx, client); }
         }, needs: Needs.Session | Needs.AdminKey)
-        .Test("edit-too-long", "Over-long name, phone, email or website give 400, not 500", async ctx =>
+        .Test("edit-too-long", "Over-long name, phone, email, website or address, or an unknown country code, give 400, not 500", async ctx =>
         {
             var client = await ctx.NamedClientAsync("adm-edit");
             try
@@ -143,6 +143,7 @@ public static class AdminClientsSuite
                          {
                              ("name", client.Name + new string('x', 600)), ("phone", "+" + new string('1', 60)),
                              ("email", new string('a', 200) + "@" + TestContext.EmailDomain), ("website", "https://example.com/" + new string('p', 300)),
+                             ("countryCode", "LEBANON"), ("countryCode", "XX"), ("address", new string('s', 600)),
                          })
                 {
                     var body = AdminHelpers.ClientBody(client);

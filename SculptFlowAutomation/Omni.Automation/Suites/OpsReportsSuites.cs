@@ -169,5 +169,30 @@ public static class OpsOrdersSuite
             var r = await CreateAsync(ctx, client, new { contactId = await OpsHelpers.ContactAsync(ctx, client, "ordhuge"), serviceId = client.BaseServiceId, quotedAmount = 1e15 });
             Expect.True(r.Status == 400, $"quotedAmount 1e15 answered {r.Status}; expected 400.");
         }, needs: OpsHelpers.PlanNeeds, risk: Risk.Billing, finding: "t3-inbox-09")
+        .Test("status-moves", "Orders: a completed order is final (422), a canceled one can be reopened", async ctx =>
+        {
+            var client = await OpsHelpers.ClientAsync(ctx);
+            var contact = await OpsHelpers.ContactAsync(ctx, client, "ordmove");
+            var done = (await CreateAsync(ctx, client, new { contactId = contact, serviceId = client.BaseServiceId })).ExpectStatus(201).Id();
+            (await client.Http.PatchAsync($"/api/orders/{done}", new { status = "completed", finalAmount = 50 }, ctx.Ct)).ExpectOk();
+            var cancel = await client.Http.PatchAsync($"/api/orders/{done}", new { status = "canceled" }, ctx.Ct);
+            Expect.True(cancel.Status == 422, $"completed -> canceled answered {cancel.Status}; expected 422 (completed is final).");
+            (await client.Http.PatchAsync($"/api/orders/{done}", new { status = "completed", notes = "same status again" }, ctx.Ct)).ExpectOk();
+
+            var other = (await CreateAsync(ctx, client, new { contactId = contact, serviceId = client.BaseServiceId })).ExpectStatus(201).Id();
+            (await client.Http.PatchAsync($"/api/orders/{other}", new { status = "canceled" }, ctx.Ct)).ExpectOk();
+            Expect.EqualText("considering", (await client.Http.PatchAsync($"/api/orders/{other}", new { status = "considering" }, ctx.Ct)).ExpectOk().Prop("status"), "Status after reopening");
+        }, needs: OpsHelpers.PlanNeeds, risk: Risk.Billing, finding: "t3-inbox-09")
+        .Test("cancel-stage", "Orders: canceling a contact's only confirmed order takes them out of the customer stage", async ctx =>
+        {
+            var client = await OpsHelpers.ClientAsync(ctx);
+            var contact = await OpsHelpers.ContactAsync(ctx, client, "ordcancel");
+            var id = (await CreateAsync(ctx, client, new { contactId = contact, serviceId = client.BaseServiceId })).ExpectStatus(201).Id();
+            (await client.Http.PatchAsync($"/api/orders/{id}", new { status = "confirmed" }, ctx.Ct)).ExpectOk();
+            var customer = (await client.Http.GetAsync($"/api/contacts/{contact}", ct: ctx.Ct)).ExpectOk().Str("stageKey");
+            (await client.Http.PatchAsync($"/api/orders/{id}", new { status = "canceled" }, ctx.Ct)).ExpectOk();
+            var after = (await client.Http.GetAsync($"/api/contacts/{contact}", ct: ctx.Ct)).ExpectOk().Str("stageKey");
+            Expect.True(after != customer, $"The contact stayed in stage {customer} after their only confirmed order was canceled.");
+        }, needs: OpsHelpers.PlanNeeds, risk: Risk.Billing, finding: "t3-inbox-09")
         .Build();
 }

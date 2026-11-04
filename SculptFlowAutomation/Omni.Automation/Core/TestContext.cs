@@ -263,6 +263,17 @@ public sealed partial class TestContext : IAsyncDisposable
             new Dictionary<string, string> { ["Idempotency-Key"] = $"auto-{Tag}-{client.ClientId:N}-{planCode}-{Guid.NewGuid():N}" }, Ct))
             .ExpectStatus(200, 201);
         Log($"Moved {client.Name} to plan {planCode}.");
+
+        // A trial client can't create services (t2-billing-03), so its base service is made once a plan allows it.
+        if (client.BaseServiceId == Guid.Empty)
+        {
+            var service = await client.Http.PostAsync("/api/services", new
+            {
+                name = $"Consultation {Tag}", code = $"auto-{Tag}-{client.Label}", description = "Created by Omni.Automation", bookingDuration = 30,
+            }, ct: Ct);
+            if (service.Status == 201) client.BaseServiceId = service.Id();
+            else Log($"Couldn't create the base service of {client.Name} on {planCode} (status {service.Status}).");
+        }
     }
 
     /// <summary>The visible error message of a Razor page that redisplayed itself (e.g. a rejected form).</summary>

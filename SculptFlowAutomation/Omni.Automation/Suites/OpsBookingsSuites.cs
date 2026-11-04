@@ -126,8 +126,10 @@ public static class OpsBookingsSuite
             var contact = await OpsHelpers.ContactAsync(ctx, client, "long");
             var type = await OpsHelpers.BookAsync(ctx, client, contact, OpsHelpers.At(5, 12), null, bookingType: new string('x', 60));
             var location = await OpsHelpers.BookAsync(ctx, client, contact, OpsHelpers.At(5, 13), null, locationType: new string('y', 40), locationName: new string('z', 250));
-            Expect.True(type.Status == 400 && location.Status == 400,
-                $"A 60-character booking type answered {type.Status}, a 40/250-character location answered {location.Status}; expected 400 with a JSON error.");
+            var name = await OpsHelpers.BookAsync(ctx, client, contact, OpsHelpers.At(5, 14), null, locationType: "in_person", locationName: new string('z', 250));
+            Expect.True(type.Status == 400 && location.Status == 400 && name.Status == 400,
+                $"A 60-character booking type answered {type.Status}, a 40/250-character location answered {location.Status}, a 250-character place name answered {name.Status}; expected 400 with a JSON error.");
+            Expect.True(new[] { type, location, name }.All(r => !string.IsNullOrEmpty(r.Json?["error"]?.ToString())), "An over-long booking field didn't answer a JSON {error}.");
         }, needs: OpsHelpers.PlanNeeds, risk: Risk.Billing, finding: "t5-ops-02")
         .Test("notes-escaped", "Bookings: HTML in notes is stored as text and shown escaped on the booking page", async ctx =>
         {

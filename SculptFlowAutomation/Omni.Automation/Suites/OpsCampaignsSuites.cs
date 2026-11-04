@@ -160,6 +160,9 @@ public static class OpsCampaignsSuite
                 await client.Http.PostAsync($"/api/campaigns/{id}/cancel", ct: ctx.Ct);
             }
             Expect.True(r.Status == 400, $"Scheduling for 2020-01-01 answered {r.Status} (status {status ?? "?"}); the worker would start it on the next tick.");
+            var soon = await client.Http.PostAsync($"/api/campaigns/{id}/schedule", new { scheduledAt = DateTimeOffset.UtcNow.AddSeconds(20) }, ct: ctx.Ct);
+            if (soon.IsSuccess) await client.Http.PostAsync($"/api/campaigns/{id}/cancel", ct: ctx.Ct);
+            Expect.True(soon.Status == 400, $"Scheduling 20 seconds ahead answered {soon.Status}; a time must be at least a minute ahead.");
         }, needs: OpsHelpers.PlanNeeds | Needs.Database, risk: Risk.Billing, finding: "t5-ops-10")
         .Test("cancel-draft", "Cancel: cancelling a draft doesn't mark its recipients as failed", async ctx =>
         {
@@ -169,6 +172,9 @@ public static class OpsCampaignsSuite
             (await client.Http.PostAsync($"/api/campaigns/{id}/cancel", ct: ctx.Ct)).ExpectOk();
             var failed = (await OpsHelpers.CampaignAsync(ctx, client, id))["stats"]!["failed"]!.GetValue<int>();
             Expect.True(failed == 0, $"Cancelling a draft that never sent marked {failed} recipients \"failed\" (\"Campaign cancelled.\").");
+            var skipped = await ctx.Db.ScalarAsync<long>(
+                "select count(*) from marketing.campaign_recipients where campaign_id = @id and status = 'skipped' and skip_reason = 'campaign_cancelled'", new { id }, ctx.Ct);
+            Expect.Equal(2L, skipped, "Recipients of the cancelled draft marked skipped (campaign_cancelled)");
         }, needs: OpsHelpers.PlanNeeds | Needs.Database, risk: Risk.Billing, finding: "t5-ops-11")
         .Test("send-without-whatsapp", "Send: with no WhatsApp connected the send is refused, or recipients fail saying WhatsApp isn't connected", async ctx =>
         {
