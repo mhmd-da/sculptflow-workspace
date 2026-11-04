@@ -33,6 +33,24 @@ public static class OpsServicesSuite
             (await client.Http.PostAsync($"/api/services/{id}/active", new { isActive = true }, ct: ctx.Ct)).ExpectOk();
             Expect.ContainsId((await client.Http.GetAsync("/api/services", ct: ctx.Ct)).ExpectOk().Array(), id, "Active services list after reactivating");
         }, needs: OpsHelpers.PlanNeeds, risk: Risk.Billing)
+        .Test("price", "Services: an optional price with its currency is saved and returned; a negative price or one without a currency is 400", async ctx =>
+        {
+            var client = await OpsHelpers.ClientAsync(ctx);
+            var created = (await Create(ctx, client, new { name = Name(ctx, "priced"), bookingDuration = 30, price = 120.5m, currency = "eur" })).ExpectStatus(201);
+            Expect.EqualText("120.5", created.Prop("price"), "Price");
+            Expect.EqualText("EUR", created.Prop("currency"), "Currency (upper case)");
+            (await Create(ctx, client, new { name = Name(ctx, "negative"), price = -1m, currency = "USD" })).ExpectClientError("A negative price");
+            (await Create(ctx, client, new { name = Name(ctx, "nocurrency"), price = 10m })).ExpectClientError("A price without a currency");
+        }, needs: OpsHelpers.PlanNeeds, finding: "t5-ops-18")
+        .Test("split-day", "Opening hours: a day with a second window after a break offers slots in both windows and none in the break", async ctx =>
+        {
+            var client = await OpsHelpers.ClientAsync(ctx, "split");
+            await ctx.Fixtures.SaveAvailabilityAsync(client, start: "09:00", end: "10:00", start2: "14:00", end2: "15:00");
+            var slots = (await client.Http.GetAsync($"/api/bookings/available?days=3&date={DateTime.UtcNow.AddDays(1):yyyy-MM-dd}", ct: ctx.Ct)).ExpectOk().Array("slots");
+            var times = slots.Select(s => s!["time"]!.ToString()).Distinct().Order().ToList();
+            Expect.True(times.Contains("09:00") && times.Contains("14:00"), $"Slots should come from both windows; got {string.Join(",", times)}.");
+            Expect.True(!times.Any(t => string.CompareOrdinal(t, "10:00") >= 0 && string.CompareOrdinal(t, "14:00") < 0), $"No slot may fall in the break; got {string.Join(",", times)}.");
+        }, needs: OpsHelpers.PlanNeeds, finding: "t5-ops-18")
         .Test("name-validation", "Services: empty, blank, missing and over-200-character names are 400; 200 characters is fine", async ctx =>
         {
             var client = await OpsHelpers.ClientAsync(ctx);

@@ -150,6 +150,20 @@ public static class OpsBookingsSuite
             Expect.EqualText("canceled", (await OpsHelpers.SetStatusAsync(ctx, client, id, "canceled")).ExpectOk().Prop("status"), "Status after cancel");
             (await OpsHelpers.SetStatusAsync(ctx, client, Guid.NewGuid(), "confirmed")).ExpectStatus(404);
         }, needs: OpsHelpers.PlanNeeds, risk: Risk.Billing)
+        .Test("outside-hours", "Bookings: a time outside opening hours asks first (422 booking_rules) and is booked with overrideRules; an overlap never is", async ctx =>
+        {
+            var client = await OpsHelpers.BookingClientAsync(ctx);
+            var contact = await OpsHelpers.ContactAsync(ctx, client, "afterhours");
+            var start = OpsHelpers.At(8, 23);   // the automation client opens 06:00-22:00 UTC
+            var body = new { contactId = contact, serviceId = client.BaseServiceId, bookingType = "standard", scheduledStart = start, scheduledEnd = start.AddMinutes(30), overrideRules = false };
+            var asked = await client.Http.PostAsync("/api/bookings", body, ct: ctx.Ct);
+            Expect.Equal(422, asked.Status, "A booking outside opening hours without the override");
+            Expect.EqualText("booking_rules", asked.Prop("code"), "Its code");
+            var booked = (await client.Http.PostAsync("/api/bookings", body with { overrideRules = true }, ct: ctx.Ct)).ExpectStatus(201);
+            var again = await client.Http.PostAsync("/api/bookings", body with { overrideRules = true }, ct: ctx.Ct);
+            Expect.Equal(409, again.Status, "The same time again, even with the override");
+            (await OpsHelpers.SetStatusAsync(ctx, client, booked.Id(), "canceled")).ExpectOk();
+        }, needs: OpsHelpers.PlanNeeds, risk: Risk.Billing, finding: "t5-ops-01")
         .Test("edit", "Bookings: a member moves a booking and changes its place and notes (PATCH /api/bookings/{id}); the move is logged and notified", async ctx =>
         {
             var client = await OpsHelpers.BookingClientAsync(ctx);

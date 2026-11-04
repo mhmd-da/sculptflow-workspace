@@ -98,6 +98,23 @@ public static class AdminMonitorSuite
             var big = await ctx.Admin.GetAsync($"{AdminHelpers.Api}/message-traces/resolve?q={new string('x', 3000)}", ct: ctx.Ct);
             Expect.True(big.Status is 400 or 404 or 414, $"Resolving a 3000-character query answered {big.Status}.");
         }, needs: Needs.AdminKey)
+        .Test("traces-outcomes", "Message traces: list rows carry an outcome; No answer and AI usage answer and clamp odd values (t7-10)", async ctx =>
+        {
+            var list = (await ctx.Admin.GetAsync($"{AdminHelpers.Api}/message-traces?hours=168&pageSize=20", ct: ctx.Ct)).ExpectOk();
+            foreach (var row in list.Array("items"))
+            {
+                Expect.True(row?["outcome"]?.ToString() is { Length: > 0 }, $"Trace {row?["traceId"]} has no outcome.");
+            }
+            var unanswered = (await ctx.Admin.GetAsync($"{AdminHelpers.Api}/message-traces/unanswered?hours=24&minutes=15&pageSize=5", ct: ctx.Ct)).ExpectOk();
+            Expect.Equal(15, unanswered.Prop("minutesWithoutAnswer").GetValue<int>(), "Minutes without an answer");
+            unanswered.Array("items");
+            var clamped = (await ctx.Admin.GetAsync($"{AdminHelpers.Api}/message-traces/unanswered?minutes=999999&hours=-3", ct: ctx.Ct)).ExpectOk();
+            Expect.Equal(1440, clamped.Prop("minutesWithoutAnswer").GetValue<int>(), "Minutes clamped to a day");
+            var usage = (await ctx.Admin.GetAsync($"{AdminHelpers.Api}/message-traces/ai-usage?days=7", ct: ctx.Ct)).ExpectOk();
+            usage.Array("rows");
+            Expect.True(usage.Prop("inputTokenPriceUsdPerMillion") is not null, "The AI usage report names its token prices.");
+            (await ctx.Admin.GetAsync($"{AdminHelpers.Api}/message-traces/ai-usage?days=100000&clientId={Guid.NewGuid()}", ct: ctx.Ct)).ExpectOk();
+        }, needs: Needs.AdminKey, finding: "t7-10")
         .Test("api-timings", "API timings answer for every sort; an unknown sort is 400", async ctx =>
         {
             foreach (var sort in new[] { "slowest", "p95", "max", "calls", "errors", "slow", "time" })

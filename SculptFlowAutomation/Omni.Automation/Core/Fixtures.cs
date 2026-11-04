@@ -68,7 +68,8 @@ public sealed class Fixtures
 
     /// <summary>Saves opening hours for every day (06:00-22:00 unless given) through the availability form.</summary>
     public async Task SaveAvailabilityAsync(TestClient client, string timezone = "UTC", string start = "06:00", string end = "22:00",
-        int noticeHours = 0, int durationMinutes = 30, int bufferMinutes = 0, int maxAdvanceDays = 60, bool[]? openDays = null)
+        int noticeHours = 0, int durationMinutes = 30, int bufferMinutes = 0, int maxAdvanceDays = 60, bool[]? openDays = null,
+        string? start2 = null, string? end2 = null)
     {
         var fields = new List<KeyValuePair<string, string>>
         {
@@ -85,6 +86,8 @@ public sealed class Fixtures
             fields.Add(new($"Days[{day}].IsOpen", open ? "true" : "false"));
             fields.Add(new($"Days[{day}].Start", start));
             fields.Add(new($"Days[{day}].End", end));
+            if (start2 is not null) fields.Add(new($"Days[{day}].Start2", start2));   // a second window (QA t5-ops-18)
+            if (end2 is not null) fields.Add(new($"Days[{day}].End2", end2));
         }
 
         var response = await client.Http.SubmitFormAsync("/settings/business-info", fields, handler: "SaveAvailability", ct: _ctx.Ct);
