@@ -8,6 +8,16 @@ namespace Omni.Automation.Suites;
 [Suite(22)]
 public static class BillingRenewalSuite
 {
+    private static Task<ApiResponse> SetAddonAsync(TestContext ctx, TestClient client, string code, int quantity) =>
+        ctx.Admin.SendJsonAsync(HttpMethod.Put, $"{BillingHelpers.Base}/clients/{client.ClientId}/addons/{code}", new { quantity },
+            BillingHelpers.Key(ctx, "ren-ad"), ctx.Ct);
+
+    private static Task<ApiResponse> SetRenewalAsync(TestContext ctx, TestClient client, string code, bool? autoRenew) =>
+        ctx.Admin.SendJsonAsync(HttpMethod.Put, $"{BillingHelpers.Base}/clients/{client.ClientId}/addons/{code}/renewal", new { autoRenew }, null, ctx.Ct);
+
+    private static async Task<JsonArray> AddonsAsync(TestContext ctx, TestClient client) =>
+        (await ctx.Admin.GetAsync($"{BillingHelpers.Base}/clients/{client.ClientId}/addons", ct: ctx.Ct)).ExpectOk().Array();
+
     public static TestSuite Build() => new SuiteBuilder("billing-renewal", "Billing: renewals, past due and trial expiry (time travel)",
             "Moves a subscription's period end into the past with a DB write, then renews through the admin API (or waits for the BillingMaintenance worker).")
         .Test("not-due", "Renew: a current subscription is not due", async ctx =>
@@ -113,6 +123,58 @@ public static class BillingRenewalSuite
             Expect.True(!page.Body.Contains("Renews on", StringComparison.OrdinalIgnoreCase),
                 "The Billing page of an expired trial still says \"Renews on <date>\" (should say when it ended).");
         }, needs: Needs.Session | Needs.AdminKey | Needs.Database, risk: Risk.Billing, finding: "t2-billing-15")
+        .Test("addon-default", "Add-ons at renewal: one nobody set to renew follows Billing:AddonsRenewByDefault (off = it ends, uncharged)", async ctx =>
+        {
+            var client = await BillingHelpers.NewClientAsync(ctx, "ren-addon-def");
+            await BillingHelpers.TopUpOkAsync(ctx, client, 100);
+            await ctx.SetPlanAsync(client, "inbox");
+            var rows = (await SetAddonAsync(ctx, client, "extra-user", 1)).ExpectOk().Array();
+            var row = rows.Single(r => r?["code"]?.ToString() == "extra-user")!;
+            Expect.True(row["autoRenew"] is null, "A new add-on should follow the default (autoRenew null).");
+            var renews = row["renews"]!.GetValue<bool>();
+            await BillingHelpers.EndPeriodNowAsync(ctx, client);
+            Expect.Equal("Renewed", await BillingHelpers.RenewAsync(ctx, client), "Renewal outcome");
+            var after = await AddonsAsync(ctx, client);
+            Expect.Equal(renews, after.Any(r => r?["code"]?.ToString() == "extra-user"), "Add-on kept after renewal (as its 'renews' said)");
+            Expect.Equal(renews ? 100m - 8m - 39m - 8m : 100m - 8m - 39m, await BillingHelpers.WalletAsync(ctx, client), "Wallet after the renewal");
+            await BillingHelpers.ExpectBalancedAsync(ctx, client);
+        }, needs: Needs.Session | Needs.AdminKey | Needs.Database, risk: Risk.Billing, finding: "t2-billing-05")
+        .Test("addon-renews", "Add-ons at renewal: one set to renew is charged with the plan; one set not to ends", async ctx =>
+        {
+            var client = await BillingHelpers.NewClientAsync(ctx, "ren-addon-yes");
+            await BillingHelpers.TopUpOkAsync(ctx, client, 100);
+            await ctx.SetPlanAsync(client, "inbox");
+            (await SetAddonAsync(ctx, client, "extra-user", 1)).ExpectOk();
+            (await SetAddonAsync(ctx, client, "extra-channel", 1)).ExpectOk();
+            (await SetRenewalAsync(ctx, client, "extra-user", true)).ExpectOk();
+            var rows = (await SetRenewalAsync(ctx, client, "extra-channel", false)).ExpectOk().Array();
+            Expect.True(rows.Single(r => r?["code"]?.ToString() == "extra-user")!["renews"]!.GetValue<bool>(), "extra-user should renew after 'yes'.");
+            Expect.True(!rows.Single(r => r?["code"]?.ToString() == "extra-channel")!["renews"]!.GetValue<bool>(), "extra-channel should not renew after 'no'.");
+            await BillingHelpers.EndPeriodNowAsync(ctx, client);
+            Expect.Equal("Renewed", await BillingHelpers.RenewAsync(ctx, client), "Renewal outcome");
+            var after = await AddonsAsync(ctx, client);
+            Expect.Equal("extra-user", after.Single()?["code"]?.ToString(), "Only the renewing add-on is left");
+            Expect.Equal(100m - 8m - 5m - 39m - 8m, await BillingHelpers.WalletAsync(ctx, client), "Wallet: plan + the renewing add-on");
+            await BillingHelpers.ExpectBalancedAsync(ctx, client);
+        }, needs: Needs.Session | Needs.AdminKey | Needs.Database, risk: Risk.Billing, finding: "t2-billing-05")
+        .Test("addon-unpaid", "Add-ons at renewal: a short wallet renews the plan and drops the renewing add-on it can't pay", async ctx =>
+        {
+            var client = await BillingHelpers.NewClientAsync(ctx, "ren-addon-short");
+            await BillingHelpers.TopUpOkAsync(ctx, client, 47);
+            await ctx.SetPlanAsync(client, "inbox");
+            (await SetAddonAsync(ctx, client, "extra-user", 1)).ExpectOk();
+            (await SetRenewalAsync(ctx, client, "extra-user", true)).ExpectOk();
+            await BillingHelpers.EndPeriodNowAsync(ctx, client);
+            Expect.Equal("Renewed", await BillingHelpers.RenewAsync(ctx, client), "Renewal outcome: the plan is paid, only the add-on isn't");
+            Expect.True((await AddonsAsync(ctx, client)).Count == 0, "The add-on the wallet couldn't pay is still there.");
+            Expect.Equal(0m, await BillingHelpers.WalletAsync(ctx, client), "Wallet: 47 - 8 - 39");
+            await BillingHelpers.ExpectBalancedAsync(ctx, client);
+        }, needs: Needs.Session | Needs.AdminKey | Needs.Database, risk: Risk.Billing, finding: "t2-billing-05")
+        .Test("addon-renewal-404", "Add-ons: a renewal choice for an add-on the client doesn't have is 404", async ctx =>
+        {
+            var client = await BillingHelpers.ReadOnlyClientAsync(ctx);
+            (await SetRenewalAsync(ctx, client, "auto-no-such-addon", true)).ExpectStatus(404);
+        }, needs: Needs.Session | Needs.AdminKey, risk: Risk.Billing)
         .Test("overdue-once", "Renew: a subscription several periods overdue is renewed once from now, not back-billed", async ctx =>
         {
             var client = await BillingHelpers.NewClientAsync(ctx, "ren-burst");

@@ -110,14 +110,14 @@ public static class BillingRatesSuite
             var r = await ctx.Admin.PostAsync($"{BillingHelpers.Base}/rates/{cur}/close", new { effectiveTo = DateTimeOffset.UtcNow.AddDays(5) }, ct: ctx.Ct);
             Expect.True(r.Status is 409 or 400, $"Closing beyond the next version answered {r.Status}.{r.Snippet(200)}");
         }, needs: Needs.Session | Needs.AdminKey, risk: Risk.Billing)
-        .Test("end-upcoming", "Rates: \"End now\" on an upcoming version withdraws it", async ctx =>
+        .Test("end-upcoming", "Rates: an upcoming version can be cancelled (the portal's Cancel); the current price keeps applying", async ctx =>
         {
             var (client, card) = await ClientCardAsync(ctx, "rate-endnow");
             (await AddRateAsync(ctx, card, new { eventType = "ai_reply", unit = "reply", providerCost = 0, clientRate = 0.03m })).ExpectOk();
             var start = DateTimeOffset.UtcNow.AddDays(2);
             var upcoming = (await AddRateAsync(ctx, card, new { eventType = "ai_reply", unit = "reply", providerCost = 0, clientRate = 0.05m, effectiveFrom = start })).ExpectOk().Id();
-            var r = await ctx.Admin.PostAsync($"{BillingHelpers.Base}/rates/{upcoming}/close", new { }, ct: ctx.Ct);
-            Expect.True(r.IsSuccess, $"\"End now\" on an upcoming rate answered {r.Status}: a scheduled price can never be withdrawn.{r.Snippet(200)}");
+            var r = await ctx.Admin.DeleteAsync($"{BillingHelpers.Base}/rates/{upcoming}", ctx.Ct);
+            Expect.True(r.IsSuccess, $"Cancelling an upcoming rate answered {r.Status}: a scheduled price can never be withdrawn.{r.Snippet(200)}");
             var later = await QuoteAsync(ctx, client, "ai_reply", start.AddDays(1));
             Expect.True(later.IsSuccess && BillingHelpers.D(later.Prop("unitPrice")) == 0.03m,
                 $"After ending the upcoming version, the price on {start.AddDays(1):d} should still be 0.03; got {later.Status}.{later.Snippet(200)}");
