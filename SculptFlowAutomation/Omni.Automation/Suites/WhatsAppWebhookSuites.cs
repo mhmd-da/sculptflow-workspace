@@ -117,6 +117,23 @@ public static class WhatsAppWebhookSuite
                 Expect.Equal(2, messages.Count, "Messages (the first plus one copy)");
                 Expect.True(responses.All(r => r.Status == 200), $"Statuses for the simultaneous copies: {string.Join(",", responses.Select(r => r.Status))} (a duplicate must be acknowledged, not answered 500).");
             }, needs: Signed, finding: "t10-10")
+            .Test("fast-ack", "WhatsApp webhook: a 30-entry delivery is answered within 5 seconds and every message is then stored", async ctx =>
+            {
+                var (client, channel) = await HookAsync(ctx);
+                var waIds = Enumerable.Range(0, 30).Select(_ => ctx.Webhooks.NewWaId()).ToList();
+                var delivery = WhatsAppHelpers.Delivery(channel.WabaId!, WhatsAppHelpers.Messages(channel, waIds[0], "Bulk 0", WhatsAppHelpers.Text(ctx, waIds[0], "bulk 0")));
+                foreach (var (waId, i) in waIds.Skip(1).Select((w, i) => (w, i + 1)))
+                {
+                    delivery["entry"]!.AsArray().Add(new JsonObject
+                    {
+                        ["id"] = channel.WabaId,
+                        ["changes"] = new JsonArray(WhatsAppHelpers.Messages(channel, waId, $"Bulk {i}", WhatsAppHelpers.Text(ctx, waId, $"bulk {i}"))),
+                    });
+                }
+                var response = (await ctx.Webhooks.WhatsAppSignedAsync(delivery)).ExpectOk();
+                Expect.True(response.ElapsedMs < 5000, $"Meta waited {response.ElapsedMs} ms for its answer to a 30-entry delivery (QA saw 69 s); it redelivers slow ones.");
+                foreach (var waId in waIds) await WhatsAppHelpers.RequireByWaIdAsync(ctx, client.ClientId, waId);
+            }, needs: Signed | Needs.Database, finding: "t10-10")
             .Test("concurrent-first", "WhatsApp webhook: simultaneous first messages from one new number make one contact, all 200", async ctx =>
             {
                 var (client, channel) = await HookAsync(ctx);
@@ -167,6 +184,43 @@ public static class WhatsAppWebhookSuite
                 Expect.True(yRow is not null && !xMessages.Any(c => c!.StartsWith("from Y")),
                     $"Y's message was filed under X (X's thread: [{string.Join(", ", xMessages)}]; Y's contact {(yRow is null ? "was never created" : "exists")}): the AI would answer Y's question to X.");
             }, needs: Signed, finding: "t10-05")
+            .Test("ad-referral", "WhatsApp webhook: a message from a click-to-WhatsApp ad keeps the ad and marks the contact's source", async ctx =>
+            {
+                var (client, channel) = await HookAsync(ctx);
+                var waId = ctx.Webhooks.NewWaId();
+                var message = WhatsAppHelpers.Text(ctx, waId, "Hi, I saw your ad. Is the offer still valid?");
+                message["referral"] = new JsonObject
+                {
+                    ["source_url"] = "https://fb.me/auto", ["source_id"] = "120201", ["source_type"] = "ad",
+                    ["headline"] = $"[{ctx.Tag}] 50% off Service A", ["body"] = "This week only", ["ctwa_clid"] = "ARAkAuto",
+                };
+                await WhatsAppHelpers.PostAsync(ctx, WhatsAppHelpers.Delivery(channel.WabaId!, WhatsAppHelpers.Messages(channel, waId, "Ad Contact", message)));
+                var row = await WhatsAppHelpers.RequireByWaIdAsync(ctx, client.ClientId, waId);
+                var detail = await ctx.Db.ScalarAsync<string?>("select source_detail from crm.contacts where id = @id", new { id = row["contact_id"] }, ctx.Ct);
+                Expect.True(InboxHelpers.S(row, "source") == "whatsapp_ad" && detail?.Contains("50% off Service A") == true,
+                    $"The contact from the ad has source \"{InboxHelpers.S(row, "source")}\" / \"{detail}\"; expected whatsapp_ad with the ad's headline.");
+                var metadata = await ctx.Db.ScalarAsync<string?>("select metadata_json::text from crm.messages where conversation_id = @c order by created_at desc limit 1", new { c = row["conversation_id"] }, ctx.Ct);
+                Expect.True(metadata?.Contains("ARAkAuto") == true, $"The message lost the ad referral (ctwa_clid): metadata {metadata ?? "null"}.");
+            }, needs: Signed, finding: "t10-08")
+            .Test("changed-number", "WhatsApp webhook: a customer's changed number moves their contact, so the new number continues it", async ctx =>
+            {
+                var (client, channel) = await HookAsync(ctx);
+                var oldId = ctx.Webhooks.NewWaId();
+                var newId = ctx.Webhooks.NewWaId();
+                (await ctx.Webhooks.WhatsAppTextAsync(channel, oldId, "hello from my old number")).ExpectOk();
+                var before = await WhatsAppHelpers.RequireByWaIdAsync(ctx, client.ClientId, oldId);
+                var system = WhatsAppHelpers.Message(ctx, oldId, "system", new JsonObject
+                {
+                    ["body"] = $"User A changed from {oldId} to {newId}", ["wa_id"] = newId, ["type"] = "user_changed_number",
+                });
+                await WhatsAppHelpers.PostAsync(ctx, WhatsAppHelpers.Delivery(channel.WabaId!, WhatsAppHelpers.Messages(channel, oldId, "Changed", system)));
+                (await ctx.Webhooks.WhatsAppTextAsync(channel, newId, "hello from my new number")).ExpectOk();
+                var after = await WhatsAppHelpers.RequireByWaIdAsync(ctx, client.ClientId, newId);
+                Expect.True(after["contact_id"]?.ToString() == before["contact_id"]?.ToString() && await WhatsAppHelpers.ContactCountAsync(ctx, client.ClientId, oldId) == 0,
+                    "The new number made a second contact instead of continuing the first one.");
+                var notice = await ctx.Db.ScalarAsync<string?>("select content from crm.messages where conversation_id = @c and message_type = 'system' limit 1", new { c = before["conversation_id"] }, ctx.Ct);
+                Expect.True(!string.IsNullOrWhiteSpace(notice), "The number-change notice was saved as an empty bubble.");
+            }, needs: Signed, finding: "t10-08")
             .Test("old-timestamp", "WhatsApp webhook: a message Meta timestamped 30 hours ago doesn't open the window", async ctx =>
             {
                 var (client, channel) = await HookAsync(ctx);

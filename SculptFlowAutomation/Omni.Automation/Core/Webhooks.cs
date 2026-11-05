@@ -69,11 +69,43 @@ public sealed class Webhooks
     /// <summary>Posts a body to the WhatsApp webhook signed with the Meta app secret (skips the test without it).</summary>
     public Task<ApiResponse> WhatsAppSignedAsync(object payload) => WhatsAppSignedRawAsync(Json(payload));
 
-    public Task<ApiResponse> WhatsAppSignedRawAsync(string body)
+    public async Task<ApiResponse> WhatsAppSignedRawAsync(string body)
     {
         if (!_ctx.Env.HasMetaSecret) throw new TestSkipped("No Meta app secret configured for this environment.");
-        return _ctx.Anonymous.PostRawAsync(WhatsAppPath, body, "application/json",
+        var response = await _ctx.Anonymous.PostRawAsync(WhatsAppPath, body, "application/json",
             new Dictionary<string, string> { ["X-Hub-Signature-256"] = Sign(body, _ctx.Env.MetaAppSecret!) }, _ctx.Ct);
+        if (response.Status == 200) await WaitProcessedAsync(body);
+        return response;
+    }
+
+    /// <summary>The app answers Meta once a delivery is stored and processes it in the background (QA t10-10), so a test waits
+    /// for its delivery to be processed before it looks at the result: the row in channels.whatsapp_webhook_deliveries with
+    /// this body's hash turns done (or failed). Without database access it waits a few seconds; against an app from before
+    /// the inbox (no such table) it doesn't wait.</summary>
+    private async Task WaitProcessedAsync(string body)
+    {
+        if (!_ctx.Env.HasDatabase)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(3), _ctx.Ct);
+            return;
+        }
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(body))).ToLowerInvariant();
+        var until = DateTimeOffset.UtcNow.AddSeconds(30);
+        while (DateTimeOffset.UtcNow < until)
+        {
+            string? status;
+            try
+            {
+                status = await _ctx.Db.ScalarAsync<string?>("select status from channels.whatsapp_webhook_deliveries where body_hash = @hash", new { hash }, _ctx.Ct);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                return; // an app from before the webhook inbox processes during the request
+            }
+            if (status is "done" or "failed") return;
+            await Task.Delay(200, _ctx.Ct);
+        }
+        throw new TestFailure("The WhatsApp delivery wasn't processed within 30 seconds of being accepted.");
     }
 
     /// <summary>"sha256=" + hex(HMAC-SHA256(body, secret)), Meta's X-Hub-Signature-256.</summary>

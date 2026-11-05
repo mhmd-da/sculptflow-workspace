@@ -70,6 +70,15 @@ public static class WhatsAppEventsSuite
             Expect.EqualText("rejected", template["status"], "Status");
             Expect.True(template["rejectionReason"]?.ToString().Contains("INVALID_FORMAT") == true, $"Rejection reason: {template["rejectionReason"]}.");
         }, needs: Signed)
+        .Test("template-rejection-info", "WhatsApp events: a rejection keeps Meta's explanation and recommendation (rejection_info)", async ctx =>
+        {
+            var (client, channel, name) = await TemplateAsync(ctx, "rejinfo");
+            var evt = TemplateStatus(name, "REJECTED", "INVALID_FORMAT");
+            evt["rejection_info"] = new JsonObject { ["reason"] = "Variables can't be at the start or end.", ["recommendation"] = "Add text around {{1}}." };
+            await WebhookEventAsync(ctx, channel, "message_template_status_update", evt);
+            var reason = (await TemplateByNameAsync(ctx, client, name))["rejectionReason"]?.ToString() ?? "";
+            Expect.True(reason.Contains("Variables can't be at the start") && reason.Contains("Add text around"), $"Meta's explanation was dropped: \"{reason}\".");
+        }, needs: Signed, finding: "t10-06")
         .Test("template-notified", "WhatsApp events: a rejected template notifies the owner once, linking to Templates", async ctx =>
         {
             var (client, channel, name) = await TemplateAsync(ctx, "notify");
@@ -176,6 +185,17 @@ public static class WhatsAppEventsSuite
             });
             var level = (await WhatsAppHelpers.HealthAsync(ctx, client))["healthLevel"]?.ToString();
             Expect.True(level is "problem" or "warning", $"After Meta restricted business-initiated messaging the health level is \"{level}\".");
+        }, needs: Signed, finding: "t10-02")
+        .Test("health-reinstated", "WhatsApp health: a reinstated account (DISABLED_UPDATE REINSTATE) is healthy again with no old problem", async ctx =>
+        {
+            var (client, channel) = await HealthClientAsync(ctx);
+            await WebhookEventAsync(ctx, channel, "account_update", new JsonObject { ["event"] = "DISABLED_UPDATE", ["ban_info"] = new JsonObject { ["waba_ban_state"] = "DISABLE" } });
+            await WebhookEventAsync(ctx, channel, "account_update", new JsonObject { ["event"] = "VERIFIED_ACCOUNT" });
+            var stillBanned = (await WhatsAppHelpers.HealthAsync(ctx, client))["healthLevel"]?.ToString();
+            await WebhookEventAsync(ctx, channel, "account_update", new JsonObject { ["event"] = "DISABLED_UPDATE", ["ban_info"] = new JsonObject { ["waba_ban_state"] = "REINSTATE" } });
+            var health = await WhatsAppHelpers.HealthAsync(ctx, client);
+            Expect.True(stillBanned == "problem" && health["healthLevel"]?.ToString() == "healthy" && health["lastProblemMessage"] is null,
+                $"Ban then an unrelated account event then reinstate: \"{stillBanned}\" then {health.ToJsonString()}.");
         }, needs: Signed, finding: "t10-02")
         .Test("health-name-rejected", "WhatsApp health: a rejected display name is at least a warning", async ctx =>
         {
