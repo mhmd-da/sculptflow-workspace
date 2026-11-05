@@ -1160,18 +1160,18 @@ public static partial class AiLiveSuite
             Expect.True(usage.Count == 1 && usage[0]["charge_status"]?.ToString() == "released",
                 $"Expected one released ai_reply, got: {string.Join(", ", usage.Select(u => $"{u["charge_status"]} ({u["release_reason"]})"))}.");
         }, needs: Live, risk: Model)
-        .Test("photo-caption", "Live AI: a photo with a question in the caption gets an answer or goes to the team", ctx =>
+        .Test("photo-caption", "Live AI: a photo with a question in the caption goes to the team (the bot reads text only)", ctx =>
             ExpectMediaHandledAsync(ctx, "photo", new JsonObject
             {
                 ["photo"] = new JsonArray(new JsonObject { ["file_id"] = "AgACAgQAAxkBAAIQA_auto", ["file_unique_id"] = "auto1", ["width"] = 90, ["height"] = 90, ["file_size"] = 1000 }),
                 ["caption"] = "How much would a consultation cost?",
             }), needs: Live, risk: Model, finding: "t7-04")
-        .Test("voice", "Live AI: a voice note gets an answer or goes to the team", ctx =>
+        .Test("voice", "Live AI: a voice note goes to the team", ctx =>
             ExpectMediaHandledAsync(ctx, "voice note", new JsonObject
             {
                 ["voice"] = new JsonObject { ["file_id"] = "AwACAgQAAxkBAAIQC_auto", ["file_unique_id"] = "auto3", ["duration"] = 4, ["mime_type"] = "audio/ogg", ["file_size"] = 9000 },
             }), needs: Live, risk: Model, finding: "t7-04")
-        .Test("sticker", "Live AI: a sticker gets an answer or goes to the team", ctx =>
+        .Test("sticker", "Live AI: a sticker goes to the team", ctx =>
             ExpectMediaHandledAsync(ctx, "sticker", new JsonObject
             {
                 ["sticker"] = new JsonObject { ["file_id"] = "CAACAgIAAxkBAAIQB_auto", ["file_unique_id"] = "auto2", ["width"] = 512, ["height"] = 512, ["is_animated"] = false, ["is_video"] = false, ["type"] = "regular", ["emoji"] = "👍" },
@@ -1191,23 +1191,39 @@ public static partial class AiLiveSuite
                 $"The run lost its permission mid-run (plan downgraded) and the contact was silently ignored: no reply was sent, the conversation stays in mode \"{mode}\" " +
                 $"and nobody on the team is told. The trace reads like a success: {string.Join(" > ", Names(steps).TakeLast(4))}.");
         }, needs: Live, risk: Model, finding: "t7-01")
-        .Test("block-lift", "Live AI: a conversation sent to the team while the bot was inactive goes back to the AI once it is active again", async ctx =>
+        .Test("block-lift", "Live AI: a conversation the team got while the bot was inactive stays with the team (members notified) until it is closed and the contact writes again", async ctx =>
         {
+            // Decided 2026-11-05 (QA t7-02): handed to the team = the team's until Return to AI, or a fresh start after it was closed.
             var live = await NewLiveAsync(ctx, "ai-live-block");
-            await AiHelpers.ExpectStatusSetAsync(ctx, live.Client, live.Bot, "inactive");
             var chat = ctx.Webhooks.NewChatId();
-            var first = await SayAsync(ctx, live, chat, "Hello, are you open tomorrow?");
+            var opened = await SayAsync(ctx, live, chat, "Hi there!");
             var conversation = await ConversationAsync(ctx, live, chat);
+            await RunEndAsync(ctx, live, conversation, opened);
+            Expect.Equal("ai", await ModeAsync(ctx, conversation), "Mode before the bot was deactivated");
+
+            await AiHelpers.ExpectStatusSetAsync(ctx, live.Client, live.Bot, "inactive");
+            var first = await SayAsync(ctx, live, chat, "Hello, are you open tomorrow?");
             await ctx.EventuallyAsync(async () => (await AiHelpers.TraceStepsAsync(ctx, live.Client.ClientId, conversation, first)).FirstOrDefault(s => s.StartsWith("bot.skipped")),
                 "the bot to skip the message while it is inactive", TimeSpan.FromSeconds(30));
             Expect.Equal("human", await ModeAsync(ctx, conversation), "Mode while the bot is inactive");
+            var notified = await ctx.EventuallyAsync(async () => await ctx.Db.ScalarAsync<long>(
+                "select count(*) from activity.notifications where conversation_id = @conversation and type = 'HANDOFF' and created_at >= @first",
+                new { conversation, first }, ctx.Ct) is > 0 and var n ? (object)n : null, "the HANDOFF notification for the switch", TimeSpan.FromSeconds(20));
+            Expect.True(notified is not null, "The automatic switch to the team (bot inactive) didn't notify the members.");
 
             await AiHelpers.ExpectStatusSetAsync(ctx, live.Client, live.Bot, "active");
             var second = await SayAsync(ctx, live, chat, "Hello again, can I book a consultation tomorrow morning?");
             var step = await ctx.EventuallyAsync(async () => (await AiHelpers.TraceStepsAsync(ctx, live.Client.ClientId, conversation, second))
                 .FirstOrDefault(s => s.StartsWith("bot.run_started") || s.StartsWith("bot.skipped")), "the bot to start or skip", TimeSpan.FromSeconds(30));
-            Expect.True(step.StartsWith("bot.run_started"),
-                $"After the bot was activated again the conversation stayed with the team for good ({step}); only Return to AI, one conversation at a time, brings it back, and no one was notified of the switch.");
+            Expect.True(step.StartsWith("bot.skipped") && step.Contains("conversation_in_human_mode"),
+                $"The conversation went back to the AI on its own ({step}); it should stay with the team until Return to AI or a fresh start.");
+
+            (await live.Client.Http.PostAsync($"/api/conversations/{conversation}/close", null, ct: ctx.Ct)).ExpectOk();
+            var fresh = await SayAsync(ctx, live, chat, "Hi, it's me again. Do you have time next week?");
+            await ctx.EventuallyAsync(async () => (await AiHelpers.TraceStepsAsync(ctx, live.Client.ClientId, conversation, fresh)).FirstOrDefault(s => s.StartsWith("bot.run_started")),
+                "the bot to answer the contact writing into the closed conversation", TimeSpan.FromSeconds(45));
+            Expect.Equal("ai", await ModeAsync(ctx, conversation), "Mode after the contact wrote into the closed conversation");
+            await RunEndAsync(ctx, live, conversation, fresh);
         }, needs: Live, risk: Model, finding: "t7-02")
         .Test("slot-grid", "Live AI: the booking bot offers start times on the service's 30-minute grid, not the 5-minute default", async ctx =>
         {
@@ -1293,9 +1309,10 @@ public static partial class AiLiveSuite
                 var list = messages as JsonArray ?? messages["items"]?.AsArray() ?? messages["messages"]?.AsArray() ?? new JsonArray();
                 var marker = list.FirstOrDefault(m => m?["senderType"]?.ToString() == "system")
                     ?? throw new TestFailure("Taking over an AI conversation added no marker message.");
-                var text = marker["content"]?.ToString() ?? "";
-                Expect.True(text != "Handed from AI to your team" && !text.Equals("Returned to AI"),
-                    $"An Arabic reader gets the marker \"{text}\": it is stored as an English sentence instead of a key worded per reader.");
+                // The Inbox words the marker from its key in the reader's language (the stored sentence is only a fallback).
+                var metadata = marker["metadataJson"]?.ToString() ?? "";
+                Expect.True(metadata.Contains("\"marker\"") && metadata.Contains("handed_to_team"),
+                    $"The marker carries no key the Inbox can word per reader (metadata \"{metadata}\", text \"{marker["content"]}\"): an Arabic reader gets English.");
             }
             finally
             {
@@ -1440,8 +1457,9 @@ public static partial class AiLiveSuite
         var mode = await ModeAsync(ctx, conversation);
         var notified = await ctx.Db.ScalarAsync<long>("select count(*) from activity.notifications where conversation_id = @conversation and type = 'HANDOFF'",
             new { conversation }, ctx.Ct);
-        Expect.True(AttemptedReply(steps) || mode == "human",
-            $"A {what} with AI on got no reply and stayed with the AI (mode \"{mode}\", {notified} handoff notifications); trace: " +
+        // Decided 2026-11-05 (QA t7-04): anything but text goes to the team, caption or not, and the members are told.
+        Expect.True(mode == "human" && notified > 0 && steps.Any(s => s.StartsWith("bot.skipped") && s.Contains("media_message")),
+            $"A {what} with AI on should go to the team with a HANDOFF notification (mode \"{mode}\", {notified} handoff notifications); trace: " +
             $"{string.Join(" > ", steps.Where(s => s.StartsWith("bot.")).Select(s => AiHelpers.Short(s, 90)))}.");
     }
 

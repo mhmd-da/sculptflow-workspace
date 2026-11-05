@@ -203,6 +203,23 @@ public static class TelegramWebhookSuite
                 Expect.True(failed == 0, $"{failed} of 15 simultaneous deliveries failed ({string.Join(",", responses.Select(r => r.Status))}): the database pool runs out under a modest burst.");
                 Expect.Equal(15, (await InboxHelpers.MessagesAsync(ctx, InboxHelpers.G(await InboxHelpers.TelegramThreadAsync(ctx, client.ClientId, chat), "id"))).Count, "Messages stored");
             }, needs: Tg, risk: Risk.Shared, finding: "t3-inbox-02")
+            .Test("burst-no-errors", "Telegram: a new chat's first burst logs no errors for the creation races the app handles", async ctx =>
+            {
+                // QA t7-06: 4 first messages 200 ms apart logged 6 Error rows (23505 on the contact and conversation unique indexes).
+                var (client, channel) = await InboxHelpers.TelegramAsync(ctx);
+                var chat = ctx.Webhooks.NewChatId();
+                var since = DateTime.UtcNow;
+                var updates = new[] { "hi", "I want to ask", "how much is it", "and do you take cash?" }.Select(t => ctx.Webhooks.TelegramMessage(chat, t)).ToList();
+                var responses = await Task.WhenAll(updates.Select(u => ctx.Webhooks.TelegramAsync(channel, u)));
+                Expect.True(responses.All(r => r.Status == 200), $"Deliveries answered {string.Join(",", responses.Select(r => r.Status))}.");
+                await Task.Delay(TimeSpan.FromSeconds(8), ctx.Ct); // the error log is written in batches
+                var races = await ctx.Db.ScalarAsync<long>("""
+                    select count(*) from activity.app_logs
+                    where occurred_at >= @since and level in ('error', 'critical')
+                      and (coalesce(exception_message, '') || message) ~ '(ux_contacts_client_external_contact_id|ux_conversations_client_channel_thread)'
+                    """, new { since }, ctx.Ct);
+                Expect.Equal(0L, races, "Error-log rows for the contact/conversation creation races of one new chat");
+            }, needs: Tg | Needs.Database, risk: Risk.Shared, finding: "t7-06")
             .Test("order", "Telegram: a late-arriving earlier message is shown before the newer one", async ctx =>
             {
                 var (client, channel) = await InboxHelpers.TelegramAsync(ctx);

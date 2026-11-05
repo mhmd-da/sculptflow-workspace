@@ -37,6 +37,9 @@ public static class WhatsAppTemplatesSuite
             var reason = created.Json?["rejectionReason"]?.ToString() ?? "";
             Expect.True(status != "rejected" && !reason.Contains("{\"error\""),
                 $"A template whose submission failed (token error) is \"{status}\" with the reason \"{(reason.Length > 100 ? reason[..100] + "…" : reason)}\"; it was never reviewed by Meta.");
+            var submitError = created.Json?["submitError"]?.ToString();
+            Expect.True(status != "draft" || (!string.IsNullOrWhiteSpace(submitError) && !submitError.Contains("{\"error\"")),
+                $"A draft Meta never received should say why in readable words (submitError \"{submitError}\").");
         }, needs: Tpl, finding: "t8-12")
         .Test("name-rules", "Templates: names Meta wouldn't accept (upper case, spaces, Arabic, over 512) are refused (400)", async ctx =>
         {
