@@ -21,6 +21,12 @@ public static class N8nEngineSettingsSuite
                 Expect.True(choices.Count == 0 || (choices.Contains("n8n") && choices.Contains("code")), $"{section}/{key} offers {string.Join(", ", choices)}.");
             }
         }, needs: Needs.AdminKey)
+        .Test("timeouts", "Engine settings: a benchmark generation nobody answers is given up after 5 minutes, a calendar sync after 10", async ctx =>
+        {
+            // QA t9-02 (30 minutes blocked new generations) and t9-03 (a sync nobody answered stayed pending forever).
+            Expect.Equal("5", (await N8nHelpers.SettingAsync(ctx, "Benchmark", "GenerationTimeoutMinutes"))["defaultValue"]?.ToString(), "Benchmark/GenerationTimeoutMinutes default");
+            Expect.Equal("10", (await N8nHelpers.SettingAsync(ctx, "Calendars", "SyncAnswerTimeoutMinutes"))["defaultValue"]?.ToString(), "Calendars/SyncAnswerTimeoutMinutes default");
+        }, needs: Needs.AdminKey, finding: "t9-03")
         .Test("default-code", "Engine settings: the built-in default of each engine is code, so a fresh deploy doesn't start on n8n", async ctx =>
         {
             var defaults = new List<string>();
@@ -54,7 +60,7 @@ public static class N8nEngineRunSuite
                 var answer = transcript is null ? [] : AiHelpers.AnswerLines(transcript);
                 Expect.True(answer.Any(l => l.Role == "bot"),
                     transcript is null
-                        ? "With Ai/BotEngine = n8n the test chat got no reply in 90 s: the deployed workflow calls the AI tools without clientId and X-Omni-Bot-Id (every tool answers TOOL_NOT_ALLOWED) and posts its reply to the member-only send route."
+                        ? "With Ai/BotEngine = n8n the test chat got no reply in 90 s: the deployed workflow calls the AI tools without clientId and X-Omni-Bot-Id (every tool answers 400 BOT_CONTEXT_MISSING) and posts its reply to the member-only send route."
                         : $"With Ai/BotEngine = n8n the bot didn't reply: {AiHelpers.Describe(answer)}.");
             });
         }, needs: Ai, risk: Risk.Shared | Risk.External | Risk.Ai | Risk.Billing, finding: "t9-01")
@@ -126,7 +132,74 @@ public static class N8nEngineRunSuite
                 Expect.True(healthy, "The connection was marked unhealthy right after the hand-off to n8n.");
             });
         }, needs: Ai | Needs.Database | Needs.IngestKey, risk: Risk.Shared | Risk.External | Risk.Billing)
+        .Test("calendar-no-answer", "Calendar sync nobody answers: marked failed, the connection unhealthy and the client told", async ctx =>
+        {
+            // QA t9-03: with n8n not answering, the sync stayed pending forever and the connection looked healthy.
+            var (client, integration, contact, start) = await FakeCalendarAsync(ctx, "n8n-cal-wd");
+            await N8nHelpers.WithSettingAsync(ctx, "Calendars", "SyncAnswerTimeoutMinutes", "2", () =>
+                N8nHelpers.WithSettingAsync(ctx, "Calendars", "SyncEngine", "n8n", async () =>
+                {
+                    var booking = await BookAsync(ctx, client, contact, start, "Omni.Automation unanswered calendar sync");
+                    // The check runs every 2 minutes and fails what waited longer than the setting.
+                    var row = await ctx.EventuallyAsync(async () => (await ctx.Db.QueryAsync("""
+                        select s.status, i.is_healthy, i.last_problem_message from scheduling.booking_calendar_syncs s
+                        join scheduling.calendar_integrations i on i.id = s.calendar_integration_id
+                        where s.booking_id = @booking and s.calendar_integration_id = @integration and s.status = 'failed'
+                        """, new { booking, integration }, ctx.Ct)).FirstOrDefault(), "the unanswered sync to be marked failed", TimeSpan.FromMinutes(6));
+                    Expect.True(row["is_healthy"] is false, $"The sync failed but the connection still looks healthy ({row["last_problem_message"]}).");
+                    var notices = await ctx.Db.ScalarAsync<long>(
+                        "select count(*) from activity.notifications where client_id = @clientId and type = 'INTEGRATION_UNHEALTHY'", new { clientId = client.ClientId }, ctx.Ct);
+                    Expect.True(notices >= 1, "The client wasn't told that the calendar sync got no answer.");
+                }));
+        }, needs: Ai | Needs.Database | Needs.IngestKey, risk: Risk.Shared | Risk.External | Risk.Billing, finding: "t9-03")
+        .Test("calendar-cancel-no-event", "Calendar sync (code): cancelling a booking whose event was never made calls nobody and keeps the real problem", async ctx =>
+        {
+            // QA t9-06: the cancel was sent with no event id, Google answered 404, and that hid the 401 telling the client to reconnect.
+            var (client, integration, contact, start) = await FakeCalendarAsync(ctx, "code-cal-cancel");
+            await N8nHelpers.WithSettingAsync(ctx, "Calendars", "SyncEngine", "code", async () =>
+            {
+                var booking = await BookAsync(ctx, client, contact, start, "Omni.Automation calendar cancel without an event");
+                var created = await ctx.EventuallyAsync(async () => (await ctx.Db.QueryAsync("""
+                    select status, external_event_id from scheduling.booking_calendar_syncs
+                    where booking_id = @booking and calendar_integration_id = @integration and status = 'failed'
+                    """, new { booking, integration }, ctx.Ct)).FirstOrDefault(), "the create to fail on the fake token", TimeSpan.FromSeconds(60));
+                Expect.True(created["external_event_id"] is null, "The failed create stored an event id.");
+                var problem = await ctx.Db.ScalarAsync<string>("select last_problem_message from scheduling.calendar_integrations where id = @integration", new { integration }, ctx.Ct);
+
+                (await OpsHelpers.SetStatusAsync(ctx, client, booking, "canceled")).ExpectOk();
+                var canceled = await ctx.EventuallyAsync(async () => await ctx.Db.ScalarAsync<string>(
+                    "select status from scheduling.booking_calendar_syncs where booking_id = @booking and calendar_integration_id = @integration",
+                    new { booking, integration }, ctx.Ct) is "canceled" ? "canceled" : null, "the sync to be recorded as canceled", TimeSpan.FromSeconds(30));
+                var after = await ctx.Db.ScalarAsync<string>("select last_problem_message from scheduling.calendar_integrations where id = @integration", new { integration }, ctx.Ct);
+                Expect.True(after == problem && !(after ?? "").Contains("404"),
+                    $"The connection's problem changed from \"{problem}\" to \"{after}\" by a cancel that had nothing to remove.");
+            });
+        }, needs: Ai | Needs.Database | Needs.IngestKey, risk: Risk.Shared | Risk.External | Risk.Billing, finding: "t9-06")
         .Build();
+
+    /// <summary>A client on a plan with bookings, a Google connection with a fake token, a contact and a free slot.</summary>
+    private static async Task<(TestClient Client, Guid Integration, Guid Contact, string Start)> FakeCalendarAsync(TestContext ctx, string label)
+    {
+        var client = await ctx.RegisterClientAsync(label);
+        await ctx.SetPlanAsync(client, "inbox-bookings");
+        var integration = Guid.NewGuid();
+        await ctx.Db.ExecuteForClientAsync(client.ClientId, """
+            insert into scheduling.calendar_integrations (id, client_id, provider, status, account_display_name, selected_calendar_id, selected_calendar_name,
+                sync_enabled, is_healthy, access_token, token_expires_at, created_at, updated_at)
+            values (@integration, @clientId, 'google', 'connected', 'automation@omni-automation.test', 'primary', 'Automation calendar',
+                true, true, @token, now() + interval '1 day', now(), now())
+            """, new { integration, token = $"auto-fake-token-{Guid.NewGuid():N}" }, ctx.Ct);
+        await AiHelpers.DropCacheAsync(ctx, "scheduling:calendars:" + client.ClientId.ToString("N"));
+        var contact = await ctx.Fixtures.NewContactAsync("calendar", client);
+        var start = await AiHelpers.SlotOnDayAsync(ctx, client, 2, 3);
+        return (client, integration, contact, start);
+    }
+
+    private static async Task<Guid> BookAsync(TestContext ctx, TestClient client, Guid contact, string start, string notes) =>
+        (await client.Http.PostAsync("/api/bookings", new
+        {
+            clientId = client.ClientId, contactId = contact, serviceId = client.BaseServiceId, bookingType = "standard", scheduledStart = start, notes,
+        }, ct: ctx.Ct)).ExpectStatus(200, 201).Id();
 }
 
 /// <summary>Platform settings through the admin API, and a temporary switch that is always undone.</summary>

@@ -892,14 +892,17 @@ public static class AiToolsSuite
         {
             (await ctx.Ingest.GetAsync("/api/ai/test/codes", ct: ctx.Ct)).ExpectOk();
         }, needs: Needs.IngestKey)
-        .Test("no-bot", "AI tools: a call without the bot header, or with a malformed one, is refused (unknown_bot)", async ctx =>
+        .Test("no-bot", "AI tools: a call without the bot header, a malformed one, or without the client is a 400 (BOT_CONTEXT_MISSING)", async ctx =>
         {
+            // QA t9-01: the live n8n workflow sent neither; every tool answered 200 "not allowed" and no contact ever got a reply.
             var bots = await AiHelpers.AiBotsAsync(ctx);
             var body = new { clientId = bots.Client.ClientId, query = "opening hours" };
-            AiHelpers.ExpectNotAllowed(await ctx.Ingest.PostAsync("/api/ai/knowledge/search", body, ct: ctx.Ct), "unknown_bot");
+            AiHelpers.ExpectNotAllowed(await ctx.Ingest.PostAsync("/api/ai/knowledge/search", body, ct: ctx.Ct), "missing_context");
             AiHelpers.ExpectNotAllowed(await ctx.Ingest.PostAsync("/api/ai/knowledge/search", body,
-                new Dictionary<string, string> { ["X-Omni-Bot-Id"] = "not-a-guid" }, ctx.Ct), "unknown_bot");
-        }, needs: Tools, risk: Risk.Billing)
+                new Dictionary<string, string> { ["X-Omni-Bot-Id"] = "not-a-guid" }, ctx.Ct), "missing_context");
+            AiHelpers.ExpectNotAllowed(await ctx.Ingest.PostAsync("/api/ai/knowledge/search", new { query = "opening hours" },
+                AiHelpers.BotHeaders(bots.Support), ctx.Ct), "missing_context");
+        }, needs: Tools, risk: Risk.Billing, finding: "t9-01")
         .Test("client-bot-pair", "AI tools: another client's id with my bot is refused (the bot must belong to the client)", async ctx =>
         {
             var bots = await AiHelpers.AiBotsAsync(ctx);
@@ -1742,15 +1745,23 @@ internal static partial class AiHelpers
     }
 
     /// <summary>A refused tool call: HTTP 200, success false, code TOOL_NOT_ALLOWED and the given reason.</summary>
+    /// <summary>A refused tool call (QA t9-01): a tool the bot isn't given is 200 TOOL_NOT_ALLOWED (the AI handles it), a call without
+    /// the client or the bot 400 BOT_CONTEXT_MISSING, and a bot that may not answer (unknown, inactive, another client's, a wrong test
+    /// session) 403 BOT_NOT_ALLOWED, so a broken workflow fails visibly.</summary>
     public static void ExpectNotAllowed(ApiResponse response, string reason)
     {
-        response.ExpectOk();
-        var json = response.RequireJson();
-        var code = json["code"]?.ToString();
-        var actual = json["reason"]?.ToString();
-        if (json["success"]?.GetValue<bool>() != false || code != "TOOL_NOT_ALLOWED" || actual != reason)
+        var (status, expectedCode) = reason switch
         {
-            throw new TestFailure($"{response.Method} {response.Path} should be refused with TOOL_NOT_ALLOWED / {reason}, got code \"{code}\" reason \"{actual}\".{response.Snippet(300)}");
+            "not_allowed" => (200, "TOOL_NOT_ALLOWED"),
+            "missing_context" => (400, "BOT_CONTEXT_MISSING"),
+            _ => (403, "BOT_NOT_ALLOWED"),
+        };
+        var json = response.Json;
+        var code = json?["code"]?.ToString();
+        var actual = json?["reason"]?.ToString();
+        if (response.Status != status || json?["success"]?.GetValue<bool>() != false || code != expectedCode || actual != reason)
+        {
+            throw new TestFailure($"{response.Method} {response.Path} should be refused with {status} {expectedCode} / {reason}, got {response.Status} code \"{code}\" reason \"{actual}\".{response.Snippet(300)}");
         }
     }
 

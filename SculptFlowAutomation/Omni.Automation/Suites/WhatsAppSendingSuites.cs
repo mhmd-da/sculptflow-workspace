@@ -114,5 +114,45 @@ public static class WhatsAppSendingSuite
             Expect.True(!response.IsSuccess && response.Status < 500,
                 $"A campaign was created ({response.Status}) with a template in status \"{template.Str("status")}\": sending it fails every recipient and ends \"completed\".");
         }, needs: Wa | Needs.AdminKey, risk: Risk.Billing, finding: "t8-11")
+        .Test("campaign-token-pause", "Campaigns: an invalid WhatsApp token pauses the campaign once with the reason instead of failing everyone", async ctx =>
+        {
+            // The fake WhatsApp number's token is refused by Meta (401, code 190): a problem for every recipient, not one.
+            var (client, _) = await WhatsAppHelpers.WhatsAppAsync(ctx, "wa-camp-tok");
+            await ctx.SetPlanAsync(client, "growth");
+            var template = await OpsHelpers.TemplateAsync(ctx, client);
+            var id = await OpsHelpers.DraftCampaignAsync(ctx, client, template,
+                await OpsHelpers.ContactAsync(ctx, client, "tok1"), await OpsHelpers.ContactAsync(ctx, client, "tok2"));
+            var since = await AiHelpers.DbNowAsync(ctx);
+
+            var send = await client.Http.PostAsync($"/api/campaigns/{id}/send", ct: ctx.Ct);
+            Expect.True(send.Status < 500, $"Sending answered {send.Status}.{send.Snippet(200)}");
+            var details = await OpsHelpers.CampaignAsync(ctx, client, id);
+            var recipients = details["recipients"]!.AsArray();
+            if (recipients.Any(r => (r?["failureReason"]?.ToString() ?? "").Contains("priced", StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new TestSkipped("Template sends aren't priced for this client, so nothing reached Meta.");
+            }
+            var campaign = details["campaign"]!;
+            var status = campaign["status"]?.ToString();
+            var reason = campaign["pausedReason"]?.ToString() ?? "";
+            var failed = details["stats"]!["failed"]!.GetValue<int>();
+            Expect.True(status == "paused" && reason.Length > 0 && !reason.Contains("{\"error\"") && failed == 0,
+                $"After Meta refused the token the campaign is \"{status}\" with {failed} failed recipients and the reason \"{reason}\"; it should stop once, with a readable reason, and keep everyone queued.");
+            var notices = await ctx.Db.ScalarAsync<long>(
+                "select count(*) from activity.notifications where client_id = @clientId and type = 'OUTBOUND_MESSAGE_FAILED' and created_at >= @since",
+                new { clientId = client.ClientId, since }, ctx.Ct);
+            Expect.Equal(1L, notices, "Notifications for the stopped campaign (one, not one per recipient)");
+            await client.Http.PostAsync($"/api/campaigns/{id}/cancel", ct: ctx.Ct);
+        }, needs: Wa | Needs.AdminKey, risk: Risk.Billing | Risk.External, finding: "t8-11")
+        .Test("campaign-retry-failed", "Campaigns: Retry failed is refused for a draft and for an unknown campaign", async ctx =>
+        {
+            var (client, _) = await WhatsAppHelpers.WhatsAppAsync(ctx, "wa-camp-retry");
+            await ctx.SetPlanAsync(client, "growth");
+            var template = await OpsHelpers.TemplateAsync(ctx, client);
+            var id = await OpsHelpers.DraftCampaignAsync(ctx, client, template, await OpsHelpers.ContactAsync(ctx, client, "retry"));
+            (await client.Http.PostAsync($"/api/campaigns/{id}/retry-failed", ct: ctx.Ct)).ExpectStatus(422);
+            (await client.Http.PostAsync($"/api/campaigns/{Guid.NewGuid()}/retry-failed", ct: ctx.Ct)).ExpectStatus(404);
+            await client.Http.PostAsync($"/api/campaigns/{id}/cancel", ct: ctx.Ct);
+        }, needs: Wa | Needs.AdminKey, risk: Risk.Billing, finding: "t8-11")
         .Build();
 }

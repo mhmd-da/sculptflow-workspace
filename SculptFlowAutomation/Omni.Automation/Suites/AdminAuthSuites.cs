@@ -98,22 +98,19 @@ public static class AdminAuthSuite
             }
             finally { await AdminHelpers.DeactivateAdminAsync(ctx, admin.Id); }
         }, needs: Needs.AdminKey)
-        .Test("lockout", "Five wrong passwords lock the admin; a password reset by another admin unlocks it", async ctx =>
+        .Test("no-lockout", "Wrong passwords never lock an admin out: after six the right one still signs in", async ctx =>
         {
+            // QA t6-admin-12 (decided 2026-11-05): anyone could keep the real admin locked out; the portal limits attempts per network instead.
             var admin = await AdminHelpers.SlotAdminAsync(ctx, "lock");
             try
             {
-                for (var i = 0; i < 5; i++) (await AdminHelpers.AdminLoginAsync(ctx, admin.Email, $"Wrong-{i}-password1A")).ExpectStatus(401);
-                (await AdminHelpers.AdminLoginAsync(ctx, admin.Email, admin.Password)).ExpectStatus(401);
+                for (var i = 0; i < 6; i++) (await AdminHelpers.AdminLoginAsync(ctx, admin.Email, $"Wrong-{i}-password1A")).ExpectStatus(401);
+                (await AdminHelpers.AdminLoginAsync(ctx, admin.Email, admin.Password)).ExpectOk();
                 var row = await AdminHelpers.FindAdminAsync(ctx, admin.Email);
-                Expect.True(row?["loginLocked"]?.GetValue<bool>() == true, "The admins list doesn't show the admin as locked after 5 wrong passwords.");
-
-                var password = AdminHelpers.NewPassword();
-                (await ctx.Admin.PutAsync($"{AdminHelpers.Api}/admins/{admin.Id}/password", new { password }, ctx.Ct)).ExpectOk();
-                (await AdminHelpers.AdminLoginAsync(ctx, admin.Email, password)).ExpectOk();
+                Expect.True(row?["loginLocked"]?.GetValue<bool>() != true, "The admins list shows the admin as locked after wrong passwords.");
             }
             finally { await AdminHelpers.DeactivateAdminAsync(ctx, admin.Id); }
-        }, needs: Needs.AdminKey)
+        }, needs: Needs.AdminKey, finding: "t6-admin-12")
         .Test("password-stamp", "Changing an admin's password changes what auth/admins/{id} answers, so old portal sessions end", async ctx =>
         {
             var admin = await AdminHelpers.SlotAdminAsync(ctx, "stamp");

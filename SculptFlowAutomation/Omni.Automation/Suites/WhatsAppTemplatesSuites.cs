@@ -87,6 +87,7 @@ public static class WhatsAppTemplatesSuite
                          ("language \"klingon<script>\"", new { name = NewName(ctx, "lang"), category = "utility", language = "klingon<script>", body = "x" }),
                          ("buttonsJson \"{not json\"", new { name = NewName(ctx, "btn"), category = "utility", language = "en_US", body = "x", buttonsJson = "{not json" }),
                          ("headerType \"hologram\"", new { name = NewName(ctx, "hdr"), category = "utility", language = "en_US", body = "x", headerType = "hologram", headerContent = "x" }),
+                         ("a 2000-character body (Meta's limit is 1024)", new { name = NewName(ctx, "body"), category = "utility", language = "en_US", body = new string('b', 2000) }),
                      })
             {
                 var response = await CreateAsync(ctx, client, body);
