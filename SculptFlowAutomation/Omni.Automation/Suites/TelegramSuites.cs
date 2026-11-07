@@ -237,6 +237,24 @@ public static class TelegramWebhookSuite
                 var shown = (await client.Http.GetAsync($"/api/conversations/{conversationId}", ct: ctx.Ct)).ExpectOk().Array("messages").Select(m => m?["content"]?.ToString()).ToList();
                 Expect.True(shown.SequenceEqual(new[] { "first", "second" }), $"The thread shows [{string.Join(", ", shown)}]: messages are ordered by arrival at the server, not by when the customer sent them.");
             }, needs: Tg, finding: "t3-inbox-16")
+            .Test("thread-page", "Inbox thread: only the newest messages load, oldest first, with hasEarlier for the rest", async ctx =>
+            {
+                // QA t3-inbox-16: every refresh re-read the whole history. Three messages of the same second, by message id.
+                var (client, channel) = await InboxHelpers.TelegramAsync(ctx);
+                var chat = ctx.Webhooks.NewChatId();
+                for (var i = 1; i <= 3; i++)
+                {
+                    var message = ctx.Webhooks.TelegramMessage(chat, $"m{i}");
+                    message["message"]!["message_id"] = i;
+                    (await ctx.Webhooks.TelegramAsync(channel, message)).ExpectOk();
+                }
+                var conversationId = InboxHelpers.G(await InboxHelpers.TelegramThreadAsync(ctx, client.ClientId, chat), "id");
+                var page = (await client.Http.GetAsync($"/api/conversations/{conversationId}?take=2", ct: ctx.Ct)).ExpectOk();
+                var shown = page.Array("messages").Select(m => m?["content"]?.ToString()).ToList();
+                var hasEarlier = page.Prop("hasEarlier").GetValue<bool>();
+                Expect.True(shown.SequenceEqual(new[] { "m2", "m3" }) && hasEarlier,
+                    $"take=2 returned [{string.Join(", ", shown)}] with hasEarlier {hasEarlier}; expected the newest two (m2, m3) and hasEarlier true.");
+            }, needs: Tg, finding: "t3-inbox-16")
             .Test("forged-id", "Telegram: a member-forged message can't block the customer's real message", async ctx =>
             {
                 var (client, channel) = await InboxHelpers.TelegramAsync(ctx);

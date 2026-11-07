@@ -59,6 +59,32 @@ public static class BillingPlansSuite
                 Expect.True(r.Status == 400, $"Plan with {what}: expected 400, got {r.Status}.{r.Snippet(200)}");
             }
         }, needs: Needs.AdminKey, risk: Risk.Billing, description: "Nothing is created: every request is invalid (a regression would add a plan to the global catalogue).")
+        .Test("put-keeps-trial", "Plans: a PUT without trialDays can't turn the trial (it has subscribers) into a free plan that never ends", async ctx =>
+        {
+            var trial = (await ctx.Admin.GetAsync($"{BillingHelpers.Base}/plans/trial", ct: ctx.Ct)).ExpectOk();
+            var days = trial.Prop("trialDays").GetValue<int>();
+            var subscribers = trial.Prop("subscribers").GetValue<int>();
+            if (subscribers == 0) throw new TestSkipped("The trial plan has no subscribers here, so switching it is an ordinary edit.");
+            // Name, price and period only, as a script would send them: no trialDays, no isActive.
+            var r = await ctx.Admin.PutAsync($"{BillingHelpers.Base}/plans/trial",
+                new { code = "trial", name = trial.Str("name"), price = 0, billingPeriod = trial.Str("billingPeriod") }, ctx.Ct);
+            if (r.Status < 300)
+            {
+                // The bug: put the trial back as it was before failing.
+                await ctx.Admin.PutAsync($"{BillingHelpers.Base}/plans/trial", new
+                {
+                    code = "trial", name = trial.Str("name"), description = trial.Prop("description")?.ToString(), price = 0,
+                    billingPeriod = trial.Str("billingPeriod"), includedUsageCredit = BillingHelpers.D(trial.Prop("includedUsageCredit")),
+                    rateCardCode = trial.Prop("rateCardCode")?.ToString(), isActive = trial.Prop("isActive").GetValue<bool>(),
+                    sortOrder = trial.Prop("sortOrder").GetValue<int>(), trialDays = days,
+                }, ctx.Ct);
+                throw new TestFailure($"PUT plans/trial without trialDays answered {r.Status}: the {subscribers} trial subscribers would renew at 0 for ever (restored).");
+            }
+            Expect.True(r.Status == 422, $"PUT plans/trial without trialDays answered {r.Status}; expected 422.{r.Snippet(200)}");
+            var after = (await ctx.Admin.GetAsync($"{BillingHelpers.Base}/plans/trial", ct: ctx.Ct)).ExpectOk();
+            Expect.Equal(days.ToString(), after.Prop("trialDays")?.ToString(), "Trial days after the refused PUT");
+        }, needs: Needs.AdminKey, risk: Risk.Billing | Risk.Shared, finding: "t2-billing-17",
+            description: "Sends a PUT to the shared trial plan that must be refused; if the bug lets it through, the plan is restored at once.")
         .Test("signup-trial", "Trial: a new client starts on the 7-day trial with an empty wallet", async ctx =>
         {
             var client = await BillingHelpers.ReadOnlyClientAsync(ctx);
